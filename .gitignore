@@ -105,6 +105,10 @@
 !plans/*.md
 !plans/*.txt
 
+# Documentation (문서)
+!docs/
+!docs/**
+
 ############################################
 # Explicit Ignore (Blacklist - Overrides Whitelist)
 **/.dart_tool/
