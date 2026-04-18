@@ -5,123 +5,166 @@
 ############################################
 # Selected folders to keep (Whitelist)
 
-# Git & Project Root
+### Git & Project Root — 프로젝트 공통 메타데이터
+# Git 추적 규칙 (이 파일)
 !.gitignore
+# 프로젝트 설명 문서
 !README.md
-!.metadata
-!analysis_options.yaml
-!pubspec.yaml
-!pubspec.lock
 
-# ClaudeCode (Agent)
+### ClaudeCode (Agent) — AI 에이전트 설정 및 커맨드
 !.claude/
+# 프로젝트 로컬 에이전트 규칙
 !.claude/CLAUDE.md
+# 에이전트 로컬 설정
 !.claude/settings.json
+# 슬래시 커맨드 정의
 !.claude/commands/
 !.claude/commands/*.md
 
-# Dart/Flutter Source
+### Claude Code Plans (플랜) — 작업 계획 문서
+!plans/
+!plans/*.md
+!plans/*.txt
+
+### Documentation (문서) — 프로젝트 문서 (이력, 참고자료)
+!docs/
+!docs/**
+
+### CoWork (TF관료제 상태) — 멀티에이전트 SDLC 파이프라인 산출물
+# CW_ARCHITECTURE.md : 아키텍처 법전
+# CW_SUBJECTS.md     : 구현 목표 (13 Subject)
+# CW_STATE_*.md      : 조직/태스크 상태
+!.cowork/
+!.cowork/*.md
+
+### Flutter/Dart — 프레임워크 설정 및 의존성
+# Flutter 프로젝트 메타데이터 (IDE 연동, 버전 추적)
+!.metadata
+# Dart 린트/분석 규칙 설정
+!analysis_options.yaml
+# 패키지 의존성 및 프로젝트 설정 (Flutter의 package.json)
+!pubspec.yaml
+# 의존성 버전 잠금 (재현 가능한 빌드 보장)
+!pubspec.lock
+
+### Dart/Flutter Source — 앱 소스 코드 (핵심)
+# 메인 소스 디렉토리 (core/, features/, infrastructure/, app/)
 !lib/
 !lib/**
 
-# Test
+### Test — 테스트 코드
+# 단위/위젯/통합 테스트
 !test/
 !test/**
 
-# Assets
+### Assets — 정적 리소스 (이미지, 폰트, JSON 등)
 !assets/
 !assets/**
 
-# Android
+### Android — Android 플랫폼 빌드 설정
 !android/
+# Android 전용 ignore 규칙
 !android/.gitignore
 !android/app/
+# 앱 모듈 빌드 설정 (minSdk, dependencies 등)
 !android/app/build.gradle.kts
+# Android 소스 (Manifest, Kotlin, 리소스)
 !android/app/src/
 !android/app/src/**
+# 프로젝트 레벨 빌드 설정
 !android/build.gradle.kts
+# Gradle 빌드 속성 (메모리, AndroidX 등)
 !android/gradle.properties
-!android/gradlew
-!android/gradlew.bat
+# Gradle 프로젝트 구조 설정
 !android/settings.gradle.kts
-!android/gradle/
-!android/gradle/**
+# Gradle wrapper 설정
 !android/gradle/
 !android/gradle/**
 
-# iOS
+### iOS — iOS 플랫폼 빌드 설정
 !ios/
+# iOS 전용 ignore 규칙
 !ios/.gitignore
+# Flutter-iOS 연동 설정 (plist, xcconfig)
 !ios/Flutter/
 !ios/Flutter/*.plist
 !ios/Flutter/*.xcconfig
+# iOS 앱 소스 (AppDelegate, Info.plist)
 !ios/Runner/
 !ios/Runner/*.swift
 !ios/Runner/*.h
 !ios/Runner/*.m
 !ios/Runner/*.plist
+# Xcode 프로젝트 설정
 !ios/Runner.xcodeproj/
 !ios/Runner.xcodeproj/**
+# Xcode 워크스페이스
 !ios/Runner.xcworkspace/
 !ios/Runner.xcworkspace/**
+# iOS 단위 테스트
 !ios/RunnerTests/
 !ios/RunnerTests/*.swift
 
-# macOS
+### macOS — macOS 데스크톱 플랫폼 빌드 설정
 !macos/
 !macos/.gitignore
+# Flutter-macOS 연동 설정
 !macos/Flutter/
 !macos/Flutter/*.xcconfig
 !macos/Flutter/*.swift
+# macOS 앱 소스 (AppDelegate, entitlements)
 !macos/Runner/
 !macos/Runner/*.swift
 !macos/Runner/*.plist
 !macos/Runner/*.entitlements
+# Xcode 프로젝트 설정
 !macos/Runner.xcodeproj/
 !macos/Runner.xcodeproj/**
+# Xcode 워크스페이스
 !macos/Runner.xcworkspace/
 !macos/Runner.xcworkspace/**
+# macOS 단위 테스트
 !macos/RunnerTests/
 !macos/RunnerTests/*.swift
 
-# Web
+### Web — 웹 플랫폼 빌드 설정
+# 웹 엔트리포인트 (index.html, manifest, 아이콘)
 !web/
 !web/**
 
-# Windows
+### Windows — Windows 데스크톱 플랫폼 빌드 설정
 !windows/
 !windows/.gitignore
+# CMake 빌드 설정 (최상위)
 !windows/CMakeLists.txt
+# Flutter-Windows 연동 (플러그인 등록)
 !windows/flutter/
 !windows/flutter/CMakeLists.txt
 !windows/flutter/generated_plugin_registrant.cc
 !windows/flutter/generated_plugin_registrant.h
 !windows/flutter/generated_plugins.cmake
+# Windows 앱 소스 (Win32 윈도우, 리소스)
 !windows/runner/
 !windows/runner/**
 
-# Claude Code Plans (플랜)
-!plans/
-!plans/*.md
-!plans/*.txt
-
-# Documentation (문서)
-!docs/
-!docs/**
-
-# CoWork (TF관료제 상태)
-!.cowork/
-!.cowork/*.md
-
 ############################################
 # Explicit Ignore (Blacklist - Overrides Whitelist)
+# 화이트리스트에 포함되더라도 반드시 제외해야 하는 빌드/캐시/자동생성 파일
+
+### Dart/Flutter 빌드 캐시
 **/.dart_tool/
-**/.idea/
 **/build/
-**/.gradle/
-**/.DS_Store
-**/local.properties
+
+### IDE 설정 (머신별 상이)
+**/.idea/
 **/*.iml
+
+### Android 빌드/로컬 설정
+**/.gradle/
+**/local.properties
+
+### macOS/iOS 자동 생성
+**/.DS_Store
 **/flutter_export_environment.sh
 **/Generated.xcconfig
 **/GeneratedPluginRegistrant.*

@@ -39,15 +39,18 @@
                 └── OCR: ML Kit (모바일) / 서��� 위임 (Web/Desktop)
 
 [메인 백엔드]  C# / ASP.NET Core
-                └── Firebase Admin SDK (.NET) — 토큰 검증
+                └── ASP.NET Core Identity — 자체 인증/JWT 발급/검증
 
 [AI 서버]      Python / FastAPI
                 └── OCR 서버 위임, AI 분류 모델
 
 [데이터베이스]  MySQL (서버), SQLite (클라이언트 로컬)
 
-[인증]         Firebase Auth (Google/Apple 소셜 로그인)
-                + local_auth (생체인증/PIN)
+[인증]         자체 구현 (외부 서비스 의존 없음, 비용 0)
+                ├── google_sign_in (Google OAuth2 직접 연동)
+                ├── sign_in_with_apple (Apple OAuth2 직접 연동)
+                ├── local_auth (생체인증/PIN)
+                └── C# 백엔드: ASP.NET Core Identity + JWT 자체 발급/검증
 ```
 
 ### 0.4 오프라인 전략
