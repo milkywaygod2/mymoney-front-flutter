@@ -1,33 +1,31 @@
 import '../models/TypedId.dart';
 import '../constants/Enums.dart';
 import '../domain/Perspective.dart';
-
-// Transaction은 Sofia 워크트리에서 동시 작성 중 — 머지 후 import 경로 확정
-// import '../domain/Transaction.dart';
+import '../domain/Transaction.dart';
 
 /// 거래(Transaction) 저장소 인터페이스.
 /// Accounting BC의 핵심 AR 영속화 계약.
 abstract interface class ITransactionRepository {
   /// ID로 거래 조회
-  Future<dynamic> findById(TransactionId id);
+  Future<Transaction?> findById(TransactionId id);
 
   /// 귀속기간 + 상태 필터 조회
-  Future<List<dynamic>> findByPeriod(
+  Future<List<Transaction>> findByPeriod(
     PeriodId periodId, {
     TransactionStatus? status,
   });
 
   /// 날짜 범위 조회
-  Future<List<dynamic>> findByDateRange(DateTime from, DateTime to);
+  Future<List<Transaction>> findByDateRange(DateTime from, DateTime to);
 
   /// 거래 저장 (생성 + 수정)
-  Future<void> save(dynamic transaction);
+  Future<void> save(Transaction transaction);
 
   /// 거래 삭제 — Draft 상태만 허용
   Future<void> delete(TransactionId id);
 
   /// Perspective(관점) 기반 필터 조회
-  Future<List<dynamic>> findByPerspective(
+  Future<List<Transaction>> findByPerspective(
     Perspective perspective, {
     DateTime? from,
     DateTime? to,

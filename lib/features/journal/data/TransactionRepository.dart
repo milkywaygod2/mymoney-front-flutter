@@ -1,0 +1,131 @@
+import '../../../core/constants/Enums.dart';
+import '../../../core/domain/JournalEntryLine.dart';
+import '../../../core/domain/Perspective.dart';
+import '../../../core/domain/Transaction.dart';
+import '../../../core/interfaces/ITransactionRepository.dart';
+import '../../../core/models/CurrencyCode.dart';
+import '../../../core/models/TypedId.dart';
+import 'TransactionDao.dart';
+
+/// ITransactionRepository 구현체 — Drift row ↔ 도메인 엔티티 변환
+class TransactionRepository implements ITransactionRepository {
+  TransactionRepository(this._dao);
+  final TransactionDao _dao;
+
+  @override
+  Future<Transaction?> findById(TransactionId id) async {
+    final result = await _dao.findById(id.value);
+    if (result == null) return null;
+    return _toDomain(result);
+  }
+
+  @override
+  Future<List<Transaction>> findByPeriod(
+    PeriodId periodId, {
+    TransactionStatus? status,
+  }) async {
+    final listResults = await _dao.findByPeriod(
+      periodId.value,
+      status: status?.name,
+    );
+    return listResults.map(_toDomain).toList();
+  }
+
+  @override
+  Future<List<Transaction>> findByDateRange(DateTime from, DateTime to) async {
+    final listResults = await _dao.findByDateRange(from, to);
+    return listResults.map(_toDomain).toList();
+  }
+
+  @override
+  Future<void> save(Transaction transaction) async {
+    // TODO: Transaction 도메인 → TransactionsCompanion 변환
+    // TODO: JEL 도메인 → JournalEntryLinesCompanion 변환
+    // _dao.insertTransactionWithLines() 호출
+    throw UnimplementedError('TransactionRepository.save — Drift Companion 변환 구현 필요');
+  }
+
+  @override
+  Future<void> delete(TransactionId id) async {
+    await _dao.deleteTransaction(id.value);
+  }
+
+  @override
+  Future<List<Transaction>> findByPerspective(
+    Perspective perspective, {
+    DateTime? from,
+    DateTime? to,
+    int? limit,
+    int? offset,
+  }) async {
+    // TODO: Perspective 필터 적용 (Wave 6)
+    if (from != null && to != null) {
+      return findByDateRange(from, to);
+    }
+    return [];
+  }
+
+  @override
+  Future<Map<AccountId, int>> calculateBalances({
+    required PeriodId periodId,
+    Perspective? perspective,
+  }) async {
+    final mapRaw = await _dao.calculateBalancesByAccount(
+      periodId: periodId.value,
+    );
+    // int key → AccountId 변환
+    return mapRaw.map((k, v) => MapEntry(AccountId(k), v));
+  }
+
+  /// Drift TransactionWithLines → 도메인 Transaction 변환
+  Transaction _toDomain(TransactionWithLines result) {
+    final tx = result.tx;
+    final listLines = result.listLines.map((jel) {
+      return JournalEntryLine(
+        id: JournalEntryLineId(jel.id),
+        accountId: AccountId(jel.accountId),
+        entryType: EntryType.values.byName(jel.entryType),
+        originalAmount: jel.originalAmount,
+        originalCurrency: CurrencyCode.values.byName(jel.originalCurrency),
+        exchangeRateAtTrade: jel.exchangeRateAtTrade,
+        baseCurrency: CurrencyCode.values.byName(jel.baseCurrency),
+        baseAmount: jel.baseAmount,
+        activityTypeOverride: jel.activityTypeOverride != null
+            ? DimensionValueId(jel.activityTypeOverride!)
+            : null,
+        ownerIdOverride: jel.ownerIdOverride != null
+            ? OwnerId(jel.ownerIdOverride!)
+            : null,
+        incomeTypeOverride: jel.incomeTypeOverride != null
+            ? DimensionValueId(jel.incomeTypeOverride!)
+            : null,
+        deductibility: Deductibility.values.byName(jel.deductibility),
+        beneficiaryId: jel.beneficiaryId != null
+            ? OwnerId(jel.beneficiaryId!)
+            : null,
+        taxClassification: jel.taxClassification,
+        memo: jel.memo,
+      );
+    }).toList();
+
+    return Transaction(
+      id: TransactionId(tx.id),
+      date: tx.date,
+      description: tx.description,
+      status: TransactionStatus.values.byName(tx.status),
+      voidedBy: tx.voidedBy != null ? TransactionId(tx.voidedBy!) : null,
+      counterpartyId: tx.counterpartyId != null
+          ? CounterpartyId(tx.counterpartyId!)
+          : null,
+      counterpartyName: tx.counterpartyName,
+      source: TransactionSource.values.byName(tx.source),
+      confidence: tx.confidence,
+      periodId: tx.periodId != null ? PeriodId(tx.periodId!) : null,
+      syncStatus: SyncStatus.values.byName(tx.syncStatus),
+      listLines: listLines,
+      listTagIds: [], // TODO: 태그 ID 변환
+      createdAt: tx.createdAt,
+      updatedAt: tx.updatedAt,
+    );
+  }
+}
