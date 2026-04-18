@@ -185,7 +185,7 @@ List<Map<String, dynamic>> getAllDimensionValueSeeds() {
     ..._kGovernmentSeeds,
   ];
 
-  return listAllSeeds.map((seed) => {
+  return listAllSeeds.map((seed) {
     return {
       'dimensionType': seed.type,
       'code': seed.code,
