@@ -72,9 +72,9 @@ class Account with _$Account {
   // 팩토리 메서드
   // ---------------------------------------------------------------------------
 
-  /// 계정과목 생성 — INV-A3, A4 검증.
-  /// INV-A1(유효 트리 노드), INV-A2(유동성 종속) 검증은 Repository/UseCase 레벨에서
-  /// DimensionValue 테이블 참조하여 수행.
+  /// 계정과목 생성 — INV-A3 검증 (지분율 합계).
+  /// INV-A1(유효 트리 노드), INV-A2(유동성 종속), INV-A4(nature-equity 일치)
+  /// 검증은 Repository/UseCase 레벨에서 DimensionValue 테이블 참조하여 수행.
   static Account create({
     required AccountId id,
     required String name,

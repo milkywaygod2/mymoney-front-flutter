@@ -73,6 +73,7 @@ class Transaction with _$Transaction {
   }
 
   /// Draft → Posted 전환 — INV-T1~T7 전체 검증.
+  /// INV-T7: periodId는 required PeriodId이므로 타입 시스템이 null을 방지.
   /// 검증 실패 시 InvariantViolationError throw.
   Transaction post({required PeriodId periodId}) {
     // INV-T5: Draft 상태에서만 전환 가능
