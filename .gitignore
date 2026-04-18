@@ -109,6 +109,10 @@
 !docs/
 !docs/**
 
+# CoWork (TF관료제 상태)
+!.cowork/
+!.cowork/*.md
+
 ############################################
 # Explicit Ignore (Blacklist - Overrides Whitelist)
 **/.dart_tool/
