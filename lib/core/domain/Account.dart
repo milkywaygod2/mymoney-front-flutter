@@ -147,9 +147,7 @@ class Account with _$Account {
         listOwnerShares.fold(0, (sum, s) => sum + s.shareRatio);
     if (totalRatio != 10000) {
       throw InvariantViolationError(
-        code: 'INV-A3',
-        message: '공동명의 지분율 합계는 10000(100%)이어야 합니다. '
-            '현재: $totalRatio',
+        'INV-A3: 공동명의 지분율 합계는 10000(100%)이어야 합니다. 현재: $totalRatio',
       );
     }
   }

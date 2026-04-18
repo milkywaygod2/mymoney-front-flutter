@@ -79,18 +79,14 @@ class Transaction with _$Transaction {
     // INV-T5: Draft 상태에서만 전환 가능
     if (status != TransactionStatus.draft) {
       throw InvariantViolationError(
-        code: 'INV-T5',
-        message: 'Draft 상태에서만 Posted로 전환할 수 있습니다. '
-            '현재 상태: $status',
+        'INV-T5: Draft 상태에서만 Posted로 전환할 수 있습니다. 현재 상태: $status',
       );
     }
 
     // INV-T1: 최소 2라인
     if (listLines.length < 2) {
       throw InvariantViolationError(
-        code: 'INV-T1',
-        message: '복식부기는 최소 2개 전표 라인이 필요합니다. '
-            '현재: ${listLines.length}개',
+        'INV-T1: 복식부기는 최소 2개 전표 라인이 필요합니다. 현재: ${listLines.length}개',
       );
     }
 
@@ -110,9 +106,7 @@ class Transaction with _$Transaction {
 
     if (sumDebit != sumCredit) {
       throw InvariantViolationError(
-        code: 'INV-T2',
-        message: '차변 합계($sumDebit)와 대변 합계($sumCredit)가 '
-            '일치하지 않습니다.',
+        'INV-T2: 차변 합계($sumDebit)와 대변 합계($sumCredit)가 일치하지 않습니다.',
       );
     }
 
@@ -129,9 +123,7 @@ class Transaction with _$Transaction {
   Transaction voidTransaction({required TransactionId reversalId}) {
     if (status != TransactionStatus.posted) {
       throw InvariantViolationError(
-        code: 'INV-T5',
-        message: 'Posted 상태에서만 무효 처리할 수 있습니다. '
-            '현재 상태: $status',
+        'INV-T5: Posted 상태에서만 무효 처리할 수 있습니다. 현재 상태: $status',
       );
     }
 
@@ -146,9 +138,7 @@ class Transaction with _$Transaction {
   Transaction updateLines(List<JournalEntryLine> listLines) {
     if (status != TransactionStatus.draft) {
       throw InvariantViolationError(
-        code: 'INV-T5',
-        message: 'Draft 상태에서만 수정할 수 있습니다. '
-            '현재 상태: $status',
+        'INV-T5: Draft 상태에서만 수정할 수 있습니다. 현재 상태: $status',
       );
     }
 
@@ -193,9 +183,7 @@ class Transaction with _$Transaction {
     final bool allSame = listLines.every((l) => l.baseCurrency == first);
     if (!allSame) {
       throw InvariantViolationError(
-        code: 'INV-T3',
-        message: '하나의 거래 내 모든 전표 라인의 기준통화는 '
-            '동일해야 합니다.',
+        'INV-T3: 하나의 거래 내 모든 전표 라인의 기준통화는 동일해야 합니다.',
       );
     }
   }
@@ -205,9 +193,7 @@ class Transaction with _$Transaction {
     for (final line in listLines) {
       if (line.originalAmount <= 0) {
         throw InvariantViolationError(
-          code: 'INV-T4',
-          message: '전표 라인의 거래원화 금액은 양수여야 합니다. '
-              'line ${line.id}: ${line.originalAmount}',
+          'INV-T4: 전표 라인의 거래원화 금액은 양수여야 합니다. line ${line.id}: ${line.originalAmount}',
         );
       }
     }
