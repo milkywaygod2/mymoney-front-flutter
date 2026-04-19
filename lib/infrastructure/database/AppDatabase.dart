@@ -86,7 +86,7 @@ class AppDatabase extends _$AppDatabase {
     );
     // 오프라인 동기화 FIFO
     await customStatement(
-      'CREATE INDEX idx_outbox_pending ON outbox_entries(is_sent, created_at)',
+      'CREATE INDEX idx_outbox_pending ON outbox_entries(status, created_at)',
     );
     // 중복 탐지용 복합 인덱스
     await customStatement(
