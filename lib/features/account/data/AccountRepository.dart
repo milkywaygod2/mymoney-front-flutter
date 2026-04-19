@@ -70,7 +70,7 @@ class AccountRepository implements IAccountRepository {
       id: AccountId(row.id),
       name: row.name,
       // 잘못된 값이면 ArgumentError → 데이터 무결성 문제 즉시 감지
-      nature: AccountNature.values.byName(row.nature),
+      nature: AccountNature.values.byName(row.nature.toLowerCase()),
       equityTypeId: DimensionValueId(row.equityTypeId),
       equityTypePath: row.equityTypePath,
       liquidityId: DimensionValueId(row.liquidityId),

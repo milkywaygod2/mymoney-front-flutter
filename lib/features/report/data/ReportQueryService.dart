@@ -97,7 +97,7 @@ class ReportQueryService {
       JOIN transactions t ON jel.transaction_id = t.id
       WHERE t.status = 'POSTED'
         AND t.date <= ?
-        AND a.nature IN ('asset', 'liability', 'equity')
+        AND a.nature IN ('ASSET', 'LIABILITY', 'EQUITY')
         ${strOwnerFilter != null ? 'AND COALESCE(jel.owner_id_override, a.owner_id) IN ($strOwnerFilter)' : ''}
       GROUP BY a.id, a.name, a.nature, a.equity_type_path, a.liquidity_path
       HAVING balance != 0
@@ -115,7 +115,7 @@ class ReportQueryService {
       return BalanceSheetEntry(
         accountId: row.read<int>('account_id'),
         accountName: row.read<String>('account_name'),
-        nature: AccountNature.values.byName(strNature),
+        nature: AccountNature.values.byName(strNature.toLowerCase()),
         equityTypePath: row.read<String>('equity_type_path'),
         liquidityPath: row.read<String>('liquidity_path'),
         balance: row.read<int>('balance'),
@@ -150,7 +150,7 @@ class ReportQueryService {
       JOIN transactions t ON jel.transaction_id = t.id
       WHERE t.status = 'POSTED'
         AND t.period_id = ?
-        AND a.nature IN ('revenue', 'expense')
+        AND a.nature IN ('REVENUE', 'EXPENSE')
         ${strOwnerFilter != null ? 'AND COALESCE(jel.owner_id_override, a.owner_id) IN ($strOwnerFilter)' : ''}
       GROUP BY a.id, a.name, a.nature, a.equity_type_path
       ORDER BY a.nature, a.equity_type_path
@@ -167,7 +167,7 @@ class ReportQueryService {
       // 수익 계정은 대변 정상 → raw amount 부호 반전이 실질 수익액
       // 비용 계정은 차변 정상 → raw amount가 실질 비용액
       final int rawAmount = row.read<int>('amount');
-      final AccountNature nature = AccountNature.values.byName(strNature);
+      final AccountNature nature = AccountNature.values.byName(strNature.toLowerCase());
       final int amount = nature == AccountNature.revenue ? -rawAmount : rawAmount;
       return IncomeStatementEntry(
         accountId: row.read<int>('account_id'),
