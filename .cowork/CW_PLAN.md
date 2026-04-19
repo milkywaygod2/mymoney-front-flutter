@@ -13,8 +13,6 @@ MyMoney는 복식부기 회계 기반 가계부 Flutter 앱이다.
 
 **목표**: CW_ARCHITECTURE.md v2.0 기반으로 신규 Wave를 정의하고, 기존 대기 태스크(W7~W10 잔여)와 통합하여 구현 계획을 확정한다.
 
-**목표**: CW_ARCHITECTURE.md 기반으로 파일 단위 구현 계획을 구체화하고, 기존 CW_SUBJECTS.md와 비교/보완하여 최종 Subject/DoD를 확정한다.
-
 ---
 
 ## 프로젝트 구조 (최종)
@@ -507,7 +505,7 @@ lib/
 | **Priya** | 테스트 | Flow Card 렌더링 + 다전표 레이아웃 |
 
 **의존**: Wave 4 (계정 트리 + 역분개)
-**DoD**: CW_SUBJECTS.md S05 DoD 그대로
+**DoD**: v1.0 DoD (구현 완료)
 
 ---
 
@@ -522,7 +520,7 @@ lib/
 | **Ryan** | Perspective Drift 쿼리 | dimensionFilters JSON 파싱 + SQL 동적 빌드 |
 
 **의존**: Wave 5 (UI 기반)
-**DoD**: CW_SUBJECTS.md S06 DoD 그대로
+**DoD**: v1.0 DoD (구현 완료)
 
 ---
 
@@ -537,7 +535,7 @@ lib/
 | **Ryan** | `infrastructure/ocr_engine/*.dart` | ML Kit 어댑터 + 서버 stub |
 
 **의존**: Wave 6 (Perspective 필터링)
-**DoD**: CW_SUBJECTS.md S07 DoD 그대로
+**DoD**: v1.0 DoD (구현 완료)
 
 ---
 
@@ -560,7 +558,7 @@ lib/
 | **Sofia** | LegalParameter 처리 | VALUE/TABLE/FORMULA 파서 |
 
 **의존**: Wave 7 (Counterparty — 접대비 거래처)
-**DoD**: CW_SUBJECTS.md S08a + S09 DoD
+**DoD**: v1.0 DoD (구현 완료)
 
 ---
 
@@ -574,7 +572,7 @@ lib/
 | **Wei** | `features/report/presentation/*.dart` | ReportBloc + DashboardPage + SettlementPage |
 
 **의존**: Wave 8 (세무 확정 + 외환 평가)
-**DoD**: CW_SUBJECTS.md S08b DoD
+**DoD**: v1.0 DoD (구현 완료)
 
 ---
 
@@ -595,29 +593,7 @@ lib/
 | **Wei** | Auth UI + SyncStatusWidget | 로그인/가입 + 동기화 상태 |
 
 **의존**: Wave 9 + 서버 API (C#)
-**DoD**: CW_SUBJECTS.md S10 + S11 DoD
-
----
-
-## CW_SUBJECTS.md 대비 변경점
-
-| 항목 | 기존 Subject | 플랜 변경 |
-|------|-------------|----------|
-| Wave 0 | 없음 | **신규 추가** — 앱 스캐폴드 (DI/Router/Theme) 선행 필요 |
-| S03b + S04 | 순차 | **Wave 4에서 병렬** — 서로 독립적이므로 동시 진행 가능 |
-| S08a + S09 | 순차 | **Wave 8에서 병렬** — 세무와 외환은 상호 독립 |
-| S10 + S11 | 순차 | **Wave 10에서 병렬** — 동기화와 인증은 독립 |
-| 의존성 그래프 | S03b→S04→S05 순차 | S03b∥S04 → S05로 단축 |
-
-**추가 패키지 필요 (pubspec.yaml에 아직 없는 것)**:
-- `sqlite3_flutter_libs` — Drift SQLite 바인딩
-- `path_provider` — DB 파일 경로
-- `path` — 경로 유틸
-- `connectivity_plus` — 네트워크 감지 (S10)
-- `google_sign_in` — Google OAuth2 (S11)
-- `sign_in_with_apple` — Apple OAuth2 (S11)
-- `local_auth` — 생체인증/PIN (S11)
-- `google_mlkit_text_recognition` — OCR (S07)
+**DoD**: v1.0 DoD (대기 — 서버 의존)
 
 ---
 
@@ -633,6 +609,26 @@ lib/
 | 14 | 비율 29종 + CF 영업세부 + 감가상각 플러그인 + 재고평가 기반 |
 | 15 | Outbox 동기화 + 소셜 로그인 (서버 의존) |
 | 7-OCR | OCR 캡처 → Draft 전체 플로우 (패키지 의존) |
+
+---
+
+## K-IFRS/SAP 참조 매핑 (구현 시 참조)
+
+| Wave | 참조 기준 | 조항/출처 |
+|------|----------|----------|
+| W11 시드 | K-IFRS 1001호 재무제표 표시 | 계정과목 L3~L4 분류 기준 |
+| W11 시드 | K-IFRS 1002호 §25 재고자산 | 재고평가방법 6종 허용/불허 |
+| W11 시드 | IFRS 9 금융상품 | FVTPL/FVOCI/상각후원가 3분류 |
+| W11 시드 | IFRS 15 수익인식 | 계약자산/계약부채 계정 |
+| W11 시드 | IFRS 16 리스 | 사용권자산/리스부채 계정 |
+| W11 시드 | IFRS 5 매각예정 | HELD_FOR_SALE 자산/부채 |
+| W12 비율 | 법인세법 시행규칙 별지 제3호의2 | 표준재무상태표/손익계산서 양식 |
+| W12 OCI | K-IFRS 1001호 §82A | 기타포괄손익 5종 표시 요건 |
+| W13 CF | K-IFRS 1007호 현금흐름표 | 간접법 5분류 표시 요건 |
+| W13 CE | K-IFRS 1001호 §106 | 자본변동표 5구성요소 표시 요건 |
+| W14 재고평가 | K-IFRS 1002호 §25-33 | NRV 저가법 + 평가방법 제한 |
+| 전체 | SAP S/4HANA Universal Journal | JEL 단일 테이블 FI+CO 통합 설계 근거 |
+| 전체 | SAP Profit Center | Perspective = 이익센터 포지셔닝 근거 |
 
 ---
 
