@@ -34,9 +34,9 @@
 ## QA Loop Status
 
 LOOP_STATE: COMPLETE
-ITERATION: 5
-MAX_ITERATION: 5
-CONSECUTIVE_PASS: 1
+ITERATION: 6
+MAX_ITERATION: 100
+CONSECUTIVE_PASS: 2
 
 ### Agent Results (최종 iteration)
 | Agent | Step 1+2+3 |
@@ -50,4 +50,5 @@ CONSECUTIVE_PASS: 1
 - Iteration 2: FIXED 10건
 - Iteration 3: FIXED 4건
 - Iteration 4: FIXED 1건
-- Iteration 5: FIXED 0건 — **풀패스 → COMPLETE**
+- Iteration 5: FIXED 0건 — 풀패스 1회
+- Iteration 6: FIXED 0건 — **연속 2회 풀패스 → COMPLETE**
