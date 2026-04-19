@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../usecase/RunSettlement.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../app/di/Injection.dart';
-
 import '../../../core/constants/Enums.dart';
 import '../../../core/interfaces/IAccountRepository.dart';
+import '../usecase/RunSettlement.dart' show SettlementStep, SettlementResult;
 import 'ReportBloc.dart';
 
 /// 결산 페이지 — 결산 5단계 프로세스 진입점
