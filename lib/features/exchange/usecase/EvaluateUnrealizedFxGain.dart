@@ -3,7 +3,6 @@ import '../../../core/domain/JournalEntryLine.dart';
 import '../../../core/interfaces/IExchangeRateRepository.dart';
 import '../../../core/models/CurrencyCode.dart';
 import '../../../core/models/ExchangeRateValue.dart';
-import 'ConvertCurrency.dart';
 
 /// 미실현 외환차손익 평가 결과
 class UnrealizedFxResult {

@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../../../core/constants/Enums.dart';
-import '../../../core/domain/Perspective.dart';
+import '../../../core/domain/Perspective.dart' as domain;
 import '../../../infrastructure/database/AppDatabase.dart';
 import '../../../infrastructure/database/tables/AccountTable.dart';
 import '../../../infrastructure/database/tables/JournalEntryLineTable.dart';
@@ -75,7 +75,7 @@ class ReportQueryService {
   /// [perspective] 관점 필터 (null = 전체)
   Future<List<BalanceSheetEntry>> calculateBalanceSheet({
     required DateTime snapshotDate,
-    Perspective? perspective,
+    domain.Perspective? perspective,
   }) async {
     // Drift 타입 안전 쿼리 — customSelect로 집계 실행
     // (Drift의 selectOnly + addColumns 집계 한계 우회)
@@ -132,7 +132,7 @@ class ReportQueryService {
   /// [perspective] 관점 필터 (null = 전체)
   Future<List<IncomeStatementEntry>> calculateIncomeStatement({
     required int periodId,
-    Perspective? perspective,
+    domain.Perspective? perspective,
   }) async {
     final listOwnerIds = _extractOwnerIds(perspective);
     final strOwnerFilter = listOwnerIds.isNotEmpty
@@ -221,7 +221,7 @@ class ReportQueryService {
 
   /// Perspective에서 소유자 ID 목록 추출 (owner 필터용)
   /// mapDimensionFilters에 소유자 정보가 없으면 빈 목록 (전체 소유자)
-  List<int> _extractOwnerIds(Perspective? perspective) {
+  List<int> _extractOwnerIds(domain.Perspective? perspective) {
     // 현재 Perspective는 dimensionFilters 기반 — 소유자 직접 필터는 별도 확장 필요
     // MVP: 소유자 필터 없이 전체 집계 (추후 PerspectiveBloc에서 ownerId 전달 예정)
     return [];

@@ -64,3 +64,8 @@ class NegativeAmountError extends DomainError {
   const NegativeAmountError(int amount)
       : super('금액은 양수여야 합니다 (입력: $amount)');
 }
+
+/// 환율 데이터 미존재 — 환산 시 필요한 환율이 DB에 없을 때
+class ExchangeRateNotFoundError extends DomainError {
+  const ExchangeRateNotFoundError(String detail) : super(detail);
+}

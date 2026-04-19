@@ -60,7 +60,7 @@ class ExchangeRateDao extends DatabaseAccessor<AppDatabase>
     return (select(exchangeRates)
           ..where((r) => r.fromCurrency.equals(fromCurrency))
           ..where((r) => r.toCurrency.equals(toCurrency))
-          ..where((r) => r.effectiveDate.isAfterOrEqualValue(cutoff))
+          ..where((r) => r.effectiveDate.isBiggerOrEqualValue(cutoff))
           ..orderBy([(r) => OrderingTerm.desc(r.effectiveDate)]))
         .get();
   }

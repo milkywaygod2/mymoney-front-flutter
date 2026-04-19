@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../usecase/RunSettlement.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'ReportBloc.dart';
@@ -223,3 +225,4 @@ class _SettlementResultView extends StatelessWidget {
         SettlementStep.completed => '완료',
       };
 }
+

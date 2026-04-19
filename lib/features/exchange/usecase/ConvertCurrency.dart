@@ -48,10 +48,9 @@ class ConvertCurrency {
     final rate = await _exchangeRateRepository.findRate(from, to, tradeDate);
     if (rate == null) {
       throw ExchangeRateNotFoundError(
-        from: from,
-        to: to,
-        date: tradeDate,
-      );
+          '환율 데이터 없음: \${fromCurrency.name}->\${toCurrency.name} '
+          '(\${date.year}-\${date.month.toString().padLeft(2, "0")}-\${date.day.toString().padLeft(2, "0")})',
+        );
     }
 
     final convertedAmount = rate.convert(amount);
@@ -80,16 +79,3 @@ class ConvertCurrency {
   }
 }
 
-/// 환율 데이터 미존재 에러
-/// ConvertCurrency, EvaluateUnrealizedFxGain 모두에서 사용
-class ExchangeRateNotFoundError extends DomainError {
-  ExchangeRateNotFoundError({
-    required CurrencyCode from,
-    required CurrencyCode to,
-    required DateTime date,
-  }) : super(
-          '환율 데이터 없음: ${from.name}→${to.name} '
-          '(${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}). '
-          '환율을 먼저 등록하세요.',
-        );
-}

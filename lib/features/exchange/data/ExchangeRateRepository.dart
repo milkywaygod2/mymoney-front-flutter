@@ -1,10 +1,10 @@
 import 'package:drift/drift.dart';
 
+import '../../../core/errors/DomainErrors.dart';
 import '../../../core/interfaces/IExchangeRateRepository.dart';
 import '../../../core/models/CurrencyCode.dart';
 import '../../../core/models/ExchangeRateValue.dart';
-import '../../../infrastructure/database/tables/ExchangeRateTable.dart';
-import '../usecase/ConvertCurrency.dart';
+import '../../../infrastructure/database/AppDatabase.dart';
 import 'ExchangeRateDao.dart';
 
 /// IExchangeRateRepository 구현체 — Drift row ↔ ExchangeRateValue VO 변환
@@ -31,9 +31,7 @@ class ExchangeRateRepository implements IExchangeRateRepository {
     final row = await _dao.getLatestRate(from.name, to.name);
     if (row == null) {
       throw ExchangeRateNotFoundError(
-        from: from,
-        to: to,
-        date: DateTime.now(),
+        '환율 없음: ${from.name}->${to.name}',
       );
     }
     return _toDomain(row);
