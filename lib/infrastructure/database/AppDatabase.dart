@@ -4,6 +4,7 @@ import '../../features/counterparty/data/CounterpartyDao.dart';
 import '../../features/exchange/data/ExchangeRateDao.dart';
 import '../../features/journal/data/TransactionDao.dart';
 import '../../features/perspective/data/PerspectiveDao.dart';
+import 'seeds/DimensionValueSeeds.dart';
 import 'tables/DimensionValueTable.dart';
 import 'tables/OwnerTable.dart';
 import 'tables/AccountTable.dart';
@@ -59,6 +60,8 @@ class AppDatabase extends _$AppDatabase {
           await m.createAll();
           // 인덱스 생성
           await _createIndices(m);
+          // 시드 데이터 삽입
+          await _seedDimensionValues();
         },
       );
 
@@ -101,5 +104,25 @@ class AppDatabase extends _$AppDatabase {
     await customStatement(
       'CREATE INDEX idx_transactions_dup_detect ON transactions(date, counterparty_name)',
     );
+  }
+
+  /// DimensionValue 시드 데이터 삽입 — DB 최초 생성 시 1회 호출
+  Future<void> _seedDimensionValues() async {
+    final listSeeds = getAllDimensionValueSeeds();
+    await batch((b) {
+      for (final map in listSeeds) {
+        b.insert(
+          dimensionValues,
+          DimensionValuesCompanion.insert(
+            dimensionType: map['dimensionType'] as String,
+            code: map['code'] as String,
+            name: map['name'] as String,
+            path: map['code'] as String,
+            entityType: Value(map['entityType'] as String),
+            sortOrder: Value(map['sortOrder'] as int),
+          ),
+        );
+      }
+    });
   }
 }

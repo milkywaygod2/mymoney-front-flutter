@@ -54,11 +54,15 @@ class OutboxProcessor {
   static const int maxRetries = 5;
 
   /// 미전송 Outbox 항목 수 조회 (UI 배지 등에 활용)
+  /// PENDING + SENDING(재시도 대기 중) 항목을 합산
   Future<int> countPending() async {
     final count = await (_db.selectOnly(_db.outboxEntries)
           ..addColumns([_db.outboxEntries.id.count()])
-          ..where(_db.outboxEntries.status.equals('PENDING') &
-              _db.outboxEntries.attemptCount.isSmallerThanValue(maxRetries)))
+          ..where(
+            (_db.outboxEntries.status.equals('PENDING') |
+                _db.outboxEntries.status.equals('SENDING')) &
+            _db.outboxEntries.attemptCount.isSmallerThanValue(maxRetries),
+          ))
         .map((row) => row.read(_db.outboxEntries.id.count())!)
         .getSingle();
     return count;
@@ -68,10 +72,10 @@ class OutboxProcessor {
   ///
   /// 반환: 처리된 항목 수 (0 = 전송할 항목 없음)
   Future<int> processNext() async {
-    // createdAt ASC, 미전송(status='PENDING'), 재시도 한도 미초과 항목 조회
+    // createdAt ASC, PENDING 또는 SENDING(재시도 대상), 재시도 한도 미초과 항목 조회
     final listPending = await (_db.select(_db.outboxEntries)
           ..where((e) =>
-              e.status.equals('PENDING') &
+              (e.status.equals('PENDING') | e.status.equals('SENDING')) &
               e.attemptCount.isSmallerThanValue(maxRetries))
           ..orderBy([(e) => OrderingTerm.asc(e.createdAt)])
           ..limit(10))

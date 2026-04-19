@@ -33,7 +33,7 @@
 
 ## QA Loop Status
 
-LOOP_STATE: STEP_2_RUNNING
+LOOP_STATE: STEP_3_RUNNING
 ITERATION: 1
 MAX_ITERATION: 5
 CONSECUTIVE_PASS: 0
@@ -41,9 +41,9 @@ CONSECUTIVE_PASS: 0
 ### Agent Results (현재 iteration)
 | Agent | Step 1 | Step 2 | Step 3 |
 |-------|--------|--------|--------|
-| Arjun-2 | FIXED 2건 | ISSUE 4건 | - |
-| Grace-2 | GAP 11건 | FIXED 2건 ISSUE 3건 | - |
-| Omar-2 | FIXED 1건 GAP 2건 | FIXED 3건 ISSUE 1건 | - |
+| Arjun-2 | FIXED 2건 | ISSUE 4건 | ISSUE 4건 |
+| Grace-2 | GAP 11건 | FIXED 2건 ISSUE 3건 | FIXED 2건 ISSUE 3건 |
+| Omar-2 | FIXED 1건 GAP 2건 | FIXED 3건 ISSUE 1건 | FIXED 2건 ISSUE 2건 |
 
 ### Loop History
 (비어있음)

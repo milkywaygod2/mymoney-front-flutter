@@ -1,5 +1,6 @@
 import '../../../core/constants/Enums.dart';
 import '../../../core/domain/Perspective.dart' as domain;
+import '../../../core/errors/DomainErrors.dart';
 import '../../../core/interfaces/IPerspectiveRepository.dart';
 import '../../../core/models/TypedId.dart';
 import 'PerspectiveDao.dart';
@@ -36,6 +37,10 @@ class PerspectiveRepository implements IPerspectiveRepository {
 
   @override
   Future<void> delete(PerspectiveId id) async {
+    final row = await _dao.findById(id.value);
+    if (row != null && row.isSystem) {
+      throw const SystemPresetModificationError();
+    }
     await _dao.deletePerspective(id.value);
   }
 

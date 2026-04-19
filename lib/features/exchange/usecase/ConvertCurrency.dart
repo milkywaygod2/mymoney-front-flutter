@@ -50,7 +50,7 @@ class ConvertCurrency {
       throw ExchangeRateNotFoundError(
           '환율 데이터 없음: ${from.name}->${to.name} '
           '(${tradeDate.year}-${tradeDate.month.toString().padLeft(2, '0')}-${tradeDate.day.toString().padLeft(2, '0')})',
-        );
+      );
     }
 
     final convertedAmount = rate.convert(amount);
