@@ -4,6 +4,7 @@ import '../../../core/interfaces/IAccountRepository.dart';
 import '../../../core/interfaces/ILegalParameterRepository.dart';
 import '../../../core/interfaces/ITransactionRepository.dart';
 import '../../../core/models/TypedId.dart';
+import '../../../infrastructure/database/AppDatabase.dart' show LegalParameter;
 import '../data/TaxRuleEngine.dart';
 
 /// 세무조정 자동 분류 결과 항목
@@ -132,34 +133,19 @@ class AutoClassifyDeductibility {
     if (strName.contains('감가')) strParamKey = '감가상각_한도';
     if (strParamKey == null) return null;
 
-    final dynamic param = await _legalParameterRepository.findEffective(
+    final LegalParameter? param = await _legalParameterRepository.findEffective(
       strParamKey,
       asOfDate,
     );
     if (param == null) return null;
+    // VALUE 타입만 처리 — TABLE/FORMULA는 TODO
+    if (param.paramType != 'VALUE') return null;
+    if (param.value == null) return null;
 
-    // VALUE 타입 처리 — param.value가 한도 금액
-    final dynamic rawValue = _extractValue(param);
-    if (rawValue == null) return null;
-
-    final int limitValue = rawValue is int
-        ? rawValue
-        : int.tryParse(rawValue.toString()) ?? 0;
+    final int limitValue = int.tryParse(param.value!) ?? 0;
 
     // 한도 초과분 반환 (0 이하면 한도 내)
     final int overAmount = lineAmount - limitValue;
     return overAmount > 0 ? overAmount : null;
-  }
-
-  /// LegalParameter 동적 타입에서 value 추출 (향후 도메인 클래스 확정 후 교체)
-  dynamic _extractValue(dynamic param) {
-    try {
-      // param이 Map이면 'value' 키 접근
-      if (param is Map) return param['value'];
-      // param에 value 필드가 있으면 리플렉션으로 접근
-      return (param as dynamic).value;
-    } catch (_) {
-      return null;
-    }
   }
 }

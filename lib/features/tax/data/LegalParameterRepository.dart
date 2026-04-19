@@ -20,10 +20,8 @@ class LegalParameterRepository implements ILegalParameterRepository {
   }
 
   /// 법률 변수 저장
-  ///
-  /// [legalParameter]는 [LegalParametersCompanion] 타입이어야 합니다.
   @override
-  Future<void> save(dynamic legalParameter) async {
-    await _dao.upsert(legalParameter as LegalParametersCompanion);
+  Future<void> save(LegalParametersCompanion legalParameter) async {
+    await _dao.upsert(legalParameter);
   }
 }
