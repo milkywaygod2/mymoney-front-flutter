@@ -435,6 +435,8 @@ class Accounts extends Table {
   // v2.0 추가
   BoolColumn get isFxRevalTarget => boolean().withDefault(const Constant(false))();   // FX 재평가 대상 (P1) — 결산 외환평가 자동 선별
   BoolColumn get isRevenueDeduction => boolean().withDefault(const Constant(false))(); // 매출차감 계정 (P1) — 순액 표시 수수료
+  // v2.0 P3 예약 — 재고 계정(INVENTORY.*)에만 적용
+  TextColumn get valuationMethod => text().nullable()();  // fifo|weightedAverage|movingAverage|specificIdentification|standardCost
 }
 
 // AccountOwnerShares — 공동명의 지분율
@@ -575,7 +577,8 @@ class ClassificationRules extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get pattern => text()();
   TextColumn get patternType => text()();       // EXACT|CONTAINS|REGEX
-  IntColumn get accountId => integer().references(Accounts, #id)();
+  IntColumn get accountId => integer().references(Accounts, #id)();           // 차변 계정
+  IntColumn get creditAccountId => integer().nullable().references(Accounts, #id)();  // v2.0 P2: 대변 계정 자동결정 (카드→미지급금 등)
   IntColumn get counterpartyId => integer().nullable().references(Counterparties, #id)();
   IntColumn get priority => integer().withDefault(const Constant(0))();
   BoolColumn get isSystemRule => boolean().withDefault(const Constant(false))();
@@ -1666,3 +1669,6 @@ linter:
 | 관계 유효기간 (v2.0) | `Counterparty.effectiveFrom/effectiveTo` — 계열 편입/제외 이력 |
 | 매각예정자산/부채 (v2.0) | `ASSET.HELD_FOR_SALE`, `LIABILITY.HELD_FOR_SALE` DimensionPath (IFRS 5) |
 | 보고서 제외 계정 (v2.0) | Perspective 시스템 프리셋("주석 제외 거래")으로 대체 — Account에 isNoteExcluded 추가 대신 |
+| 재고평가 UseCase (v2.0) | `CalculateInventoryValuation`: 기초재고+매입-기말재고=COGS, 평가방법별(FIFO/가중평균/이동평균) 단가 계산. Account.valuationMethod enum 참조. 결산 플러그인 `InventoryNrvPlugin`(저가법 NRV) 별도 예약 |
+| 복합 분류 규칙 (v2.0) | ClassificationRules에 `patternType=RULE_BASED` + `conditions: JSON` 매트릭스 추가. 조건: `{field, op, value}[]` → 거래처+금액대+카드사 복합 조건으로 차변+대변 계정 쌍 자동 결정 (SAP Account Determination 가계부 버전) |
+| 원가배부 (v2.0) | SAP CO Assessment/Distribution 패턴. 현행 AccountOwnerShares(지분율)+activityTypeOverride(활동구분)로 가계부 배분 시나리오 대응 완료. 기업 확장 시 `CostAllocationRule` 테이블 신설 |
