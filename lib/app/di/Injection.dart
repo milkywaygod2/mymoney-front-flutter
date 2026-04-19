@@ -5,6 +5,7 @@ import 'package:get_it/get_it.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../../core/constants/Enums.dart' show TransactionStatus;
 import '../../core/interfaces/IAccountRepository.dart';
 import '../../core/interfaces/ICounterpartyMatcher.dart';
 import '../../core/interfaces/ICounterpartyRepository.dart';
@@ -251,44 +252,38 @@ void _connectBlocStreams() {
   final reportBloc = getIt<ReportBloc>();
   final taxBloc = getIt<TaxBloc>();
 
-  // 1. PerspectiveBloc → JournalBloc (Perspective 변경 → 거래 리필터링)
+  // 1~3. PerspectiveBloc → JournalBloc / ReportBloc / TaxBloc
+  // (단일 subscription으로 통합 — 3개별 listen 시 동일 이벤트가 3번 dispatch됨)
   perspectiveBloc.stream.listen((state) {
     if (state.effectivePerspective != null) {
+      // 1. Perspective 변경 → 거래 리필터링
       journalBloc.add(const LoadTransactions());
-    }
-  });
-
-  // 2. PerspectiveBloc → ReportBloc (Perspective 변경 → 보고서 갱신)
-  perspectiveBloc.stream.listen((state) {
-    if (state.effectivePerspective != null) {
+      // 2. Perspective 변경 → 보고서 갱신
       reportBloc.add(LoadDashboard(perspective: state.effectivePerspective));
-    }
-  });
-
-  // 3. PerspectiveBloc → TaxBloc (Perspective 변경 → 미판정 항목 갱신)
-  perspectiveBloc.stream.listen((state) {
-    if (state.effectivePerspective != null) {
+      // 3. Perspective 변경 → 미판정 항목 갱신
       taxBloc.add(const LoadPendingItems());
     }
   });
 
   // 4. JournalBloc → TaxBloc (TransactionPosted → 세무 자동판정)
   journalBloc.stream.listen((state) {
-    final posted = state.listTransactions
-        .where((t) => t.status.name == 'posted')
+    if (state.isLoading) return;
+    final listPosted = state.listTransactions
+        .where((t) => t.status == TransactionStatus.posted)
         .map((t) => t.id)
         .toList();
-    if (posted.isNotEmpty) {
+    if (listPosted.isNotEmpty) {
       taxBloc.add(RunAutoClassification(
-        listTransactionIds: posted,
+        listTransactionIds: listPosted,
         asOfDate: DateTime.now(),
       ));
     }
   });
 
-  // 5. JournalBloc → ReportBloc (TransactionUpdated → 대시보드 갱신)
+  // 5. JournalBloc → ReportBloc (거래 목록 로드 완료 → 대시보드 갱신)
+  // isLoading 완료 + 거래 목록 존재 시에만 트리거 (초기 빈 상태 제외)
   journalBloc.stream.listen((state) {
-    if (!state.isLoading) {
+    if (!state.isLoading && state.listTransactions.isNotEmpty) {
       reportBloc.add(const LoadDashboard());
     }
   });
