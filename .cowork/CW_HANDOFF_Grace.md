@@ -11,6 +11,7 @@
 | Wave | 태스크 | 커밋 | 변경 파일 |
 |------|--------|------|-----------|
 | W7 보조 | CounterpartyPage UI | `c736a2b` | `lib/features/counterparty/presentation/CounterpartyPage.dart` (805줄) |
+| W8 | ExchangeRate DAO/Repo + 환산/미실현손익 UseCase | `254a7e0` | 5개 파일 (DAO, Repo, 2 UseCases, Interface 수정) |
 
 ---
 
@@ -42,19 +43,41 @@
 
 ---
 
-## 대기 중 (W8 본 담당)
+## W8: ExchangeRate DAO/Repo + 환산/미실현손익 (`254a7e0`)
 
-S09 외환차손익 + S08b 결산 프로세스 — W7 완료 후 착수 예정
+**변경 파일**:
+- `lib/features/exchange/data/ExchangeRateDao.dart:1-79` (신규)
+- `lib/features/exchange/data/ExchangeRateRepository.dart:1-87` (신규)
+- `lib/features/exchange/usecase/ConvertCurrency.dart:1-96` (신규)
+- `lib/features/exchange/usecase/EvaluateUnrealizedFxGain.dart:1-155` (신규)
+- `lib/core/interfaces/IExchangeRateRepository.dart` (수정 — dynamic → ExchangeRateValue 타입 확정)
 
-| Subject | 태스크 | 의존 |
+**구현 내용**:
+- `ExchangeRateDao`: findRate/getLatestRate/saveRate/findRecentRates/deleteOlderThan
+  - 인덱스 `idx_exchange_rates_lookup` 활용 (effectiveDate DESC, limit 1)
+- `ExchangeRateRepository`: IExchangeRateRepository 구현, Drift row ↔ ExchangeRateValue VO 변환
+  - `saveWithMeta()` 확장 메서드 (API 연동 시 날짜/출처 명시)
+- `ConvertCurrency`: 거래 시점 환율 기준 통화 환산
+  - 동일 통화 단락 처리 (1:1 환율 반환)
+  - `ExchangeRateNotFoundError` 정의 (ConvertCurrency.dart에 포함)
+- `EvaluateUnrealizedFxGain`: 온디맨드 미실현 외환차손익 계산 (저장 안 함)
+  - 계정 성격(Asset/Liability)에 따른 손익 방향 결정 (아키텍처 7.3)
+  - `execute()` (JEL 목록 일괄), `evaluateSingle()` (FlowCard 노드용)
+
+**특이사항**:
+- `ExchangeRateNotFoundError`는 `ConvertCurrency.dart`에 정의 (DomainErrors.dart 미수정)
+- IExchangeRateRepository의 dynamic 타입을 ExchangeRateValue?/ExchangeRateValue로 확정
+
+---
+
+## 대기 중 (W8 이후)
+
+| Subject | 태스크 | 상태 |
 |---------|--------|------|
-| S09 | ExchangeRateDao + Repository 구현 | W7 완료 |
-| S09 | 다통화 거래 base_amount 파생 계산 | S09 DAO |
-| S09 | 온디맨드 미실현 손익 계산 UseCase | S09 DAO |
-| S09 | ExchangeRate 캐시 (최근 30일, 1일 1회) | S09 DAO |
-| S09 | Flow Card 다통화 노드 표시 | S09 UseCase |
-| S08b | ReportBloc + B/S·P/L·CF 집계 쿼리 | S09 완료 |
-| S08b | 결산 5단계 UseCase | S08a(세무), S09 |
-| S08b | 외환차손익 자동 전표 생성 | S09 |
-| S08b | 손익 마감 UseCase (수익/비용 → 이익잉여금) | S08b 집계 |
-| S08b | 결산 스냅샷 저장 | S08b 마감 |
+| S09 | ExchangeRate 캐시 갱신 정책 구현 (1일 1회) | 대기 |
+| S09 | Flow Card 다통화 노드 UI | 대기 |
+| S08b | ReportBloc + B/S·P/L·CF 집계 쿼리 | 대기 |
+| S08b | 결산 5단계 UseCase | 대기 |
+| S08b | 외환차손익 자동 전표 생성 | 대기 |
+| S08b | 손익 마감 UseCase | 대기 |
+| S08b | 결산 스냅샷 저장 | 대기 |
