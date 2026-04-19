@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../core/domain/Perspective.dart';
 import 'PerspectiveBloc.dart';
 import 'PerspectiveEvent.dart';
 import 'PerspectiveState.dart';

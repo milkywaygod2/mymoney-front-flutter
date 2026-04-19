@@ -1,4 +1,3 @@
-import 'package:drift/drift.dart';
 
 // TODO: Ryan이 Drift 테이블 작성 완료 후 실제 import 경로로 교체
 // import '../../../infrastructure/database/AppDatabase.dart';

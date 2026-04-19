@@ -7972,8 +7972,29 @@ class $FiscalPeriodsTable extends FiscalPeriods
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _isClosedMeta = const VerificationMeta(
+    'isClosed',
+  );
   @override
-  List<GeneratedColumn> get $columns => [id, name, startDate, endDate];
+  late final GeneratedColumn<bool> isClosed = GeneratedColumn<bool>(
+    'is_closed',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_closed" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    startDate,
+    endDate,
+    isClosed,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -8013,6 +8034,12 @@ class $FiscalPeriodsTable extends FiscalPeriods
     } else if (isInserting) {
       context.missing(_endDateMeta);
     }
+    if (data.containsKey('is_closed')) {
+      context.handle(
+        _isClosedMeta,
+        isClosed.isAcceptableOrUnknown(data['is_closed']!, _isClosedMeta),
+      );
+    }
     return context;
   }
 
@@ -8042,6 +8069,11 @@ class $FiscalPeriodsTable extends FiscalPeriods
             DriftSqlType.dateTime,
             data['${effectivePrefix}end_date'],
           )!,
+      isClosed:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}is_closed'],
+          )!,
     );
   }
 
@@ -8058,11 +8090,15 @@ class FiscalPeriod extends DataClass implements Insertable<FiscalPeriod> {
   final String name;
   final DateTime startDate;
   final DateTime endDate;
+
+  /// 결산 마감 여부 — true면 해당 기간 수정 불가
+  final bool isClosed;
   const FiscalPeriod({
     required this.id,
     required this.name,
     required this.startDate,
     required this.endDate,
+    required this.isClosed,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -8071,6 +8107,7 @@ class FiscalPeriod extends DataClass implements Insertable<FiscalPeriod> {
     map['name'] = Variable<String>(name);
     map['start_date'] = Variable<DateTime>(startDate);
     map['end_date'] = Variable<DateTime>(endDate);
+    map['is_closed'] = Variable<bool>(isClosed);
     return map;
   }
 
@@ -8080,6 +8117,7 @@ class FiscalPeriod extends DataClass implements Insertable<FiscalPeriod> {
       name: Value(name),
       startDate: Value(startDate),
       endDate: Value(endDate),
+      isClosed: Value(isClosed),
     );
   }
 
@@ -8093,6 +8131,7 @@ class FiscalPeriod extends DataClass implements Insertable<FiscalPeriod> {
       name: serializer.fromJson<String>(json['name']),
       startDate: serializer.fromJson<DateTime>(json['startDate']),
       endDate: serializer.fromJson<DateTime>(json['endDate']),
+      isClosed: serializer.fromJson<bool>(json['isClosed']),
     );
   }
   @override
@@ -8103,6 +8142,7 @@ class FiscalPeriod extends DataClass implements Insertable<FiscalPeriod> {
       'name': serializer.toJson<String>(name),
       'startDate': serializer.toJson<DateTime>(startDate),
       'endDate': serializer.toJson<DateTime>(endDate),
+      'isClosed': serializer.toJson<bool>(isClosed),
     };
   }
 
@@ -8111,11 +8151,13 @@ class FiscalPeriod extends DataClass implements Insertable<FiscalPeriod> {
     String? name,
     DateTime? startDate,
     DateTime? endDate,
+    bool? isClosed,
   }) => FiscalPeriod(
     id: id ?? this.id,
     name: name ?? this.name,
     startDate: startDate ?? this.startDate,
     endDate: endDate ?? this.endDate,
+    isClosed: isClosed ?? this.isClosed,
   );
   FiscalPeriod copyWithCompanion(FiscalPeriodsCompanion data) {
     return FiscalPeriod(
@@ -8123,6 +8165,7 @@ class FiscalPeriod extends DataClass implements Insertable<FiscalPeriod> {
       name: data.name.present ? data.name.value : this.name,
       startDate: data.startDate.present ? data.startDate.value : this.startDate,
       endDate: data.endDate.present ? data.endDate.value : this.endDate,
+      isClosed: data.isClosed.present ? data.isClosed.value : this.isClosed,
     );
   }
 
@@ -8132,13 +8175,14 @@ class FiscalPeriod extends DataClass implements Insertable<FiscalPeriod> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('startDate: $startDate, ')
-          ..write('endDate: $endDate')
+          ..write('endDate: $endDate, ')
+          ..write('isClosed: $isClosed')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, startDate, endDate);
+  int get hashCode => Object.hash(id, name, startDate, endDate, isClosed);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -8146,7 +8190,8 @@ class FiscalPeriod extends DataClass implements Insertable<FiscalPeriod> {
           other.id == this.id &&
           other.name == this.name &&
           other.startDate == this.startDate &&
-          other.endDate == this.endDate);
+          other.endDate == this.endDate &&
+          other.isClosed == this.isClosed);
 }
 
 class FiscalPeriodsCompanion extends UpdateCompanion<FiscalPeriod> {
@@ -8154,17 +8199,20 @@ class FiscalPeriodsCompanion extends UpdateCompanion<FiscalPeriod> {
   final Value<String> name;
   final Value<DateTime> startDate;
   final Value<DateTime> endDate;
+  final Value<bool> isClosed;
   const FiscalPeriodsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.startDate = const Value.absent(),
     this.endDate = const Value.absent(),
+    this.isClosed = const Value.absent(),
   });
   FiscalPeriodsCompanion.insert({
     this.id = const Value.absent(),
     required String name,
     required DateTime startDate,
     required DateTime endDate,
+    this.isClosed = const Value.absent(),
   }) : name = Value(name),
        startDate = Value(startDate),
        endDate = Value(endDate);
@@ -8173,12 +8221,14 @@ class FiscalPeriodsCompanion extends UpdateCompanion<FiscalPeriod> {
     Expression<String>? name,
     Expression<DateTime>? startDate,
     Expression<DateTime>? endDate,
+    Expression<bool>? isClosed,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (startDate != null) 'start_date': startDate,
       if (endDate != null) 'end_date': endDate,
+      if (isClosed != null) 'is_closed': isClosed,
     });
   }
 
@@ -8187,12 +8237,14 @@ class FiscalPeriodsCompanion extends UpdateCompanion<FiscalPeriod> {
     Value<String>? name,
     Value<DateTime>? startDate,
     Value<DateTime>? endDate,
+    Value<bool>? isClosed,
   }) {
     return FiscalPeriodsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
+      isClosed: isClosed ?? this.isClosed,
     );
   }
 
@@ -8211,6 +8263,9 @@ class FiscalPeriodsCompanion extends UpdateCompanion<FiscalPeriod> {
     if (endDate.present) {
       map['end_date'] = Variable<DateTime>(endDate.value);
     }
+    if (isClosed.present) {
+      map['is_closed'] = Variable<bool>(isClosed.value);
+    }
     return map;
   }
 
@@ -8220,7 +8275,8 @@ class FiscalPeriodsCompanion extends UpdateCompanion<FiscalPeriod> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('startDate: $startDate, ')
-          ..write('endDate: $endDate')
+          ..write('endDate: $endDate, ')
+          ..write('isClosed: $isClosed')
           ..write(')'))
         .toString();
   }
@@ -8289,6 +8345,16 @@ class $OutboxEntriesTable extends OutboxEntries
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('PENDING'),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -8301,30 +8367,50 @@ class $OutboxEntriesTable extends OutboxEntries
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
-  static const VerificationMeta _isSentMeta = const VerificationMeta('isSent');
+  static const VerificationMeta _attemptedAtMeta = const VerificationMeta(
+    'attemptedAt',
+  );
   @override
-  late final GeneratedColumn<bool> isSent = GeneratedColumn<bool>(
-    'is_sent',
+  late final GeneratedColumn<DateTime> attemptedAt = GeneratedColumn<DateTime>(
+    'attempted_at',
     aliasedName,
-    false,
-    type: DriftSqlType.bool,
+    true,
+    type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("is_sent" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
   );
-  static const VerificationMeta _retryCountMeta = const VerificationMeta(
-    'retryCount',
+  static const VerificationMeta _attemptCountMeta = const VerificationMeta(
+    'attemptCount',
   );
   @override
-  late final GeneratedColumn<int> retryCount = GeneratedColumn<int>(
-    'retry_count',
+  late final GeneratedColumn<int> attemptCount = GeneratedColumn<int>(
+    'attempt_count',
     aliasedName,
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _errorMessageMeta = const VerificationMeta(
+    'errorMessage',
+  );
+  @override
+  late final GeneratedColumn<String> errorMessage = GeneratedColumn<String>(
+    'error_message',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _serverResponseMeta = const VerificationMeta(
+    'serverResponse',
+  );
+  @override
+  late final GeneratedColumn<String> serverResponse = GeneratedColumn<String>(
+    'server_response',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
   );
   @override
   List<GeneratedColumn> get $columns => [
@@ -8333,9 +8419,12 @@ class $OutboxEntriesTable extends OutboxEntries
     entityId,
     operation,
     payload,
+    status,
     createdAt,
-    isSent,
-    retryCount,
+    attemptedAt,
+    attemptCount,
+    errorMessage,
+    serverResponse,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -8384,22 +8473,52 @@ class $OutboxEntriesTable extends OutboxEntries
     } else if (isInserting) {
       context.missing(_payloadMeta);
     }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
-    if (data.containsKey('is_sent')) {
+    if (data.containsKey('attempted_at')) {
       context.handle(
-        _isSentMeta,
-        isSent.isAcceptableOrUnknown(data['is_sent']!, _isSentMeta),
+        _attemptedAtMeta,
+        attemptedAt.isAcceptableOrUnknown(
+          data['attempted_at']!,
+          _attemptedAtMeta,
+        ),
       );
     }
-    if (data.containsKey('retry_count')) {
+    if (data.containsKey('attempt_count')) {
       context.handle(
-        _retryCountMeta,
-        retryCount.isAcceptableOrUnknown(data['retry_count']!, _retryCountMeta),
+        _attemptCountMeta,
+        attemptCount.isAcceptableOrUnknown(
+          data['attempt_count']!,
+          _attemptCountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('error_message')) {
+      context.handle(
+        _errorMessageMeta,
+        errorMessage.isAcceptableOrUnknown(
+          data['error_message']!,
+          _errorMessageMeta,
+        ),
+      );
+    }
+    if (data.containsKey('server_response')) {
+      context.handle(
+        _serverResponseMeta,
+        serverResponse.isAcceptableOrUnknown(
+          data['server_response']!,
+          _serverResponseMeta,
+        ),
       );
     }
     return context;
@@ -8436,21 +8555,33 @@ class $OutboxEntriesTable extends OutboxEntries
             DriftSqlType.string,
             data['${effectivePrefix}payload'],
           )!,
+      status:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}status'],
+          )!,
       createdAt:
           attachedDatabase.typeMapping.read(
             DriftSqlType.dateTime,
             data['${effectivePrefix}created_at'],
           )!,
-      isSent:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}is_sent'],
-          )!,
-      retryCount:
+      attemptedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}attempted_at'],
+      ),
+      attemptCount:
           attachedDatabase.typeMapping.read(
             DriftSqlType.int,
-            data['${effectivePrefix}retry_count'],
+            data['${effectivePrefix}attempt_count'],
           )!,
+      errorMessage: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}error_message'],
+      ),
+      serverResponse: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_response'],
+      ),
     );
   }
 
@@ -8472,18 +8603,26 @@ class OutboxEntry extends DataClass implements Insertable<OutboxEntry> {
 
   /// 변경 내용 (JSON)
   final String payload;
+
+  /// PENDING | SENDING | SYNCED | CONFLICT | FAILED (CW 섹션 5)
+  final String status;
   final DateTime createdAt;
-  final bool isSent;
-  final int retryCount;
+  final DateTime? attemptedAt;
+  final int attemptCount;
+  final String? errorMessage;
+  final String? serverResponse;
   const OutboxEntry({
     required this.id,
     required this.entityType,
     required this.entityId,
     required this.operation,
     required this.payload,
+    required this.status,
     required this.createdAt,
-    required this.isSent,
-    required this.retryCount,
+    this.attemptedAt,
+    required this.attemptCount,
+    this.errorMessage,
+    this.serverResponse,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -8493,9 +8632,18 @@ class OutboxEntry extends DataClass implements Insertable<OutboxEntry> {
     map['entity_id'] = Variable<int>(entityId);
     map['operation'] = Variable<String>(operation);
     map['payload'] = Variable<String>(payload);
+    map['status'] = Variable<String>(status);
     map['created_at'] = Variable<DateTime>(createdAt);
-    map['is_sent'] = Variable<bool>(isSent);
-    map['retry_count'] = Variable<int>(retryCount);
+    if (!nullToAbsent || attemptedAt != null) {
+      map['attempted_at'] = Variable<DateTime>(attemptedAt);
+    }
+    map['attempt_count'] = Variable<int>(attemptCount);
+    if (!nullToAbsent || errorMessage != null) {
+      map['error_message'] = Variable<String>(errorMessage);
+    }
+    if (!nullToAbsent || serverResponse != null) {
+      map['server_response'] = Variable<String>(serverResponse);
+    }
     return map;
   }
 
@@ -8506,9 +8654,21 @@ class OutboxEntry extends DataClass implements Insertable<OutboxEntry> {
       entityId: Value(entityId),
       operation: Value(operation),
       payload: Value(payload),
+      status: Value(status),
       createdAt: Value(createdAt),
-      isSent: Value(isSent),
-      retryCount: Value(retryCount),
+      attemptedAt:
+          attemptedAt == null && nullToAbsent
+              ? const Value.absent()
+              : Value(attemptedAt),
+      attemptCount: Value(attemptCount),
+      errorMessage:
+          errorMessage == null && nullToAbsent
+              ? const Value.absent()
+              : Value(errorMessage),
+      serverResponse:
+          serverResponse == null && nullToAbsent
+              ? const Value.absent()
+              : Value(serverResponse),
     );
   }
 
@@ -8523,9 +8683,12 @@ class OutboxEntry extends DataClass implements Insertable<OutboxEntry> {
       entityId: serializer.fromJson<int>(json['entityId']),
       operation: serializer.fromJson<String>(json['operation']),
       payload: serializer.fromJson<String>(json['payload']),
+      status: serializer.fromJson<String>(json['status']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-      isSent: serializer.fromJson<bool>(json['isSent']),
-      retryCount: serializer.fromJson<int>(json['retryCount']),
+      attemptedAt: serializer.fromJson<DateTime?>(json['attemptedAt']),
+      attemptCount: serializer.fromJson<int>(json['attemptCount']),
+      errorMessage: serializer.fromJson<String?>(json['errorMessage']),
+      serverResponse: serializer.fromJson<String?>(json['serverResponse']),
     );
   }
   @override
@@ -8537,9 +8700,12 @@ class OutboxEntry extends DataClass implements Insertable<OutboxEntry> {
       'entityId': serializer.toJson<int>(entityId),
       'operation': serializer.toJson<String>(operation),
       'payload': serializer.toJson<String>(payload),
+      'status': serializer.toJson<String>(status),
       'createdAt': serializer.toJson<DateTime>(createdAt),
-      'isSent': serializer.toJson<bool>(isSent),
-      'retryCount': serializer.toJson<int>(retryCount),
+      'attemptedAt': serializer.toJson<DateTime?>(attemptedAt),
+      'attemptCount': serializer.toJson<int>(attemptCount),
+      'errorMessage': serializer.toJson<String?>(errorMessage),
+      'serverResponse': serializer.toJson<String?>(serverResponse),
     };
   }
 
@@ -8549,18 +8715,25 @@ class OutboxEntry extends DataClass implements Insertable<OutboxEntry> {
     int? entityId,
     String? operation,
     String? payload,
+    String? status,
     DateTime? createdAt,
-    bool? isSent,
-    int? retryCount,
+    Value<DateTime?> attemptedAt = const Value.absent(),
+    int? attemptCount,
+    Value<String?> errorMessage = const Value.absent(),
+    Value<String?> serverResponse = const Value.absent(),
   }) => OutboxEntry(
     id: id ?? this.id,
     entityType: entityType ?? this.entityType,
     entityId: entityId ?? this.entityId,
     operation: operation ?? this.operation,
     payload: payload ?? this.payload,
+    status: status ?? this.status,
     createdAt: createdAt ?? this.createdAt,
-    isSent: isSent ?? this.isSent,
-    retryCount: retryCount ?? this.retryCount,
+    attemptedAt: attemptedAt.present ? attemptedAt.value : this.attemptedAt,
+    attemptCount: attemptCount ?? this.attemptCount,
+    errorMessage: errorMessage.present ? errorMessage.value : this.errorMessage,
+    serverResponse:
+        serverResponse.present ? serverResponse.value : this.serverResponse,
   );
   OutboxEntry copyWithCompanion(OutboxEntriesCompanion data) {
     return OutboxEntry(
@@ -8570,10 +8743,22 @@ class OutboxEntry extends DataClass implements Insertable<OutboxEntry> {
       entityId: data.entityId.present ? data.entityId.value : this.entityId,
       operation: data.operation.present ? data.operation.value : this.operation,
       payload: data.payload.present ? data.payload.value : this.payload,
+      status: data.status.present ? data.status.value : this.status,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      isSent: data.isSent.present ? data.isSent.value : this.isSent,
-      retryCount:
-          data.retryCount.present ? data.retryCount.value : this.retryCount,
+      attemptedAt:
+          data.attemptedAt.present ? data.attemptedAt.value : this.attemptedAt,
+      attemptCount:
+          data.attemptCount.present
+              ? data.attemptCount.value
+              : this.attemptCount,
+      errorMessage:
+          data.errorMessage.present
+              ? data.errorMessage.value
+              : this.errorMessage,
+      serverResponse:
+          data.serverResponse.present
+              ? data.serverResponse.value
+              : this.serverResponse,
     );
   }
 
@@ -8585,9 +8770,12 @@ class OutboxEntry extends DataClass implements Insertable<OutboxEntry> {
           ..write('entityId: $entityId, ')
           ..write('operation: $operation, ')
           ..write('payload: $payload, ')
+          ..write('status: $status, ')
           ..write('createdAt: $createdAt, ')
-          ..write('isSent: $isSent, ')
-          ..write('retryCount: $retryCount')
+          ..write('attemptedAt: $attemptedAt, ')
+          ..write('attemptCount: $attemptCount, ')
+          ..write('errorMessage: $errorMessage, ')
+          ..write('serverResponse: $serverResponse')
           ..write(')'))
         .toString();
   }
@@ -8599,9 +8787,12 @@ class OutboxEntry extends DataClass implements Insertable<OutboxEntry> {
     entityId,
     operation,
     payload,
+    status,
     createdAt,
-    isSent,
-    retryCount,
+    attemptedAt,
+    attemptCount,
+    errorMessage,
+    serverResponse,
   );
   @override
   bool operator ==(Object other) =>
@@ -8612,9 +8803,12 @@ class OutboxEntry extends DataClass implements Insertable<OutboxEntry> {
           other.entityId == this.entityId &&
           other.operation == this.operation &&
           other.payload == this.payload &&
+          other.status == this.status &&
           other.createdAt == this.createdAt &&
-          other.isSent == this.isSent &&
-          other.retryCount == this.retryCount);
+          other.attemptedAt == this.attemptedAt &&
+          other.attemptCount == this.attemptCount &&
+          other.errorMessage == this.errorMessage &&
+          other.serverResponse == this.serverResponse);
 }
 
 class OutboxEntriesCompanion extends UpdateCompanion<OutboxEntry> {
@@ -8623,18 +8817,24 @@ class OutboxEntriesCompanion extends UpdateCompanion<OutboxEntry> {
   final Value<int> entityId;
   final Value<String> operation;
   final Value<String> payload;
+  final Value<String> status;
   final Value<DateTime> createdAt;
-  final Value<bool> isSent;
-  final Value<int> retryCount;
+  final Value<DateTime?> attemptedAt;
+  final Value<int> attemptCount;
+  final Value<String?> errorMessage;
+  final Value<String?> serverResponse;
   const OutboxEntriesCompanion({
     this.id = const Value.absent(),
     this.entityType = const Value.absent(),
     this.entityId = const Value.absent(),
     this.operation = const Value.absent(),
     this.payload = const Value.absent(),
+    this.status = const Value.absent(),
     this.createdAt = const Value.absent(),
-    this.isSent = const Value.absent(),
-    this.retryCount = const Value.absent(),
+    this.attemptedAt = const Value.absent(),
+    this.attemptCount = const Value.absent(),
+    this.errorMessage = const Value.absent(),
+    this.serverResponse = const Value.absent(),
   });
   OutboxEntriesCompanion.insert({
     this.id = const Value.absent(),
@@ -8642,9 +8842,12 @@ class OutboxEntriesCompanion extends UpdateCompanion<OutboxEntry> {
     required int entityId,
     required String operation,
     required String payload,
+    this.status = const Value.absent(),
     this.createdAt = const Value.absent(),
-    this.isSent = const Value.absent(),
-    this.retryCount = const Value.absent(),
+    this.attemptedAt = const Value.absent(),
+    this.attemptCount = const Value.absent(),
+    this.errorMessage = const Value.absent(),
+    this.serverResponse = const Value.absent(),
   }) : entityType = Value(entityType),
        entityId = Value(entityId),
        operation = Value(operation),
@@ -8655,9 +8858,12 @@ class OutboxEntriesCompanion extends UpdateCompanion<OutboxEntry> {
     Expression<int>? entityId,
     Expression<String>? operation,
     Expression<String>? payload,
+    Expression<String>? status,
     Expression<DateTime>? createdAt,
-    Expression<bool>? isSent,
-    Expression<int>? retryCount,
+    Expression<DateTime>? attemptedAt,
+    Expression<int>? attemptCount,
+    Expression<String>? errorMessage,
+    Expression<String>? serverResponse,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -8665,9 +8871,12 @@ class OutboxEntriesCompanion extends UpdateCompanion<OutboxEntry> {
       if (entityId != null) 'entity_id': entityId,
       if (operation != null) 'operation': operation,
       if (payload != null) 'payload': payload,
+      if (status != null) 'status': status,
       if (createdAt != null) 'created_at': createdAt,
-      if (isSent != null) 'is_sent': isSent,
-      if (retryCount != null) 'retry_count': retryCount,
+      if (attemptedAt != null) 'attempted_at': attemptedAt,
+      if (attemptCount != null) 'attempt_count': attemptCount,
+      if (errorMessage != null) 'error_message': errorMessage,
+      if (serverResponse != null) 'server_response': serverResponse,
     });
   }
 
@@ -8677,9 +8886,12 @@ class OutboxEntriesCompanion extends UpdateCompanion<OutboxEntry> {
     Value<int>? entityId,
     Value<String>? operation,
     Value<String>? payload,
+    Value<String>? status,
     Value<DateTime>? createdAt,
-    Value<bool>? isSent,
-    Value<int>? retryCount,
+    Value<DateTime?>? attemptedAt,
+    Value<int>? attemptCount,
+    Value<String?>? errorMessage,
+    Value<String?>? serverResponse,
   }) {
     return OutboxEntriesCompanion(
       id: id ?? this.id,
@@ -8687,9 +8899,12 @@ class OutboxEntriesCompanion extends UpdateCompanion<OutboxEntry> {
       entityId: entityId ?? this.entityId,
       operation: operation ?? this.operation,
       payload: payload ?? this.payload,
+      status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
-      isSent: isSent ?? this.isSent,
-      retryCount: retryCount ?? this.retryCount,
+      attemptedAt: attemptedAt ?? this.attemptedAt,
+      attemptCount: attemptCount ?? this.attemptCount,
+      errorMessage: errorMessage ?? this.errorMessage,
+      serverResponse: serverResponse ?? this.serverResponse,
     );
   }
 
@@ -8711,14 +8926,23 @@ class OutboxEntriesCompanion extends UpdateCompanion<OutboxEntry> {
     if (payload.present) {
       map['payload'] = Variable<String>(payload.value);
     }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
-    if (isSent.present) {
-      map['is_sent'] = Variable<bool>(isSent.value);
+    if (attemptedAt.present) {
+      map['attempted_at'] = Variable<DateTime>(attemptedAt.value);
     }
-    if (retryCount.present) {
-      map['retry_count'] = Variable<int>(retryCount.value);
+    if (attemptCount.present) {
+      map['attempt_count'] = Variable<int>(attemptCount.value);
+    }
+    if (errorMessage.present) {
+      map['error_message'] = Variable<String>(errorMessage.value);
+    }
+    if (serverResponse.present) {
+      map['server_response'] = Variable<String>(serverResponse.value);
     }
     return map;
   }
@@ -8731,9 +8955,12 @@ class OutboxEntriesCompanion extends UpdateCompanion<OutboxEntry> {
           ..write('entityId: $entityId, ')
           ..write('operation: $operation, ')
           ..write('payload: $payload, ')
+          ..write('status: $status, ')
           ..write('createdAt: $createdAt, ')
-          ..write('isSent: $isSent, ')
-          ..write('retryCount: $retryCount')
+          ..write('attemptedAt: $attemptedAt, ')
+          ..write('attemptCount: $attemptCount, ')
+          ..write('errorMessage: $errorMessage, ')
+          ..write('serverResponse: $serverResponse')
           ..write(')'))
         .toString();
   }
@@ -16328,6 +16555,7 @@ typedef $$FiscalPeriodsTableCreateCompanionBuilder =
       required String name,
       required DateTime startDate,
       required DateTime endDate,
+      Value<bool> isClosed,
     });
 typedef $$FiscalPeriodsTableUpdateCompanionBuilder =
     FiscalPeriodsCompanion Function({
@@ -16335,6 +16563,7 @@ typedef $$FiscalPeriodsTableUpdateCompanionBuilder =
       Value<String> name,
       Value<DateTime> startDate,
       Value<DateTime> endDate,
+      Value<bool> isClosed,
     });
 
 class $$FiscalPeriodsTableFilterComposer
@@ -16363,6 +16592,11 @@ class $$FiscalPeriodsTableFilterComposer
 
   ColumnFilters<DateTime> get endDate => $composableBuilder(
     column: $table.endDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isClosed => $composableBuilder(
+    column: $table.isClosed,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -16395,6 +16629,11 @@ class $$FiscalPeriodsTableOrderingComposer
     column: $table.endDate,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get isClosed => $composableBuilder(
+    column: $table.isClosed,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$FiscalPeriodsTableAnnotationComposer
@@ -16417,6 +16656,9 @@ class $$FiscalPeriodsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get endDate =>
       $composableBuilder(column: $table.endDate, builder: (column) => column);
+
+  GeneratedColumn<bool> get isClosed =>
+      $composableBuilder(column: $table.isClosed, builder: (column) => column);
 }
 
 class $$FiscalPeriodsTableTableManager
@@ -16458,11 +16700,13 @@ class $$FiscalPeriodsTableTableManager
                 Value<String> name = const Value.absent(),
                 Value<DateTime> startDate = const Value.absent(),
                 Value<DateTime> endDate = const Value.absent(),
+                Value<bool> isClosed = const Value.absent(),
               }) => FiscalPeriodsCompanion(
                 id: id,
                 name: name,
                 startDate: startDate,
                 endDate: endDate,
+                isClosed: isClosed,
               ),
           createCompanionCallback:
               ({
@@ -16470,11 +16714,13 @@ class $$FiscalPeriodsTableTableManager
                 required String name,
                 required DateTime startDate,
                 required DateTime endDate,
+                Value<bool> isClosed = const Value.absent(),
               }) => FiscalPeriodsCompanion.insert(
                 id: id,
                 name: name,
                 startDate: startDate,
                 endDate: endDate,
+                isClosed: isClosed,
               ),
           withReferenceMapper:
               (p0) =>
@@ -16515,9 +16761,12 @@ typedef $$OutboxEntriesTableCreateCompanionBuilder =
       required int entityId,
       required String operation,
       required String payload,
+      Value<String> status,
       Value<DateTime> createdAt,
-      Value<bool> isSent,
-      Value<int> retryCount,
+      Value<DateTime?> attemptedAt,
+      Value<int> attemptCount,
+      Value<String?> errorMessage,
+      Value<String?> serverResponse,
     });
 typedef $$OutboxEntriesTableUpdateCompanionBuilder =
     OutboxEntriesCompanion Function({
@@ -16526,9 +16775,12 @@ typedef $$OutboxEntriesTableUpdateCompanionBuilder =
       Value<int> entityId,
       Value<String> operation,
       Value<String> payload,
+      Value<String> status,
       Value<DateTime> createdAt,
-      Value<bool> isSent,
-      Value<int> retryCount,
+      Value<DateTime?> attemptedAt,
+      Value<int> attemptCount,
+      Value<String?> errorMessage,
+      Value<String?> serverResponse,
     });
 
 class $$OutboxEntriesTableFilterComposer
@@ -16565,18 +16817,33 @@ class $$OutboxEntriesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<bool> get isSent => $composableBuilder(
-    column: $table.isSent,
+  ColumnFilters<DateTime> get attemptedAt => $composableBuilder(
+    column: $table.attemptedAt,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get retryCount => $composableBuilder(
-    column: $table.retryCount,
+  ColumnFilters<int> get attemptCount => $composableBuilder(
+    column: $table.attemptCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get errorMessage => $composableBuilder(
+    column: $table.errorMessage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serverResponse => $composableBuilder(
+    column: $table.serverResponse,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -16615,18 +16882,33 @@ class $$OutboxEntriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<bool> get isSent => $composableBuilder(
-    column: $table.isSent,
+  ColumnOrderings<DateTime> get attemptedAt => $composableBuilder(
+    column: $table.attemptedAt,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get retryCount => $composableBuilder(
-    column: $table.retryCount,
+  ColumnOrderings<int> get attemptCount => $composableBuilder(
+    column: $table.attemptCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get errorMessage => $composableBuilder(
+    column: $table.errorMessage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get serverResponse => $composableBuilder(
+    column: $table.serverResponse,
     builder: (column) => ColumnOrderings(column),
   );
 }
@@ -16657,14 +16939,29 @@ class $$OutboxEntriesTableAnnotationComposer
   GeneratedColumn<String> get payload =>
       $composableBuilder(column: $table.payload, builder: (column) => column);
 
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  GeneratedColumn<bool> get isSent =>
-      $composableBuilder(column: $table.isSent, builder: (column) => column);
+  GeneratedColumn<DateTime> get attemptedAt => $composableBuilder(
+    column: $table.attemptedAt,
+    builder: (column) => column,
+  );
 
-  GeneratedColumn<int> get retryCount => $composableBuilder(
-    column: $table.retryCount,
+  GeneratedColumn<int> get attemptCount => $composableBuilder(
+    column: $table.attemptCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get errorMessage => $composableBuilder(
+    column: $table.errorMessage,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get serverResponse => $composableBuilder(
+    column: $table.serverResponse,
     builder: (column) => column,
   );
 }
@@ -16709,18 +17006,24 @@ class $$OutboxEntriesTableTableManager
                 Value<int> entityId = const Value.absent(),
                 Value<String> operation = const Value.absent(),
                 Value<String> payload = const Value.absent(),
+                Value<String> status = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
-                Value<bool> isSent = const Value.absent(),
-                Value<int> retryCount = const Value.absent(),
+                Value<DateTime?> attemptedAt = const Value.absent(),
+                Value<int> attemptCount = const Value.absent(),
+                Value<String?> errorMessage = const Value.absent(),
+                Value<String?> serverResponse = const Value.absent(),
               }) => OutboxEntriesCompanion(
                 id: id,
                 entityType: entityType,
                 entityId: entityId,
                 operation: operation,
                 payload: payload,
+                status: status,
                 createdAt: createdAt,
-                isSent: isSent,
-                retryCount: retryCount,
+                attemptedAt: attemptedAt,
+                attemptCount: attemptCount,
+                errorMessage: errorMessage,
+                serverResponse: serverResponse,
               ),
           createCompanionCallback:
               ({
@@ -16729,18 +17032,24 @@ class $$OutboxEntriesTableTableManager
                 required int entityId,
                 required String operation,
                 required String payload,
+                Value<String> status = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
-                Value<bool> isSent = const Value.absent(),
-                Value<int> retryCount = const Value.absent(),
+                Value<DateTime?> attemptedAt = const Value.absent(),
+                Value<int> attemptCount = const Value.absent(),
+                Value<String?> errorMessage = const Value.absent(),
+                Value<String?> serverResponse = const Value.absent(),
               }) => OutboxEntriesCompanion.insert(
                 id: id,
                 entityType: entityType,
                 entityId: entityId,
                 operation: operation,
                 payload: payload,
+                status: status,
                 createdAt: createdAt,
-                isSent: isSent,
-                retryCount: retryCount,
+                attemptedAt: attemptedAt,
+                attemptCount: attemptCount,
+                errorMessage: errorMessage,
+                serverResponse: serverResponse,
               ),
           withReferenceMapper:
               (p0) =>

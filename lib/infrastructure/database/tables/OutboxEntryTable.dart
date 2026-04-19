@@ -11,7 +11,11 @@ class OutboxEntries extends Table {
   TextColumn get operation => text()();
   /// 변경 내용 (JSON)
   TextColumn get payload => text()();
+  /// PENDING | SENDING | SYNCED | CONFLICT | FAILED (CW 섹션 5)
+  TextColumn get status => text().withDefault(const Constant('PENDING'))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
-  BoolColumn get isSent => boolean().withDefault(const Constant(false))();
-  IntColumn get retryCount => integer().withDefault(const Constant(0))();
+  DateTimeColumn get attemptedAt => dateTime().nullable()();
+  IntColumn get attemptCount => integer().withDefault(const Constant(0))();
+  TextColumn get errorMessage => text().nullable()();
+  TextColumn get serverResponse => text().nullable()();
 }

@@ -1,13 +1,10 @@
 import 'package:drift/drift.dart' show Value;
 
 import '../../../core/constants/Enums.dart';
-import '../../../core/errors/DomainErrors.dart';
 import '../../../core/interfaces/IAccountRepository.dart';
 import '../../../core/interfaces/ITransactionRepository.dart';
 import '../../../core/models/TypedId.dart';
 import '../../../infrastructure/database/AppDatabase.dart';
-import '../../../infrastructure/database/tables/JournalEntryLineTable.dart';
-import '../../../infrastructure/database/tables/TransactionTable.dart';
 import '../../exchange/usecase/EvaluateUnrealizedFxGain.dart';
 import '../data/ReportQueryService.dart';
 import 'GenerateIncomeStatement.dart';

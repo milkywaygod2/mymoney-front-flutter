@@ -35,11 +35,11 @@ class ConflictException implements Exception {
 /// Outbox 큐 FIFO 순차 처리기
 ///
 /// 처리 흐름:
-///   1. OutboxEntries에서 isSent=false 항목을 createdAt ASC 순으로 조회
+///   1. OutboxEntries에서 status=false 항목을 createdAt ASC 순으로 조회
 ///   2. 각 항목을 서버로 전송
-///   3. 성공 → isSent=true
-///   4. 충돌(409) → retryCount를 maxRetries로 설정 (사용자 해소 대기)
-///   5. 네트워크 오류 → retryCount++ (지수 백오프는 SyncService에서 제어)
+///   3. 성공 → status=true
+///   4. 충돌(409) → attemptCount를 maxRetries로 설정 (사용자 해소 대기)
+///   5. 네트워크 오류 → attemptCount++ (지수 백오프는 SyncService에서 제어)
 class OutboxProcessor {
   OutboxProcessor({
     required AppDatabase db,
@@ -57,8 +57,8 @@ class OutboxProcessor {
   Future<int> countPending() async {
     final count = await (_db.selectOnly(_db.outboxEntries)
           ..addColumns([_db.outboxEntries.id.count()])
-          ..where(_db.outboxEntries.isSent.equals(false) &
-              _db.outboxEntries.retryCount.isSmallerThanValue(maxRetries)))
+          ..where(_db.outboxEntries.status.equals('PENDING') &
+              _db.outboxEntries.attemptCount.isSmallerThanValue(maxRetries)))
         .map((row) => row.read(_db.outboxEntries.id.count())!)
         .getSingle();
     return count;
@@ -68,11 +68,11 @@ class OutboxProcessor {
   ///
   /// 반환: 처리된 항목 수 (0 = 전송할 항목 없음)
   Future<int> processNext() async {
-    // createdAt ASC, 미전송(isSent=false), 재시도 한도 미초과 항목 조회
+    // createdAt ASC, 미전송(status=false), 재시도 한도 미초과 항목 조회
     final listPending = await (_db.select(_db.outboxEntries)
           ..where((e) =>
-              e.isSent.equals(false) &
-              e.retryCount.isSmallerThanValue(maxRetries))
+              e.status.equals('PENDING') &
+              e.attemptCount.isSmallerThanValue(maxRetries))
           ..orderBy([(e) => OrderingTerm.asc(e.createdAt)])
           ..limit(10))
         .get();
@@ -93,28 +93,28 @@ class OutboxProcessor {
   Future<OutboxProcessResult> _processEntry(OutboxEntry entry) async {
     try {
       await _apiClient.sendEntry(entry);
-      // 성공 → isSent=true
+      // 성공 → status=true
       await (_db.update(_db.outboxEntries)
             ..where((e) => e.id.equals(entry.id)))
           .write(OutboxEntriesCompanion(
-        isSent: const Value(true),
+        status: const Value('SYNCED'),
       ));
       return OutboxProcessResult.success;
     } on ConflictException {
-      // 충돌(409) → retryCount를 maxRetries로 설정 (사용자 해소 대기)
+      // 충돌(409) → attemptCount를 maxRetries로 설정 (사용자 해소 대기)
       await (_db.update(_db.outboxEntries)
             ..where((e) => e.id.equals(entry.id)))
           .write(OutboxEntriesCompanion(
-        retryCount: Value(maxRetries),
+        attemptCount: Value(maxRetries),
       ));
       return OutboxProcessResult.conflict;
     } catch (_) {
-      // 네트워크 오류 → retryCount 증가
-      final newCount = entry.retryCount + 1;
+      // 네트워크 오류 → attemptCount 증가
+      final newCount = entry.attemptCount + 1;
       await (_db.update(_db.outboxEntries)
             ..where((e) => e.id.equals(entry.id)))
           .write(OutboxEntriesCompanion(
-        retryCount: Value(newCount),
+        attemptCount: Value(newCount),
       ));
       return newCount >= maxRetries
           ? OutboxProcessResult.failed
@@ -126,8 +126,8 @@ class OutboxProcessor {
   Future<List<OutboxEntry>> fetchConflicts() async {
     return (_db.select(_db.outboxEntries)
           ..where((e) =>
-              e.isSent.equals(false) &
-              e.retryCount.equals(maxRetries)))
+              e.status.equals('PENDING') &
+              e.attemptCount.equals(maxRetries)))
         .get();
   }
 

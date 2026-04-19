@@ -7,4 +7,6 @@ class FiscalPeriods extends Table {
   TextColumn get name => text()();
   DateTimeColumn get startDate => dateTime()();
   DateTimeColumn get endDate => dateTime()();
+  /// 결산 마감 여부 — true면 해당 기간 수정 불가
+  BoolColumn get isClosed => boolean().withDefault(const Constant(false))();
 }
