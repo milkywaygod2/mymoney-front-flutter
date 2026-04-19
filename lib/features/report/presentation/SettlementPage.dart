@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../usecase/RunSettlement.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../app/di/Injection.dart';
+
 import '../../../core/constants/Enums.dart';
 import '../../../core/interfaces/IAccountRepository.dart';
 import 'ReportBloc.dart';
@@ -65,7 +67,7 @@ class _SettlementStartViewState extends State<_SettlementStartView> {
   }
 
   Future<void> _loadRetainedEarningsAccount() async {
-    final accountRepo = context.read<IAccountRepository>();
+    final accountRepo = getIt<IAccountRepository>();
     final listAccounts = await accountRepo.findByDimensionPath(
       DimensionType.equityType,
       'EQUITY.RETAINED_EARNINGS',
