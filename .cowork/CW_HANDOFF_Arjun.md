@@ -46,7 +46,38 @@ No issues found!
 
 ---
 
+---
+
+### W8 — S08a 세무조정 규칙엔진
+
+**커밋**: `3472273`
+
+#### 구현 파일
+
+| 파일 | 내용 |
+|------|------|
+| `lib/features/tax/data/TaxRuleEngine.dart` | 계정과목명 기반 11개 자동 판정 규칙 |
+| `lib/features/tax/usecase/AutoClassifyDeductibility.dart` | 자동 deductibility 분류 + LegalParameter VALUE/TABLE/FORMULA 처리 |
+| `lib/features/tax/usecase/ClassifyIncomeType.dart` | 소득 8종 자동 분류 + 금융소득 종합과세 판정 |
+| `lib/features/tax/presentation/TaxEvent.dart` | freezed v3 이벤트 (abstract class) |
+| `lib/features/tax/presentation/TaxState.dart` | freezed v3 상태 (abstract class) |
+| `lib/features/tax/presentation/TaxBloc.dart` | TaxBloc (4개 이벤트 핸들러) |
+| `lib/features/tax/presentation/TaxAdjustmentPage.dart` | 세무조정 3단계 UI |
+
+#### 주요 설계 결정
+
+- TaxRuleEngine: 손금불산입 우선 → 한도 → 산입 순서 (부정적 판정 우선)
+- AutoClassifyDeductibility: FORMULA 처리는 TODO stub
+- TaxBloc: ConfirmSettlement 시 미판정 잔존 시 에러 반환 (확정 거부)
+- JournalBloc → TaxBloc 스트림 연결: TODO (DI Composition Root)
+
+#### analyze 결과
+```
+No issues found!
+```
+
+---
+
 ## 다음 대기 중
 
-- S07 나머지: OCR 파이프라인 (ML Kit), ClassificationEngine (로직트리)
 - team-lead 추가 지시 대기 중
