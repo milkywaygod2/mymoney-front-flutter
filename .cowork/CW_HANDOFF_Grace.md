@@ -12,6 +12,7 @@
 |------|--------|------|-----------|
 | W7 보조 | CounterpartyPage UI | `c736a2b` | `lib/features/counterparty/presentation/CounterpartyPage.dart` (805줄) |
 | W8 | ExchangeRate DAO/Repo + 환산/미실현손익 UseCase | `254a7e0` | 5개 파일 (DAO, Repo, 2 UseCases, Interface 수정) |
+| W9 | 결산 프로세스 + ReportBloc (S08b) | `850519e` | 7개 파일 (QueryService, 3 UseCases, ReportBloc, 2 Pages) |
 
 ---
 
@@ -70,14 +71,41 @@
 
 ---
 
-## 대기 중 (W8 이후)
+## W9: 결산 프로세스 + ReportBloc (`850519e`)
 
-| Subject | 태스크 | 상태 |
-|---------|--------|------|
-| S09 | ExchangeRate 캐시 갱신 정책 구현 (1일 1회) | 대기 |
-| S09 | Flow Card 다통화 노드 UI | 대기 |
-| S08b | ReportBloc + B/S·P/L·CF 집계 쿼리 | 대기 |
-| S08b | 결산 5단계 UseCase | 대기 |
-| S08b | 외환차손익 자동 전표 생성 | 대기 |
-| S08b | 손익 마감 UseCase | 대기 |
-| S08b | 결산 스냅샷 저장 | 대기 |
+**변경 파일** (7개 신규):
+- `lib/features/report/data/ReportQueryService.dart:1-175`
+- `lib/features/report/usecase/GenerateBalanceSheet.dart:1-89`
+- `lib/features/report/usecase/GenerateIncomeStatement.dart:1-74`
+- `lib/features/report/usecase/RunSettlement.dart:1-289`
+- `lib/features/report/presentation/ReportBloc.dart:1-266`
+- `lib/features/report/presentation/DashboardPage.dart:1-120` (스켈레톤)
+- `lib/features/report/presentation/SettlementPage.dart:1-195` (스켈레톤)
+
+**구현 내용**:
+- `ReportQueryService`: customSelect 기반 B/S(`calculateBalanceSheet`) + P/L(`calculateIncomeStatement`) + 시산표(`buildTrialBalance`) + Draft 건수 조회
+- `GenerateBalanceSheet`: 자산/부채/자본 분류 + 합계 + 대차균형(`isBalanced`) 검증
+- `GenerateIncomeStatement`: 수익/비용 분류 + 당기순이익(`netIncome`) 산출
+- `RunSettlement`: 5단계 결산 오케스트레이터
+  - 1단계: Draft 잔존 검증 → 차대변 균형(시산표) 검증
+  - 2단계: 다통화 JEL → EvaluateUnrealizedFxGain → 외환차손익 자동전표 삽입 (아키텍처 7.3)
+  - 3단계: TaxRuleEngine TODO stub (S08a 연동 예정)
+  - 4단계: GenerateIncomeStatement → 이익잉여금 대체 전표 삽입
+  - 5단계: 스냅샷 기록 (FiscalPeriods 스키마 확장 TODO)
+- `ReportBloc`: LoadDashboard / LoadBalanceSheet / LoadIncomeStatement / ChangeReportPeriod / RunSettlementEvent
+- `DashboardPage` / `SettlementPage`: 기본 스켈레톤 + 결산 5단계 UI
+
+**특이사항**:
+- 3단계 세무조정은 S08a TaxRuleEngine 완성 후 교체 (현재 TODO stub)
+- FiscalPeriods isClosed 컬럼 미존재 → 5단계 스냅샷은 로그 수준 (스키마 확장 필요)
+- retainedEarningsAccountId는 설정/시드에서 조회 필요 (현재 호출자 전달 방식)
+
+---
+
+## 대기 중 (후속)
+
+| 태스크 | 상태 |
+|--------|------|
+| S09 Flow Card 다통화 노드 UI | 대기 |
+| S08b FiscalPeriods isClosed 스키마 확장 | 대기 |
+| S08b 3단계 TaxRuleEngine 연동 (S08a 완성 후) | 대기 |
