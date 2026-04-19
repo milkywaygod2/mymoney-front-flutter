@@ -48,8 +48,8 @@ class ConvertCurrency {
     final rate = await _exchangeRateRepository.findRate(from, to, tradeDate);
     if (rate == null) {
       throw ExchangeRateNotFoundError(
-          '환율 데이터 없음: \${fromCurrency.name}->\${toCurrency.name} '
-          '(\${date.year}-\${date.month.toString().padLeft(2, "0")}-\${date.day.toString().padLeft(2, "0")})',
+          '환율 데이터 없음: ${from.name}->${to.name} '
+          '(${tradeDate.year}-${tradeDate.month.toString().padLeft(2, '0')}-${tradeDate.day.toString().padLeft(2, '0')})',
         );
     }
 
