@@ -6,6 +6,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../../core/constants/Enums.dart';
 import '../../../core/domain/Transaction.dart';
 import '../../../core/interfaces/ICounterpartyMatcher.dart';
+import '../../../core/models/CurrencyCode.dart';
 import '../../../core/models/TypedId.dart';
 import '../../../features/journal/usecase/CreateTransaction.dart';
 import '../data/ClassificationEngine.dart';

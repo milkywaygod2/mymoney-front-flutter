@@ -2,7 +2,6 @@ import 'package:drift/drift.dart';
 
 import '../../../core/models/TypedId.dart';
 import '../../../infrastructure/database/AppDatabase.dart';
-import '../../../infrastructure/database/tables/ClassificationRuleTable.dart';
 
 /// OCR 텍스트 → 계정과목/거래처 자동 매핑 결과
 class ClassificationResult {
@@ -75,10 +74,11 @@ class ClassificationEngine {
   }) async {
     // 기존 사용자 규칙 중 같은 패턴이 있는지 확인
     final existing = await (_db.select(_db.classificationRules)
-          ..where((r) => r.pattern
-              .equals(pattern)
-              .and(r.patternType.equals(patternType))
-              .and(r.isUserRule.equals(true))))
+          ..where((r) => Expression.and([
+                r.pattern.equals(pattern),
+                r.patternType.equals(patternType),
+                r.isUserRule.equals(true),
+              ])))
         .getSingleOrNull();
 
     if (existing != null) {
