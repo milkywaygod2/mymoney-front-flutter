@@ -1,4 +1,7 @@
+import 'package:drift/drift.dart';
+
 import '../../../core/constants/Enums.dart';
+import '../../../infrastructure/database/AppDatabase.dart' show TransactionsCompanion, JournalEntryLinesCompanion;
 import '../../../core/domain/JournalEntryLine.dart';
 import '../../../core/domain/Perspective.dart';
 import '../../../core/domain/Transaction.dart';
@@ -39,10 +42,54 @@ class TransactionRepository implements ITransactionRepository {
 
   @override
   Future<void> save(Transaction transaction) async {
-    // TODO: Transaction 도메인 → TransactionsCompanion 변환
-    // TODO: JEL 도메인 → JournalEntryLinesCompanion 변환
-    // _dao.insertTransactionWithLines() 호출
-    throw UnimplementedError('TransactionRepository.save — Drift Companion 변환 구현 필요');
+    final txCompanion = TransactionsCompanion(
+      id: transaction.id.value == 0
+          ? const Value.absent()
+          : Value(transaction.id.value),
+      date: Value(transaction.date),
+      description: Value(transaction.description),
+      status: Value(transaction.status.name.toUpperCase()),
+      voidedBy: Value(transaction.voidedBy?.value),
+      counterpartyId: Value(transaction.counterpartyId?.value),
+      counterpartyName: Value(transaction.counterpartyName),
+      source: Value(transaction.source.name.toUpperCase()),
+      confidence: Value(transaction.confidence),
+      periodId: Value(transaction.periodId?.value),
+      syncStatus: Value(transaction.syncStatus.name.toUpperCase()),
+      createdAt: Value(transaction.createdAt),
+      updatedAt: Value(transaction.updatedAt),
+    );
+
+    final listLineCompanions = transaction.listLines.map((jel) {
+      return JournalEntryLinesCompanion(
+        id: jel.id.value == 0
+            ? const Value.absent()
+            : Value(jel.id.value),
+        accountId: Value(jel.accountId.value),
+        entryType: Value(jel.entryType.name.toUpperCase()),
+        originalAmount: Value(jel.originalAmount),
+        originalCurrency: Value(jel.originalCurrency.name),
+        exchangeRateAtTrade: Value(jel.exchangeRateAtTrade),
+        baseCurrency: Value(jel.baseCurrency.name),
+        baseAmount: Value(jel.baseAmount),
+        activityTypeOverride: Value(jel.activityTypeOverride?.value),
+        ownerIdOverride: Value(jel.ownerIdOverride?.value),
+        incomeTypeOverride: Value(jel.incomeTypeOverride?.value),
+        deductibility: Value(jel.deductibility.name.toUpperCase()),
+        beneficiaryId: Value(jel.beneficiaryId?.value),
+        taxClassification: Value(jel.taxClassification),
+        memo: Value(jel.memo),
+      );
+    }).toList();
+
+    if (transaction.id.value == 0) {
+      // 신규 거래: insert
+      await _dao.insertTransactionWithLines(txCompanion, listLineCompanions);
+    } else {
+      // 기존 거래: update + JEL 전체 삭제 후 재삽입
+      await _dao.updateTransactionWithLines(
+          transaction.id.value, txCompanion, listLineCompanions);
+    }
   }
 
   @override

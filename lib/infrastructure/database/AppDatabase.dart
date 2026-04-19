@@ -1,9 +1,11 @@
 import 'package:drift/drift.dart';
 
+import '../../features/account/data/AccountDao.dart';
 import '../../features/counterparty/data/CounterpartyDao.dart';
 import '../../features/exchange/data/ExchangeRateDao.dart';
 import '../../features/journal/data/TransactionDao.dart';
 import '../../features/perspective/data/PerspectiveDao.dart';
+import '../../features/tax/data/LegalParameterDao.dart';
 import 'seeds/DimensionValueSeeds.dart';
 import 'tables/DimensionValueTable.dart';
 import 'tables/OwnerTable.dart';
@@ -43,10 +45,12 @@ part 'AppDatabase.g.dart';
   FiscalPeriods,
   OutboxEntries,
 ], daos: [
+  AccountDao,
   TransactionDao,
   PerspectiveDao,
   CounterpartyDao,
   ExchangeRateDao,
+  LegalParameterDao,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(QueryExecutor e) : super(e);

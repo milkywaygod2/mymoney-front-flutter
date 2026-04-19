@@ -50,6 +50,27 @@ class TransactionDao extends DatabaseAccessor<AppDatabase>
     return update(transactions).replace(entry);
   }
 
+  /// 거래 업데이트 + JEL 전체 삭제 후 재삽입 (트랜잭션 내)
+  Future<void> updateTransactionWithLines(
+    int txId,
+    TransactionsCompanion txEntry,
+    List<JournalEntryLinesCompanion> listLineEntries,
+  ) async {
+    await transaction(() async {
+      await update(transactions).replace(txEntry);
+      // 기존 JEL 전체 삭제
+      await (delete(journalEntryLines)
+            ..where((jel) => jel.transactionId.equals(txId)))
+          .go();
+      // 새 JEL 삽입
+      for (final lineEntry in listLineEntries) {
+        await into(journalEntryLines).insert(
+          lineEntry.copyWith(transactionId: Value(txId)),
+        );
+      }
+    });
+  }
+
   /// 거래 삭제 (Draft만 — 비즈니스 규칙은 UseCase에서 검증)
   Future<int> deleteTransaction(int id) {
     return transaction(() async {

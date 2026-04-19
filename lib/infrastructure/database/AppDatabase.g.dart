@@ -8995,6 +8995,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $ClassificationRulesTable(this);
   late final $FiscalPeriodsTable fiscalPeriods = $FiscalPeriodsTable(this);
   late final $OutboxEntriesTable outboxEntries = $OutboxEntriesTable(this);
+  late final AccountDao accountDao = AccountDao(this as AppDatabase);
   late final TransactionDao transactionDao = TransactionDao(
     this as AppDatabase,
   );
@@ -9005,6 +9006,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this as AppDatabase,
   );
   late final ExchangeRateDao exchangeRateDao = ExchangeRateDao(
+    this as AppDatabase,
+  );
+  late final LegalParameterDao legalParameterDao = LegalParameterDao(
     this as AppDatabase,
   );
   @override
