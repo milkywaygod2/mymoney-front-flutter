@@ -211,22 +211,35 @@ class OcrBloc extends Bloc<OcrEvent, OcrState> {
     try {
       final merchantName = event.parsed.merchantName ?? '';
 
-      // 1단계: 거래처 매칭 (결과는 classified에 counterpartyId로 반영됨)
-      await (merchantName.isNotEmpty
-          ? _counterpartyMatcher.matchByText(merchantName)
-          : Future.value(null));
+      // 1단계: 거래처 매칭
+      final counterpartyMatch = merchantName.isNotEmpty
+          ? await _counterpartyMatcher.matchByText(merchantName)
+          : null;
 
       // 2단계: 계정과목 분류 (merchantName 또는 description으로 시도)
       final searchText =
           merchantName.isNotEmpty ? merchantName : (event.parsed.rawText);
-      final classified = await _classificationEngine.classify(searchText);
+      ClassificationResult? classified =
+          await _classificationEngine.classify(searchText);
+
+      // 거래처 매칭 결과를 classified에 반영 — classified가 없으면 counterpartyId만 보유한 결과 생성
+      if (counterpartyMatch != null) {
+        if (classified != null) {
+          // 기존 classified에 counterpartyId 교체 반영
+          classified = ClassificationResult(
+            accountId: classified.accountId,
+            counterpartyId: counterpartyMatch.counterpartyId,
+            confidence: (classified.confidence + counterpartyMatch.confidence) / 2,
+            matchedRuleId: classified.matchedRuleId,
+          );
+        }
+      }
 
       emit(state.copyWith(
         phase: OcrPhase.reviewing,
         parsed: event.parsed,
         classified: classified,
         confidence: classified?.confidence ?? 0.0,
-        // 거래처 매칭 신뢰도도 반영 (두 신뢰도의 평균)
       ));
     } catch (e) {
       emit(state.copyWith(

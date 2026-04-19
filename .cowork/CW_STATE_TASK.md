@@ -29,4 +29,21 @@
 | W10 | S11 | 인증 (OAuth2+생체) | 대기 | - | 네이티브 설정 필요 |
 
 ## 대기열
-(Phase 5 편성 후 배정)
+(전 Wave 완료)
+
+## QA Loop Status
+
+LOOP_STATE: STEP_2_PENDING
+ITERATION: 1
+MAX_ITERATION: 5
+CONSECUTIVE_PASS: 0
+
+### Agent Results (현재 iteration)
+| Agent | Step 1 | Step 2 | Step 3 |
+|-------|--------|--------|--------|
+| Arjun-2 | FIXED 2건 | - | - |
+| Grace-2 | GAP 11건 | - | - |
+| Omar-2 | FIXED 1건 GAP 2건 | - | - |
+
+### Loop History
+(비어있음)

@@ -26,6 +26,8 @@ class DetectDuplicate {
     final listCandidates = await _repository.findByDateRange(from, to);
     final List<DuplicateCandidate> listResults = [];
     for (final candidate in listCandidates) {
+      // 섹션 8.2: Draft 상태에서만 탐지
+      if (candidate.status != TransactionStatus.draft) continue;
       int score = 0;
       final List<String> listReasons = [];
       final dayDiff = candidate.date.difference(date).inDays.abs();

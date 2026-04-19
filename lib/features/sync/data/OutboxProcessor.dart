@@ -132,9 +132,7 @@ class OutboxProcessor {
   /// CONFLICT 상태 항목 목록 조회 (충돌 해소 UI용)
   Future<List<OutboxEntry>> fetchConflicts() async {
     return (_db.select(_db.outboxEntries)
-          ..where((e) =>
-              e.status.equals('PENDING') &
-              e.attemptCount.equals(maxRetries)))
+          ..where((e) => e.status.equals('CONFLICT')))
         .get();
   }
 
