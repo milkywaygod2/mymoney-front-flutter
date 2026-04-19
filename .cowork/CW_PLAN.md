@@ -385,6 +385,21 @@ lib/
 
 ---
 
+## 추가 패키지 필요 (pubspec.yaml에 아직 없는 것)
+
+| 패키지 | 용도 | 필요 Wave |
+|--------|------|----------|
+| `sqlite3_flutter_libs` | Drift SQLite 바인딩 | W0 (설치 완료) |
+| `path_provider` | DB 파일 경로 | W0 (설치 완료) |
+| `path` | 경로 유틸 | W0 (설치 완료) |
+| `connectivity_plus` | 네트워크 감지 | W15 (S10) |
+| `google_sign_in` | Google OAuth2 | W15 (S11) |
+| `sign_in_with_apple` | Apple OAuth2 | W15 (S11) |
+| `local_auth` | 생체인증/PIN | W15 (S11) |
+| `google_mlkit_text_recognition` | OCR | W7-OCR (S07) |
+
+---
+
 ## v1.0 Wave 상세 (참조용 — 아래는 완료된 원본)
 
 ### Wave 1: S01 — core/ 기반 (4명 병렬 — 완료)
