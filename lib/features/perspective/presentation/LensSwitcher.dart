@@ -615,12 +615,53 @@ class _CustomFilterPanelState extends State<_CustomFilterPanel>
                   mapAttributeFilters: _t2SelectedCurrency != null
                       ? {'currency': [_t2SelectedCurrency!.name]}
                       : null,
-                  listTagIds:
-                      const [], // TODO: TagId 조회 후 전달
+                  listTagIds: const [], // TODO: TagId 조회 후 전달
                 ));
               },
               child: const Text('적용'),
             ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(Icons.bookmark_add_outlined),
+            tooltip: '프리셋으로 저장',
+            onPressed: () => _showSavePresetDialog(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSavePresetDialog(BuildContext context) {
+    final nameCtrl = TextEditingController();
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('프리셋으로 저장'),
+        content: TextField(
+          controller: nameCtrl,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: '프리셋 이름 입력',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final name = nameCtrl.text.trim();
+              if (name.isNotEmpty) {
+                context
+                    .read<PerspectiveBloc>()
+                    .add(SaveAsPreset(name: name));
+                Navigator.pop(dialogContext);
+              }
+            },
+            child: const Text('저장'),
           ),
         ],
       ),

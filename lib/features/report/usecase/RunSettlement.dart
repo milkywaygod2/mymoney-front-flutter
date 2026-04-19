@@ -424,6 +424,16 @@ class RunSettlement {
       final totalExpense = incomeStatement.totalExpense;
       final netIncome = incomeStatement.netIncome;
 
+      // 수익/비용 집계 계정 사전 조회 — 없으면 조기 실패
+      final revenueAccountId = await _findAccountIdByPath('REVENUE');
+      final expenseAccountId = await _findAccountIdByPath('EXPENSE');
+      if (revenueAccountId == null && totalRevenue > 0) {
+        throw Exception('수익 집계 계정(REVENUE)을 찾을 수 없습니다');
+      }
+      if (expenseAccountId == null && totalExpense > 0) {
+        throw Exception('비용 집계 계정(EXPENSE)을 찾을 수 없습니다');
+      }
+
       await _db.transaction(() async {
         // ① 수익 마감 전표: 차변 수익계정 / 대변 손익요약
         if (totalRevenue > 0) {
@@ -441,7 +451,7 @@ class RunSettlement {
           await _db.into(_db.journalEntryLines).insert(
             JournalEntryLinesCompanion(
               transactionId: Value(txRevenueId),
-              accountId: Value(await _findAccountIdByPath('REVENUE') ?? 0),
+              accountId: Value(revenueAccountId!),
               entryType: const Value('DEBIT'),
               originalAmount: Value(totalRevenue),
               originalCurrency: const Value('KRW'),
@@ -497,7 +507,7 @@ class RunSettlement {
           await _db.into(_db.journalEntryLines).insert(
             JournalEntryLinesCompanion(
               transactionId: Value(txExpenseId),
-              accountId: Value(await _findAccountIdByPath('EXPENSE') ?? 0),
+              accountId: Value(expenseAccountId!),
               entryType: const Value('CREDIT'),
               originalAmount: Value(totalExpense),
               originalCurrency: const Value('KRW'),

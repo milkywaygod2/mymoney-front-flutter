@@ -127,6 +127,9 @@ class AccountDao extends DatabaseAccessor<AppDatabase>
         query.where(accounts.liquidityPath.like('$pathPrefix%'));
       case 'assetType':
         query.where(accounts.assetTypePath.like('$pathPrefix%'));
+      default:
+        // 유효하지 않은 dimensionType → 빈 목록 반환 (전체 조회 방지)
+        return [];
     }
 
     return _groupByAccount(await query.get());
