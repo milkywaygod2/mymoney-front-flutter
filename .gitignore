@@ -137,12 +137,9 @@
 !windows/.gitignore
 # CMake 빌드 설정 (최상위)
 !windows/CMakeLists.txt
-# Flutter-Windows 연동 (플러그인 등록)
+# Flutter-Windows 연동
 !windows/flutter/
 !windows/flutter/CMakeLists.txt
-!windows/flutter/generated_plugin_registrant.cc
-!windows/flutter/generated_plugin_registrant.h
-!windows/flutter/generated_plugins.cmake
 # Windows 앱 소스 (Win32 윈도우, 리소스)
 !windows/runner/
 !windows/runner/**
