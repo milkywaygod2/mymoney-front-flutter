@@ -54,15 +54,17 @@ class GenerateCashFlowStatement {
   /// CF 생성
   ///
   /// [periodId] 결산 기간 ID
+  /// [snapshotDate] 기말 기준일
   Future<CashFlowStatement> execute({
     required int periodId,
+    required DateTime snapshotDate,
   }) async {
     // 1. 당기순이익 (C110000 — Automatic)
     final incomeStatement = await _generateIncomeStatement.execute(periodId: periodId);
     final netIncome = incomeStatement.netIncome;
 
     // 2. B/S 계정별 변동 조회 — cashFlowCategory 기반 분류
-    final listBsEntries = await _queryService.calculateBalanceSheet(periodId);
+    final listBsEntries = await _queryService.calculateBalanceSheet(snapshotDate: snapshotDate);
 
     // 운전자본 변동 계산: 채권채무 계정의 당기 변동
     var operatingWorkingCapitalChange = 0;

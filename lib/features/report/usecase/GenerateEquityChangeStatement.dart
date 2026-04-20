@@ -43,13 +43,15 @@ class GenerateEquityChangeStatement {
   /// CE 생성
   ///
   /// [periodId] 결산 기간 ID
+  /// [snapshotDate] 기말 기준일
   Future<EquityChangeStatement> execute({
     required int periodId,
+    required DateTime snapshotDate,
   }) async {
     final listItems = <EquityChangeItem>[];
 
     // 1. 기말 자본 잔액 조회 (B/S에서 EQUITY 계정 추출)
-    final listBsEntries = await _queryService.calculateBalanceSheet(periodId);
+    final listBsEntries = await _queryService.calculateBalanceSheet(snapshotDate: snapshotDate);
 
     // 자본 5구성요소별 기말 잔액 집계
     var capitalStock = 0;
