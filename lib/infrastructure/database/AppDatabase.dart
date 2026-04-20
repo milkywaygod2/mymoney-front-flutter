@@ -23,10 +23,14 @@ import 'tables/LegalParameterTable.dart';
 import 'tables/ClassificationRuleTable.dart';
 import 'tables/FiscalPeriodTable.dart';
 import 'tables/OutboxEntryTable.dart';
+import 'tables/FinancialRatioSnapshotTable.dart';
+import 'tables/CashFlowCodeTable.dart';
+import 'tables/CashFlowMappingTable.dart';
+import 'tables/SettlementSnapshotTable.dart';
 
 part 'AppDatabase.g.dart';
 
-/// MyMoney 메인 데이터베이스 — 16 테이블 + 8 인덱스
+/// MyMoney 메인 데이터베이스 — 20 테이블 + 16 인덱스 (v2.0)
 @DriftDatabase(tables: [
   DimensionValues,
   Owners,
@@ -44,6 +48,11 @@ part 'AppDatabase.g.dart';
   ClassificationRules,
   FiscalPeriods,
   OutboxEntries,
+  // v2.0 신규 테이블
+  FinancialRatioSnapshots,
+  CashFlowCodes,
+  CashFlowMappings,
+  SettlementSnapshots,
 ], daos: [
   AccountDao,
   TransactionDao,
@@ -107,6 +116,38 @@ class AppDatabase extends _$AppDatabase {
     // 중복 탐지용 복합 인덱스
     await customStatement(
       'CREATE INDEX idx_transactions_dup_detect ON transactions(date, counterparty_name)',
+    );
+    // --- v2.0 인덱스 ---
+    // 특수관계자 유형 필터
+    await customStatement(
+      'CREATE INDEX idx_counterparties_related_party_type ON counterparties(related_party_type)',
+    );
+    // 외부 참조번호 조회
+    await customStatement(
+      'CREATE INDEX idx_transactions_reference_no ON transactions(reference_no)',
+    );
+    // FX 재평가 대상 계정 선별
+    await customStatement(
+      'CREATE INDEX idx_accounts_fx_reval_target ON accounts(is_fx_reval_target) WHERE is_fx_reval_target = 1',
+    );
+    // 역분개 유형 필터
+    await customStatement(
+      'CREATE INDEX idx_transactions_reversal_type ON transactions(reversal_type)',
+    );
+    // CF 코드 정렬/계층
+    await customStatement(
+      'CREATE INDEX idx_cash_flow_codes_parent ON cash_flow_codes(parent_code)',
+    );
+    await customStatement(
+      'CREATE INDEX idx_cash_flow_codes_sort ON cash_flow_codes(level, sort_order)',
+    );
+    // CF 매핑 조회
+    await customStatement(
+      'CREATE INDEX idx_cash_flow_mappings_account ON cash_flow_mappings(account_id)',
+    );
+    // 결산 스냅샷 조회
+    await customStatement(
+      'CREATE INDEX idx_settlement_snapshots_lookup ON settlement_snapshots(period_id, snapshot_type)',
     );
   }
 
