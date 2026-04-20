@@ -1062,6 +1062,20 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _isRevenueDeductionMeta =
+      const VerificationMeta('isRevenueDeduction');
+  @override
+  late final GeneratedColumn<bool> isRevenueDeduction = GeneratedColumn<bool>(
+    'is_revenue_deduction',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_revenue_deduction" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1083,6 +1097,7 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
     cashFlowCategory,
     isFxRevalTarget,
     vendorRequirement,
+    isRevenueDeduction,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1267,6 +1282,15 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
         ),
       );
     }
+    if (data.containsKey('is_revenue_deduction')) {
+      context.handle(
+        _isRevenueDeductionMeta,
+        isRevenueDeduction.isAcceptableOrUnknown(
+          data['is_revenue_deduction']!,
+          _isRevenueDeductionMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1364,6 +1388,11 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
         DriftSqlType.string,
         data['${effectivePrefix}vendor_requirement'],
       ),
+      isRevenueDeduction:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}is_revenue_deduction'],
+          )!,
     );
   }
 
@@ -1409,6 +1438,9 @@ class Account extends DataClass implements Insertable<Account> {
 
   /// 거래처 입력 강제 수준: notSet | optional | required
   final String? vendorRequirement;
+
+  /// 매출차감 계정 플래그 — 순액 표시 수수료 (INV-A6: nature == EXPENSE만 가능)
+  final bool isRevenueDeduction;
   const Account({
     required this.id,
     required this.name,
@@ -1429,6 +1461,7 @@ class Account extends DataClass implements Insertable<Account> {
     this.cashFlowCategory,
     required this.isFxRevalTarget,
     this.vendorRequirement,
+    required this.isRevenueDeduction,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1466,6 +1499,7 @@ class Account extends DataClass implements Insertable<Account> {
     if (!nullToAbsent || vendorRequirement != null) {
       map['vendor_requirement'] = Variable<String>(vendorRequirement);
     }
+    map['is_revenue_deduction'] = Variable<bool>(isRevenueDeduction);
     return map;
   }
 
@@ -1511,6 +1545,7 @@ class Account extends DataClass implements Insertable<Account> {
           vendorRequirement == null && nullToAbsent
               ? const Value.absent()
               : Value(vendorRequirement),
+      isRevenueDeduction: Value(isRevenueDeduction),
     );
   }
 
@@ -1547,6 +1582,7 @@ class Account extends DataClass implements Insertable<Account> {
       vendorRequirement: serializer.fromJson<String?>(
         json['vendorRequirement'],
       ),
+      isRevenueDeduction: serializer.fromJson<bool>(json['isRevenueDeduction']),
     );
   }
   @override
@@ -1572,6 +1608,7 @@ class Account extends DataClass implements Insertable<Account> {
       'cashFlowCategory': serializer.toJson<String?>(cashFlowCategory),
       'isFxRevalTarget': serializer.toJson<bool>(isFxRevalTarget),
       'vendorRequirement': serializer.toJson<String?>(vendorRequirement),
+      'isRevenueDeduction': serializer.toJson<bool>(isRevenueDeduction),
     };
   }
 
@@ -1595,6 +1632,7 @@ class Account extends DataClass implements Insertable<Account> {
     Value<String?> cashFlowCategory = const Value.absent(),
     bool? isFxRevalTarget,
     Value<String?> vendorRequirement = const Value.absent(),
+    bool? isRevenueDeduction,
   }) => Account(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -1631,6 +1669,7 @@ class Account extends DataClass implements Insertable<Account> {
         vendorRequirement.present
             ? vendorRequirement.value
             : this.vendorRequirement,
+    isRevenueDeduction: isRevenueDeduction ?? this.isRevenueDeduction,
   );
   Account copyWithCompanion(AccountsCompanion data) {
     return Account(
@@ -1689,6 +1728,10 @@ class Account extends DataClass implements Insertable<Account> {
           data.vendorRequirement.present
               ? data.vendorRequirement.value
               : this.vendorRequirement,
+      isRevenueDeduction:
+          data.isRevenueDeduction.present
+              ? data.isRevenueDeduction.value
+              : this.isRevenueDeduction,
     );
   }
 
@@ -1713,7 +1756,8 @@ class Account extends DataClass implements Insertable<Account> {
           ..write('isActive: $isActive, ')
           ..write('cashFlowCategory: $cashFlowCategory, ')
           ..write('isFxRevalTarget: $isFxRevalTarget, ')
-          ..write('vendorRequirement: $vendorRequirement')
+          ..write('vendorRequirement: $vendorRequirement, ')
+          ..write('isRevenueDeduction: $isRevenueDeduction')
           ..write(')'))
         .toString();
   }
@@ -1739,6 +1783,7 @@ class Account extends DataClass implements Insertable<Account> {
     cashFlowCategory,
     isFxRevalTarget,
     vendorRequirement,
+    isRevenueDeduction,
   );
   @override
   bool operator ==(Object other) =>
@@ -1762,7 +1807,8 @@ class Account extends DataClass implements Insertable<Account> {
           other.isActive == this.isActive &&
           other.cashFlowCategory == this.cashFlowCategory &&
           other.isFxRevalTarget == this.isFxRevalTarget &&
-          other.vendorRequirement == this.vendorRequirement);
+          other.vendorRequirement == this.vendorRequirement &&
+          other.isRevenueDeduction == this.isRevenueDeduction);
 }
 
 class AccountsCompanion extends UpdateCompanion<Account> {
@@ -1785,6 +1831,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
   final Value<String?> cashFlowCategory;
   final Value<bool> isFxRevalTarget;
   final Value<String?> vendorRequirement;
+  final Value<bool> isRevenueDeduction;
   const AccountsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -1805,6 +1852,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     this.cashFlowCategory = const Value.absent(),
     this.isFxRevalTarget = const Value.absent(),
     this.vendorRequirement = const Value.absent(),
+    this.isRevenueDeduction = const Value.absent(),
   });
   AccountsCompanion.insert({
     this.id = const Value.absent(),
@@ -1826,6 +1874,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     this.cashFlowCategory = const Value.absent(),
     this.isFxRevalTarget = const Value.absent(),
     this.vendorRequirement = const Value.absent(),
+    this.isRevenueDeduction = const Value.absent(),
   }) : name = Value(name),
        nature = Value(nature),
        equityTypeId = Value(equityTypeId),
@@ -1855,6 +1904,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     Expression<String>? cashFlowCategory,
     Expression<bool>? isFxRevalTarget,
     Expression<String>? vendorRequirement,
+    Expression<bool>? isRevenueDeduction,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1879,6 +1929,8 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       if (cashFlowCategory != null) 'cash_flow_category': cashFlowCategory,
       if (isFxRevalTarget != null) 'is_fx_reval_target': isFxRevalTarget,
       if (vendorRequirement != null) 'vendor_requirement': vendorRequirement,
+      if (isRevenueDeduction != null)
+        'is_revenue_deduction': isRevenueDeduction,
     });
   }
 
@@ -1902,6 +1954,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     Value<String?>? cashFlowCategory,
     Value<bool>? isFxRevalTarget,
     Value<String?>? vendorRequirement,
+    Value<bool>? isRevenueDeduction,
   }) {
     return AccountsCompanion(
       id: id ?? this.id,
@@ -1924,6 +1977,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       cashFlowCategory: cashFlowCategory ?? this.cashFlowCategory,
       isFxRevalTarget: isFxRevalTarget ?? this.isFxRevalTarget,
       vendorRequirement: vendorRequirement ?? this.vendorRequirement,
+      isRevenueDeduction: isRevenueDeduction ?? this.isRevenueDeduction,
     );
   }
 
@@ -1991,6 +2045,9 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     if (vendorRequirement.present) {
       map['vendor_requirement'] = Variable<String>(vendorRequirement.value);
     }
+    if (isRevenueDeduction.present) {
+      map['is_revenue_deduction'] = Variable<bool>(isRevenueDeduction.value);
+    }
     return map;
   }
 
@@ -2015,7 +2072,8 @@ class AccountsCompanion extends UpdateCompanion<Account> {
           ..write('isActive: $isActive, ')
           ..write('cashFlowCategory: $cashFlowCategory, ')
           ..write('isFxRevalTarget: $isFxRevalTarget, ')
-          ..write('vendorRequirement: $vendorRequirement')
+          ..write('vendorRequirement: $vendorRequirement, ')
+          ..write('isRevenueDeduction: $isRevenueDeduction')
           ..write(')'))
         .toString();
   }
@@ -7843,6 +7901,20 @@ class $ClassificationRulesTable extends ClassificationRules
       'REFERENCES accounts (id)',
     ),
   );
+  static const VerificationMeta _creditAccountIdMeta = const VerificationMeta(
+    'creditAccountId',
+  );
+  @override
+  late final GeneratedColumn<int> creditAccountId = GeneratedColumn<int>(
+    'credit_account_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES accounts (id)',
+    ),
+  );
   static const VerificationMeta _counterpartyIdMeta = const VerificationMeta(
     'counterpartyId',
   );
@@ -7905,6 +7977,7 @@ class $ClassificationRulesTable extends ClassificationRules
     pattern,
     patternType,
     accountId,
+    creditAccountId,
     counterpartyId,
     priority,
     isSystemRule,
@@ -7951,6 +8024,15 @@ class $ClassificationRulesTable extends ClassificationRules
       );
     } else if (isInserting) {
       context.missing(_accountIdMeta);
+    }
+    if (data.containsKey('credit_account_id')) {
+      context.handle(
+        _creditAccountIdMeta,
+        creditAccountId.isAcceptableOrUnknown(
+          data['credit_account_id']!,
+          _creditAccountIdMeta,
+        ),
+      );
     }
     if (data.containsKey('counterparty_id')) {
       context.handle(
@@ -8014,6 +8096,10 @@ class $ClassificationRulesTable extends ClassificationRules
             DriftSqlType.int,
             data['${effectivePrefix}account_id'],
           )!,
+      creditAccountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}credit_account_id'],
+      ),
       counterpartyId: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}counterparty_id'],
@@ -8051,7 +8137,12 @@ class ClassificationRule extends DataClass
 
   /// EXACT | CONTAINS | REGEX
   final String patternType;
+
+  /// 차변 계정 (비용/자산 — 자동 배정 대상)
   final int accountId;
+
+  /// 대변 계정 (부채/현금 — 차대변 쌍 자동 결정, v2.0)
+  final int? creditAccountId;
   final int? counterpartyId;
 
   /// 우선순위 (높을수록 우선, 사용자 규칙 > 시스템 규칙)
@@ -8063,6 +8154,7 @@ class ClassificationRule extends DataClass
     required this.pattern,
     required this.patternType,
     required this.accountId,
+    this.creditAccountId,
     this.counterpartyId,
     required this.priority,
     required this.isSystemRule,
@@ -8075,6 +8167,9 @@ class ClassificationRule extends DataClass
     map['pattern'] = Variable<String>(pattern);
     map['pattern_type'] = Variable<String>(patternType);
     map['account_id'] = Variable<int>(accountId);
+    if (!nullToAbsent || creditAccountId != null) {
+      map['credit_account_id'] = Variable<int>(creditAccountId);
+    }
     if (!nullToAbsent || counterpartyId != null) {
       map['counterparty_id'] = Variable<int>(counterpartyId);
     }
@@ -8090,6 +8185,10 @@ class ClassificationRule extends DataClass
       pattern: Value(pattern),
       patternType: Value(patternType),
       accountId: Value(accountId),
+      creditAccountId:
+          creditAccountId == null && nullToAbsent
+              ? const Value.absent()
+              : Value(creditAccountId),
       counterpartyId:
           counterpartyId == null && nullToAbsent
               ? const Value.absent()
@@ -8110,6 +8209,7 @@ class ClassificationRule extends DataClass
       pattern: serializer.fromJson<String>(json['pattern']),
       patternType: serializer.fromJson<String>(json['patternType']),
       accountId: serializer.fromJson<int>(json['accountId']),
+      creditAccountId: serializer.fromJson<int?>(json['creditAccountId']),
       counterpartyId: serializer.fromJson<int?>(json['counterpartyId']),
       priority: serializer.fromJson<int>(json['priority']),
       isSystemRule: serializer.fromJson<bool>(json['isSystemRule']),
@@ -8124,6 +8224,7 @@ class ClassificationRule extends DataClass
       'pattern': serializer.toJson<String>(pattern),
       'patternType': serializer.toJson<String>(patternType),
       'accountId': serializer.toJson<int>(accountId),
+      'creditAccountId': serializer.toJson<int?>(creditAccountId),
       'counterpartyId': serializer.toJson<int?>(counterpartyId),
       'priority': serializer.toJson<int>(priority),
       'isSystemRule': serializer.toJson<bool>(isSystemRule),
@@ -8136,6 +8237,7 @@ class ClassificationRule extends DataClass
     String? pattern,
     String? patternType,
     int? accountId,
+    Value<int?> creditAccountId = const Value.absent(),
     Value<int?> counterpartyId = const Value.absent(),
     int? priority,
     bool? isSystemRule,
@@ -8145,6 +8247,8 @@ class ClassificationRule extends DataClass
     pattern: pattern ?? this.pattern,
     patternType: patternType ?? this.patternType,
     accountId: accountId ?? this.accountId,
+    creditAccountId:
+        creditAccountId.present ? creditAccountId.value : this.creditAccountId,
     counterpartyId:
         counterpartyId.present ? counterpartyId.value : this.counterpartyId,
     priority: priority ?? this.priority,
@@ -8158,6 +8262,10 @@ class ClassificationRule extends DataClass
       patternType:
           data.patternType.present ? data.patternType.value : this.patternType,
       accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      creditAccountId:
+          data.creditAccountId.present
+              ? data.creditAccountId.value
+              : this.creditAccountId,
       counterpartyId:
           data.counterpartyId.present
               ? data.counterpartyId.value
@@ -8179,6 +8287,7 @@ class ClassificationRule extends DataClass
           ..write('pattern: $pattern, ')
           ..write('patternType: $patternType, ')
           ..write('accountId: $accountId, ')
+          ..write('creditAccountId: $creditAccountId, ')
           ..write('counterpartyId: $counterpartyId, ')
           ..write('priority: $priority, ')
           ..write('isSystemRule: $isSystemRule, ')
@@ -8193,6 +8302,7 @@ class ClassificationRule extends DataClass
     pattern,
     patternType,
     accountId,
+    creditAccountId,
     counterpartyId,
     priority,
     isSystemRule,
@@ -8206,6 +8316,7 @@ class ClassificationRule extends DataClass
           other.pattern == this.pattern &&
           other.patternType == this.patternType &&
           other.accountId == this.accountId &&
+          other.creditAccountId == this.creditAccountId &&
           other.counterpartyId == this.counterpartyId &&
           other.priority == this.priority &&
           other.isSystemRule == this.isSystemRule &&
@@ -8217,6 +8328,7 @@ class ClassificationRulesCompanion extends UpdateCompanion<ClassificationRule> {
   final Value<String> pattern;
   final Value<String> patternType;
   final Value<int> accountId;
+  final Value<int?> creditAccountId;
   final Value<int?> counterpartyId;
   final Value<int> priority;
   final Value<bool> isSystemRule;
@@ -8226,6 +8338,7 @@ class ClassificationRulesCompanion extends UpdateCompanion<ClassificationRule> {
     this.pattern = const Value.absent(),
     this.patternType = const Value.absent(),
     this.accountId = const Value.absent(),
+    this.creditAccountId = const Value.absent(),
     this.counterpartyId = const Value.absent(),
     this.priority = const Value.absent(),
     this.isSystemRule = const Value.absent(),
@@ -8236,6 +8349,7 @@ class ClassificationRulesCompanion extends UpdateCompanion<ClassificationRule> {
     required String pattern,
     required String patternType,
     required int accountId,
+    this.creditAccountId = const Value.absent(),
     this.counterpartyId = const Value.absent(),
     this.priority = const Value.absent(),
     this.isSystemRule = const Value.absent(),
@@ -8248,6 +8362,7 @@ class ClassificationRulesCompanion extends UpdateCompanion<ClassificationRule> {
     Expression<String>? pattern,
     Expression<String>? patternType,
     Expression<int>? accountId,
+    Expression<int>? creditAccountId,
     Expression<int>? counterpartyId,
     Expression<int>? priority,
     Expression<bool>? isSystemRule,
@@ -8258,6 +8373,7 @@ class ClassificationRulesCompanion extends UpdateCompanion<ClassificationRule> {
       if (pattern != null) 'pattern': pattern,
       if (patternType != null) 'pattern_type': patternType,
       if (accountId != null) 'account_id': accountId,
+      if (creditAccountId != null) 'credit_account_id': creditAccountId,
       if (counterpartyId != null) 'counterparty_id': counterpartyId,
       if (priority != null) 'priority': priority,
       if (isSystemRule != null) 'is_system_rule': isSystemRule,
@@ -8270,6 +8386,7 @@ class ClassificationRulesCompanion extends UpdateCompanion<ClassificationRule> {
     Value<String>? pattern,
     Value<String>? patternType,
     Value<int>? accountId,
+    Value<int?>? creditAccountId,
     Value<int?>? counterpartyId,
     Value<int>? priority,
     Value<bool>? isSystemRule,
@@ -8280,6 +8397,7 @@ class ClassificationRulesCompanion extends UpdateCompanion<ClassificationRule> {
       pattern: pattern ?? this.pattern,
       patternType: patternType ?? this.patternType,
       accountId: accountId ?? this.accountId,
+      creditAccountId: creditAccountId ?? this.creditAccountId,
       counterpartyId: counterpartyId ?? this.counterpartyId,
       priority: priority ?? this.priority,
       isSystemRule: isSystemRule ?? this.isSystemRule,
@@ -8301,6 +8419,9 @@ class ClassificationRulesCompanion extends UpdateCompanion<ClassificationRule> {
     }
     if (accountId.present) {
       map['account_id'] = Variable<int>(accountId.value);
+    }
+    if (creditAccountId.present) {
+      map['credit_account_id'] = Variable<int>(creditAccountId.value);
     }
     if (counterpartyId.present) {
       map['counterparty_id'] = Variable<int>(counterpartyId.value);
@@ -8324,6 +8445,7 @@ class ClassificationRulesCompanion extends UpdateCompanion<ClassificationRule> {
           ..write('pattern: $pattern, ')
           ..write('patternType: $patternType, ')
           ..write('accountId: $accountId, ')
+          ..write('creditAccountId: $creditAccountId, ')
           ..write('counterpartyId: $counterpartyId, ')
           ..write('priority: $priority, ')
           ..write('isSystemRule: $isSystemRule, ')
@@ -12079,6 +12201,7 @@ typedef $$AccountsTableCreateCompanionBuilder =
       Value<String?> cashFlowCategory,
       Value<bool> isFxRevalTarget,
       Value<String?> vendorRequirement,
+      Value<bool> isRevenueDeduction,
     });
 typedef $$AccountsTableUpdateCompanionBuilder =
     AccountsCompanion Function({
@@ -12101,6 +12224,7 @@ typedef $$AccountsTableUpdateCompanionBuilder =
       Value<String?> cashFlowCategory,
       Value<bool> isFxRevalTarget,
       Value<String?> vendorRequirement,
+      Value<bool> isRevenueDeduction,
     });
 
 final class $$AccountsTableReferences
@@ -12276,33 +12400,6 @@ final class $$AccountsTableReferences
     );
   }
 
-  static MultiTypedResultKey<
-    $ClassificationRulesTable,
-    List<ClassificationRule>
-  >
-  _classificationRulesRefsTable(_$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.classificationRules,
-        aliasName: $_aliasNameGenerator(
-          db.accounts.id,
-          db.classificationRules.accountId,
-        ),
-      );
-
-  $$ClassificationRulesTableProcessedTableManager get classificationRulesRefs {
-    final manager = $$ClassificationRulesTableTableManager(
-      $_db,
-      $_db.classificationRules,
-    ).filter((f) => f.accountId.id.sqlEquals($_itemColumn<int>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(
-      _classificationRulesRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-
   static MultiTypedResultKey<$CashFlowMappingsTable, List<CashFlowMapping>>
   _cashFlowMappingsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.cashFlowMappings,
@@ -12398,6 +12495,11 @@ class $$AccountsTableFilterComposer
 
   ColumnFilters<String> get vendorRequirement => $composableBuilder(
     column: $table.vendorRequirement,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isRevenueDeduction => $composableBuilder(
+    column: $table.isRevenueDeduction,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -12589,31 +12691,6 @@ class $$AccountsTableFilterComposer
     return f(composer);
   }
 
-  Expression<bool> classificationRulesRefs(
-    Expression<bool> Function($$ClassificationRulesTableFilterComposer f) f,
-  ) {
-    final $$ClassificationRulesTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.classificationRules,
-      getReferencedColumn: (t) => t.accountId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ClassificationRulesTableFilterComposer(
-            $db: $db,
-            $table: $db.classificationRules,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
   Expression<bool> cashFlowMappingsRefs(
     Expression<bool> Function($$CashFlowMappingsTableFilterComposer f) f,
   ) {
@@ -12711,6 +12788,11 @@ class $$AccountsTableOrderingComposer
 
   ColumnOrderings<String> get vendorRequirement => $composableBuilder(
     column: $table.vendorRequirement,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isRevenueDeduction => $composableBuilder(
+    column: $table.isRevenueDeduction,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -12919,6 +13001,11 @@ class $$AccountsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<bool> get isRevenueDeduction => $composableBuilder(
+    column: $table.isRevenueDeduction,
+    builder: (column) => column,
+  );
+
   $$DimensionValuesTableAnnotationComposer get equityTypeId {
     final $$DimensionValuesTableAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -13109,32 +13196,6 @@ class $$AccountsTableAnnotationComposer
     return f(composer);
   }
 
-  Expression<T> classificationRulesRefs<T extends Object>(
-    Expression<T> Function($$ClassificationRulesTableAnnotationComposer a) f,
-  ) {
-    final $$ClassificationRulesTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.classificationRules,
-          getReferencedColumn: (t) => t.accountId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$ClassificationRulesTableAnnotationComposer(
-                $db: $db,
-                $table: $db.classificationRules,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
-    return f(composer);
-  }
-
   Expression<T> cashFlowMappingsRefs<T extends Object>(
     Expression<T> Function($$CashFlowMappingsTableAnnotationComposer a) f,
   ) {
@@ -13183,7 +13244,6 @@ class $$AccountsTableTableManager
             bool ownerId,
             bool accountOwnerSharesRefs,
             bool journalEntryLinesRefs,
-            bool classificationRulesRefs,
             bool cashFlowMappingsRefs,
           })
         > {
@@ -13219,6 +13279,7 @@ class $$AccountsTableTableManager
                 Value<String?> cashFlowCategory = const Value.absent(),
                 Value<bool> isFxRevalTarget = const Value.absent(),
                 Value<String?> vendorRequirement = const Value.absent(),
+                Value<bool> isRevenueDeduction = const Value.absent(),
               }) => AccountsCompanion(
                 id: id,
                 name: name,
@@ -13239,6 +13300,7 @@ class $$AccountsTableTableManager
                 cashFlowCategory: cashFlowCategory,
                 isFxRevalTarget: isFxRevalTarget,
                 vendorRequirement: vendorRequirement,
+                isRevenueDeduction: isRevenueDeduction,
               ),
           createCompanionCallback:
               ({
@@ -13261,6 +13323,7 @@ class $$AccountsTableTableManager
                 Value<String?> cashFlowCategory = const Value.absent(),
                 Value<bool> isFxRevalTarget = const Value.absent(),
                 Value<String?> vendorRequirement = const Value.absent(),
+                Value<bool> isRevenueDeduction = const Value.absent(),
               }) => AccountsCompanion.insert(
                 id: id,
                 name: name,
@@ -13281,6 +13344,7 @@ class $$AccountsTableTableManager
                 cashFlowCategory: cashFlowCategory,
                 isFxRevalTarget: isFxRevalTarget,
                 vendorRequirement: vendorRequirement,
+                isRevenueDeduction: isRevenueDeduction,
               ),
           withReferenceMapper:
               (p0) =>
@@ -13301,7 +13365,6 @@ class $$AccountsTableTableManager
             ownerId = false,
             accountOwnerSharesRefs = false,
             journalEntryLinesRefs = false,
-            classificationRulesRefs = false,
             cashFlowMappingsRefs = false,
           }) {
             return PrefetchHooks(
@@ -13309,7 +13372,6 @@ class $$AccountsTableTableManager
               explicitlyWatchedTables: [
                 if (accountOwnerSharesRefs) db.accountOwnerShares,
                 if (journalEntryLinesRefs) db.journalEntryLines,
-                if (classificationRulesRefs) db.classificationRules,
                 if (cashFlowMappingsRefs) db.cashFlowMappings,
               ],
               addJoins: <
@@ -13458,28 +13520,6 @@ class $$AccountsTableTableManager
                           ),
                       typedResults: items,
                     ),
-                  if (classificationRulesRefs)
-                    await $_getPrefetchedData<
-                      Account,
-                      $AccountsTable,
-                      ClassificationRule
-                    >(
-                      currentTable: table,
-                      referencedTable: $$AccountsTableReferences
-                          ._classificationRulesRefsTable(db),
-                      managerFromTypedResult:
-                          (p0) =>
-                              $$AccountsTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).classificationRulesRefs,
-                      referencedItemsForCurrentItem:
-                          (item, referencedItems) => referencedItems.where(
-                            (e) => e.accountId == item.id,
-                          ),
-                      typedResults: items,
-                    ),
                   if (cashFlowMappingsRefs)
                     await $_getPrefetchedData<
                       Account,
@@ -13531,7 +13571,6 @@ typedef $$AccountsTableProcessedTableManager =
         bool ownerId,
         bool accountOwnerSharesRefs,
         bool journalEntryLinesRefs,
-        bool classificationRulesRefs,
         bool cashFlowMappingsRefs,
       })
     >;
@@ -18482,6 +18521,7 @@ typedef $$ClassificationRulesTableCreateCompanionBuilder =
       required String pattern,
       required String patternType,
       required int accountId,
+      Value<int?> creditAccountId,
       Value<int?> counterpartyId,
       Value<int> priority,
       Value<bool> isSystemRule,
@@ -18493,6 +18533,7 @@ typedef $$ClassificationRulesTableUpdateCompanionBuilder =
       Value<String> pattern,
       Value<String> patternType,
       Value<int> accountId,
+      Value<int?> creditAccountId,
       Value<int?> counterpartyId,
       Value<int> priority,
       Value<bool> isSystemRule,
@@ -18525,6 +18566,28 @@ final class $$ClassificationRulesTableReferences
       $_db.accounts,
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_accountIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $AccountsTable _creditAccountIdTable(_$AppDatabase db) =>
+      db.accounts.createAlias(
+        $_aliasNameGenerator(
+          db.classificationRules.creditAccountId,
+          db.accounts.id,
+        ),
+      );
+
+  $$AccountsTableProcessedTableManager? get creditAccountId {
+    final $_column = $_itemColumn<int>('credit_account_id');
+    if ($_column == null) return null;
+    final manager = $$AccountsTableTableManager(
+      $_db,
+      $_db.accounts,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_creditAccountIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
@@ -18597,6 +18660,29 @@ class $$ClassificationRulesTableFilterComposer
     final $$AccountsTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.accountId,
+      referencedTable: $db.accounts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AccountsTableFilterComposer(
+            $db: $db,
+            $table: $db.accounts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$AccountsTableFilterComposer get creditAccountId {
+    final $$AccountsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.creditAccountId,
       referencedTable: $db.accounts,
       getReferencedColumn: (t) => t.id,
       builder:
@@ -18702,6 +18788,29 @@ class $$ClassificationRulesTableOrderingComposer
     return composer;
   }
 
+  $$AccountsTableOrderingComposer get creditAccountId {
+    final $$AccountsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.creditAccountId,
+      referencedTable: $db.accounts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AccountsTableOrderingComposer(
+            $db: $db,
+            $table: $db.accounts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
   $$CounterpartiesTableOrderingComposer get counterpartyId {
     final $$CounterpartiesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -18782,6 +18891,29 @@ class $$ClassificationRulesTableAnnotationComposer
     return composer;
   }
 
+  $$AccountsTableAnnotationComposer get creditAccountId {
+    final $$AccountsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.creditAccountId,
+      referencedTable: $db.accounts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AccountsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.accounts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
   $$CounterpartiesTableAnnotationComposer get counterpartyId {
     final $$CounterpartiesTableAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -18819,7 +18951,11 @@ class $$ClassificationRulesTableTableManager
           $$ClassificationRulesTableUpdateCompanionBuilder,
           (ClassificationRule, $$ClassificationRulesTableReferences),
           ClassificationRule,
-          PrefetchHooks Function({bool accountId, bool counterpartyId})
+          PrefetchHooks Function({
+            bool accountId,
+            bool creditAccountId,
+            bool counterpartyId,
+          })
         > {
   $$ClassificationRulesTableTableManager(
     _$AppDatabase db,
@@ -18849,6 +18985,7 @@ class $$ClassificationRulesTableTableManager
                 Value<String> pattern = const Value.absent(),
                 Value<String> patternType = const Value.absent(),
                 Value<int> accountId = const Value.absent(),
+                Value<int?> creditAccountId = const Value.absent(),
                 Value<int?> counterpartyId = const Value.absent(),
                 Value<int> priority = const Value.absent(),
                 Value<bool> isSystemRule = const Value.absent(),
@@ -18858,6 +18995,7 @@ class $$ClassificationRulesTableTableManager
                 pattern: pattern,
                 patternType: patternType,
                 accountId: accountId,
+                creditAccountId: creditAccountId,
                 counterpartyId: counterpartyId,
                 priority: priority,
                 isSystemRule: isSystemRule,
@@ -18869,6 +19007,7 @@ class $$ClassificationRulesTableTableManager
                 required String pattern,
                 required String patternType,
                 required int accountId,
+                Value<int?> creditAccountId = const Value.absent(),
                 Value<int?> counterpartyId = const Value.absent(),
                 Value<int> priority = const Value.absent(),
                 Value<bool> isSystemRule = const Value.absent(),
@@ -18878,6 +19017,7 @@ class $$ClassificationRulesTableTableManager
                 pattern: pattern,
                 patternType: patternType,
                 accountId: accountId,
+                creditAccountId: creditAccountId,
                 counterpartyId: counterpartyId,
                 priority: priority,
                 isSystemRule: isSystemRule,
@@ -18893,7 +19033,11 @@ class $$ClassificationRulesTableTableManager
                         ),
                       )
                       .toList(),
-          prefetchHooksCallback: ({accountId = false, counterpartyId = false}) {
+          prefetchHooksCallback: ({
+            accountId = false,
+            creditAccountId = false,
+            counterpartyId = false,
+          }) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -18923,6 +19067,21 @@ class $$ClassificationRulesTableTableManager
                             referencedColumn:
                                 $$ClassificationRulesTableReferences
                                     ._accountIdTable(db)
+                                    .id,
+                          )
+                          as T;
+                }
+                if (creditAccountId) {
+                  state =
+                      state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.creditAccountId,
+                            referencedTable:
+                                $$ClassificationRulesTableReferences
+                                    ._creditAccountIdTable(db),
+                            referencedColumn:
+                                $$ClassificationRulesTableReferences
+                                    ._creditAccountIdTable(db)
                                     .id,
                           )
                           as T;
@@ -18966,7 +19125,11 @@ typedef $$ClassificationRulesTableProcessedTableManager =
       $$ClassificationRulesTableUpdateCompanionBuilder,
       (ClassificationRule, $$ClassificationRulesTableReferences),
       ClassificationRule,
-      PrefetchHooks Function({bool accountId, bool counterpartyId})
+      PrefetchHooks Function({
+        bool accountId,
+        bool creditAccountId,
+        bool counterpartyId,
+      })
     >;
 typedef $$FiscalPeriodsTableCreateCompanionBuilder =
     FiscalPeriodsCompanion Function({
