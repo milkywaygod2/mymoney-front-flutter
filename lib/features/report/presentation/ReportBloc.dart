@@ -2,8 +2,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/domain/Perspective.dart';
 import '../../../core/models/FinancialRatio.dart';
+import '../../../core/models/PeriodComparison.dart';
 import '../data/ReportQueryService.dart';
 import '../usecase/CalculateFinancialRatios.dart';
+import '../usecase/ComparePeriods.dart';
 import '../usecase/GenerateBalanceSheet.dart';
 import '../usecase/GenerateComprehensiveIncome.dart';
 import '../usecase/GenerateIncomeStatement.dart';
@@ -77,6 +79,16 @@ class LoadComprehensiveIncome extends ReportEvent {
   final int periodId;
 }
 
+/// 기간 비교 로드 (v2.0 §7.5)
+class LoadPeriodComparisons extends ReportEvent {
+  const LoadPeriodComparisons({
+    required this.asOfDate,
+    required this.currentPeriodId,
+  });
+  final DateTime asOfDate;
+  final int currentPeriodId;
+}
+
 // ─────────────────────────────────────────────────────────────────
 // 상태
 // ─────────────────────────────────────────────────────────────────
@@ -117,6 +129,7 @@ class ReportState {
     this.errorMessage,
     this.listRatios,
     this.comprehensiveIncome,
+    this.mapPeriodComparisons,
   });
 
   final bool isLoading;
@@ -134,6 +147,8 @@ class ReportState {
   final List<FinancialRatio>? listRatios;
   /// v2.0: 총포괄이익 결과
   final ComprehensiveIncomeResult? comprehensiveIncome;
+  /// v2.0: 기간 비교 결과 (comparisonType → List<PeriodComparison>)
+  final Map<String, List<PeriodComparison>>? mapPeriodComparisons;
 
   ReportState copyWith({
     bool? isLoading,
@@ -146,6 +161,7 @@ class ReportState {
     String? errorMessage,
     List<FinancialRatio>? listRatios,
     ComprehensiveIncomeResult? comprehensiveIncome,
+    Map<String, List<PeriodComparison>>? mapPeriodComparisons,
   }) {
     return ReportState(
       isLoading: isLoading ?? this.isLoading,
@@ -158,6 +174,7 @@ class ReportState {
       errorMessage: errorMessage,
       listRatios: listRatios ?? this.listRatios,
       comprehensiveIncome: comprehensiveIncome ?? this.comprehensiveIncome,
+      mapPeriodComparisons: mapPeriodComparisons ?? this.mapPeriodComparisons,
     );
   }
 }
@@ -180,12 +197,14 @@ class ReportBloc extends Bloc<ReportEvent, ReportState> {
     required ReportQueryService queryService,
     required CalculateFinancialRatios calculateFinancialRatios,
     required GenerateComprehensiveIncome generateComprehensiveIncome,
+    required ComparePeriods comparePeriods,
   })  : _generateBalanceSheet = generateBalanceSheet,
         _generateIncomeStatement = generateIncomeStatement,
         _runSettlement = runSettlement,
         _queryService = queryService,
         _calculateFinancialRatios = calculateFinancialRatios,
         _generateComprehensiveIncome = generateComprehensiveIncome,
+        _comparePeriods = comparePeriods,
         super(const ReportState()) {
     on<LoadDashboard>(_onLoadDashboard);
     on<LoadBalanceSheet>(_onLoadBalanceSheet);
@@ -194,6 +213,7 @@ class ReportBloc extends Bloc<ReportEvent, ReportState> {
     on<RunSettlementEvent>(_onRunSettlement);
     on<LoadFinancialRatios>(_onLoadFinancialRatios);
     on<LoadComprehensiveIncome>(_onLoadComprehensiveIncome);
+    on<LoadPeriodComparisons>(_onLoadPeriodComparisons);
   }
 
   final GenerateBalanceSheet _generateBalanceSheet;
@@ -202,6 +222,7 @@ class ReportBloc extends Bloc<ReportEvent, ReportState> {
   final ReportQueryService _queryService;
   final CalculateFinancialRatios _calculateFinancialRatios;
   final GenerateComprehensiveIncome _generateComprehensiveIncome;
+  final ComparePeriods _comparePeriods;
 
   // ─────────────────────────────────────────────────────────────
   // 대시보드 로드 — B/S + P/L 요약 합산
@@ -381,6 +402,25 @@ class ReportBloc extends Bloc<ReportEvent, ReportState> {
         periodId: event.periodId,
       );
       emit(state.copyWith(isLoading: false, comprehensiveIncome: result));
+    } catch (e) {
+      emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // v2.0: 기간 비교 로드 (MOM/QOQ/YOY)
+  // ─────────────────────────────────────────────────────────────
+  Future<void> _onLoadPeriodComparisons(
+    LoadPeriodComparisons event,
+    Emitter<ReportState> emit,
+  ) async {
+    emit(state.copyWith(isLoading: true));
+    try {
+      final mapResults = await _comparePeriods.compareAllTypes(
+        asOfDate: event.asOfDate,
+        currentPeriodId: event.currentPeriodId,
+      );
+      emit(state.copyWith(isLoading: false, mapPeriodComparisons: mapResults));
     } catch (e) {
       emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
     }
