@@ -185,7 +185,7 @@ class _SettlementProgressView extends StatelessWidget {
   Widget build(BuildContext context) {
     final strStep = switch (currentStep) {
       SettlementStep.preparingClose => '1단계: 마감 준비 중...',
-      SettlementStep.fxRevaluation => '2단계: 외환 평가 중...',
+      SettlementStep.executingPlugins => '2단계: 자동 결산 전표 생성 중...',
       SettlementStep.taxAdjustment => '3단계: 세무조정 중...',
       SettlementStep.closingIncome => '4단계: 손익 마감 중...',
       SettlementStep.savingSnapshot => '5단계: 스냅샷 저장 중...',
@@ -256,7 +256,7 @@ class _SettlementResultView extends StatelessWidget {
 
   String _stepLabel(SettlementStep step) => switch (step) {
         SettlementStep.preparingClose => '1단계: 마감 준비',
-        SettlementStep.fxRevaluation => '2단계: 외환 평가',
+        SettlementStep.executingPlugins => '2단계: 자동 결산 전표',
         SettlementStep.taxAdjustment => '3단계: 세무조정',
         SettlementStep.closingIncome => '4단계: 손익 마감',
         SettlementStep.savingSnapshot => '5단계: 스냅샷 저장',

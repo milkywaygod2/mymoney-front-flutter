@@ -254,7 +254,7 @@ class RunSettlement {
       final fxLossAccountId = await _findAccountIdByPath('EXPENSE.FINANCIAL.FX_LOSS');
       if (fxGainAccountId == null || fxLossAccountId == null) {
         return const SettlementStepResult(
-          step: SettlementStep.fxRevaluation,
+          step: SettlementStep.executingPlugins,
           isSuccess: false,
           message: '외환차익/외환차손 계정을 찾을 수 없습니다 — 계정과목 설정 확인 필요',
         );
@@ -274,7 +274,7 @@ class RunSettlement {
 
       if (listMultiCurrencyJels.isEmpty) {
         return const SettlementStepResult(
-          step: SettlementStep.fxRevaluation,
+          step: SettlementStep.executingPlugins,
           isSuccess: true,
           message: '다통화 거래 없음 — 외환 평가 전표 불필요',
           details: {'fxEntryCount': 0},
@@ -388,14 +388,14 @@ class RunSettlement {
       }
 
       return SettlementStepResult(
-        step: SettlementStep.fxRevaluation,
+        step: SettlementStep.executingPlugins,
         isSuccess: true,
         message: '외환 평가 전표 $countEntries건 생성 완료',
         details: {'fxEntryCount': countEntries},
       );
     } catch (e) {
       return SettlementStepResult(
-        step: SettlementStep.fxRevaluation,
+        step: SettlementStep.executingPlugins,
         isSuccess: false,
         message: '외환 평가 전표 생성 실패: $e',
       );
