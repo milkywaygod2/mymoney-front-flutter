@@ -1,8 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/domain/Perspective.dart';
+import '../../../core/models/FinancialRatio.dart';
 import '../data/ReportQueryService.dart';
+import '../usecase/CalculateFinancialRatios.dart';
 import '../usecase/GenerateBalanceSheet.dart';
+import '../usecase/GenerateComprehensiveIncome.dart';
 import '../usecase/GenerateIncomeStatement.dart';
 import '../usecase/RunSettlement.dart';
 
@@ -58,6 +61,22 @@ class RunSettlementEvent extends ReportEvent {
   final int retainedEarningsAccountId;
 }
 
+/// 재무비율 로드 (v2.0 §7.4)
+class LoadFinancialRatios extends ReportEvent {
+  const LoadFinancialRatios({
+    required this.periodId,
+    required this.asOfDate,
+  });
+  final int periodId;
+  final DateTime asOfDate;
+}
+
+/// 총포괄이익 로드 (v2.0 §12.1a)
+class LoadComprehensiveIncome extends ReportEvent {
+  const LoadComprehensiveIncome({required this.periodId});
+  final int periodId;
+}
+
 // ─────────────────────────────────────────────────────────────────
 // 상태
 // ─────────────────────────────────────────────────────────────────
@@ -96,6 +115,8 @@ class ReportState {
     this.settlementResult,
     this.settlementStep,
     this.errorMessage,
+    this.listRatios,
+    this.comprehensiveIncome,
   });
 
   final bool isLoading;
@@ -109,6 +130,11 @@ class ReportState {
   final SettlementStep? settlementStep;
   final String? errorMessage;
 
+  /// v2.0: 재무비율 목록
+  final List<FinancialRatio>? listRatios;
+  /// v2.0: 총포괄이익 결과
+  final ComprehensiveIncomeResult? comprehensiveIncome;
+
   ReportState copyWith({
     bool? isLoading,
     DashboardSummary? dashboard,
@@ -118,6 +144,8 @@ class ReportState {
     SettlementResult? settlementResult,
     SettlementStep? settlementStep,
     String? errorMessage,
+    List<FinancialRatio>? listRatios,
+    ComprehensiveIncomeResult? comprehensiveIncome,
   }) {
     return ReportState(
       isLoading: isLoading ?? this.isLoading,
@@ -128,6 +156,8 @@ class ReportState {
       settlementResult: settlementResult ?? this.settlementResult,
       settlementStep: settlementStep ?? this.settlementStep,
       errorMessage: errorMessage,
+      listRatios: listRatios ?? this.listRatios,
+      comprehensiveIncome: comprehensiveIncome ?? this.comprehensiveIncome,
     );
   }
 }
@@ -148,22 +178,30 @@ class ReportBloc extends Bloc<ReportEvent, ReportState> {
     required GenerateIncomeStatement generateIncomeStatement,
     required RunSettlement runSettlement,
     required ReportQueryService queryService,
+    required CalculateFinancialRatios calculateFinancialRatios,
+    required GenerateComprehensiveIncome generateComprehensiveIncome,
   })  : _generateBalanceSheet = generateBalanceSheet,
         _generateIncomeStatement = generateIncomeStatement,
         _runSettlement = runSettlement,
         _queryService = queryService,
+        _calculateFinancialRatios = calculateFinancialRatios,
+        _generateComprehensiveIncome = generateComprehensiveIncome,
         super(const ReportState()) {
     on<LoadDashboard>(_onLoadDashboard);
     on<LoadBalanceSheet>(_onLoadBalanceSheet);
     on<LoadIncomeStatement>(_onLoadIncomeStatement);
     on<ChangeReportPeriod>(_onChangePeriod);
     on<RunSettlementEvent>(_onRunSettlement);
+    on<LoadFinancialRatios>(_onLoadFinancialRatios);
+    on<LoadComprehensiveIncome>(_onLoadComprehensiveIncome);
   }
 
   final GenerateBalanceSheet _generateBalanceSheet;
   final GenerateIncomeStatement _generateIncomeStatement;
   final RunSettlement _runSettlement;
   final ReportQueryService _queryService;
+  final CalculateFinancialRatios _calculateFinancialRatios;
+  final GenerateComprehensiveIncome _generateComprehensiveIncome;
 
   // ─────────────────────────────────────────────────────────────
   // 대시보드 로드 — B/S + P/L 요약 합산
@@ -306,6 +344,43 @@ class ReportBloc extends Bloc<ReportEvent, ReportState> {
       if (result.isCompleted) {
         add(const LoadDashboard());
       }
+    } catch (e) {
+      emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // v2.0: 재무비율 로드
+  // ─────────────────────────────────────────────────────────────
+  Future<void> _onLoadFinancialRatios(
+    LoadFinancialRatios event,
+    Emitter<ReportState> emit,
+  ) async {
+    emit(state.copyWith(isLoading: true));
+    try {
+      final listRatios = await _calculateFinancialRatios.execute(
+        periodId: event.periodId,
+        asOfDate: event.asOfDate,
+      );
+      emit(state.copyWith(isLoading: false, listRatios: listRatios));
+    } catch (e) {
+      emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // v2.0: 총포괄이익 로드
+  // ─────────────────────────────────────────────────────────────
+  Future<void> _onLoadComprehensiveIncome(
+    LoadComprehensiveIncome event,
+    Emitter<ReportState> emit,
+  ) async {
+    emit(state.copyWith(isLoading: true));
+    try {
+      final result = await _generateComprehensiveIncome.execute(
+        periodId: event.periodId,
+      );
+      emit(state.copyWith(isLoading: false, comprehensiveIncome: result));
     } catch (e) {
       emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
     }
