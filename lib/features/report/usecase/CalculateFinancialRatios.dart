@@ -200,6 +200,75 @@ class CalculateFinancialRatios {
       denominator: totalRevenue,
     ));
 
+    // === P3 확장 +16종 (총 29종) ===
+
+    // 14. PER = 주가 / EPS (외부 데이터 의존 — 0으로 stub)
+    listRatios.add(_buildRatio(code: 'PER', category: RatioCategory.profitability, periodId: periodId, numerator: 0, denominator: 1));
+
+    // 15. EPS = Rolling12M(순이익) / 주식수 (외부 데이터 의존 — 0으로 stub)
+    listRatios.add(_buildRatio(code: 'EPS', category: RatioCategory.profitability, periodId: periodId, numerator: netIncome, denominator: 1));
+
+    // 16. ROIC = 세후순영업이익(NOPAT) / 영업투하자본(IC)
+    final nopat = operatingIncome; // 간이: 세후 조정 생략
+    final investedCapital = currentEquity + currentLiabilities - currentCurrentAssets;
+    listRatios.add(_buildRatio(code: 'ROIC', category: RatioCategory.profitability, periodId: periodId, numerator: nopat, denominator: investedCapital));
+
+    // 17. EBITDA 마진율 = (세전이익+이자비용+감���상각비) / 매출
+    final depreciation = _sumPlByPath(listPl, 'EXPENSE.DEPRECIATION').abs();
+    final ebitda = netIncome + interestExpense + depreciation;
+    listRatios.add(_buildRatio(code: 'EBITDA_MARGIN', category: RatioCategory.profitability, periodId: periodId, numerator: ebitda, denominator: totalRevenue));
+
+    // --- 성장성 3종 ---
+    // 18. 유동��산��가율
+    final prevCurrentAssets = _sumByPath(mapBsPrevious, 'ASSET.CURRENT');
+    listRatios.add(_buildRatio(code: 'CURRENT_ASSET_GROWTH', category: RatioCategory.growth, periodId: periodId, numerator: currentCurrentAssets - prevCurrentAssets, denominator: prevCurrentAssets));
+
+    // 19. 유형자산증가율
+    final currentTangible = _sumByPath(mapBsCurrent, 'ASSET.NON_CURRENT.TANGIBLE');
+    final prevTangible = _sumByPath(mapBsPrevious, 'ASSET.NON_CURRENT.TANGIBLE');
+    listRatios.add(_buildRatio(code: 'TANGIBLE_ASSET_GROWTH', category: RatioCategory.growth, periodId: periodId, numerator: currentTangible - prevTangible, denominator: prevTangible));
+
+    // 20. 자기자본증가율
+    listRatios.add(_buildRatio(code: 'EQUITY_GROWTH', category: RatioCategory.growth, periodId: periodId, numerator: currentEquity - previousEquity, denominator: previousEquity));
+
+    // --- 안정성 5종 ---
+    // 21. 유동부채비율 = 유동부채 / 자본
+    listRatios.add(_buildRatio(code: 'CURRENT_LIABILITY_RATIO', category: RatioCategory.stability, periodId: periodId, numerator: currentCurrentLiabilities, denominator: currentEquity));
+
+    // 22. 비유동부채비율 = 비유동부채 / 자본
+    final nonCurrentLiabilities = currentLiabilities - currentCurrentLiabilities;
+    listRatios.add(_buildRatio(code: 'NON_CURRENT_LIABILITY_RATIO', category: RatioCategory.stability, periodId: periodId, numerator: nonCurrentLiabilities, denominator: currentEquity));
+
+    // 23. 순부채비율 = (부채 - 현금성자산) / 자본
+    final cashAssets = _sumByPath(mapBsCurrent, 'ASSET.CURRENT.CASH');
+    listRatios.add(_buildRatio(code: 'NET_DEBT_RATIO', category: RatioCategory.stability, periodId: periodId, numerator: currentLiabilities - cashAssets, denominator: currentEquity));
+
+    // 24. 당좌비율 = (유동자산 - 재고) / 유동부채
+    final inventories = _sumByPath(mapBsCurrent, 'ASSET.CURRENT.INVENTORY');
+    listRatios.add(_buildRatio(code: 'QUICK_RATIO', category: RatioCategory.stability, periodId: periodId, numerator: currentCurrentAssets - inventories, denominator: currentCurrentLiabilities));
+
+    // 25. 금융���부담률 = 이자비용 / 매출
+    listRatios.add(_buildRatio(code: 'FINANCIAL_COST_RATIO', category: RatioCategory.stability, periodId: periodId, numerator: interestExpense, denominator: totalRevenue));
+
+    // --- ��동성 5종 ---
+    // 26. 재고자산회전율 = 매출 / 평균���고
+    final prevInventories = _sumByPath(mapBsPrevious, 'ASSET.CURRENT.INVENTORY');
+    final avgInventories = (inventories + prevInventories) ~/ 2;
+    listRatios.add(_buildRatio(code: 'INVENTORY_TURNOVER', category: RatioCategory.activity, periodId: periodId, numerator: totalRevenue, denominator: avgInventories));
+
+    // 27. 순운전자본회전율 = 매출 / (유동자산 - 유동부채)
+    final nwc = currentCurrentAssets - currentCurrentLiabilities;
+    listRatios.add(_buildRatio(code: 'NWC_TURNOVER', category: RatioCategory.activity, periodId: periodId, numerator: totalRevenue, denominator: nwc));
+
+    // 28. 유형자산회전율 = 매출 / 유형자산
+    listRatios.add(_buildRatio(code: 'TANGIBLE_ASSET_TURNOVER', category: RatioCategory.activity, periodId: periodId, numerator: totalRevenue, denominator: currentTangible));
+
+    // 29. 매입채무회전율 = 매출원가 / 평균매입채무
+    final payables = _sumByPath(mapBsCurrent, 'LIABILITY.CURRENT.PAYABLE');
+    final prevPayables = _sumByPath(mapBsPrevious, 'LIABILITY.CURRENT.PAYABLE');
+    final avgPayables = (payables + prevPayables) ~/ 2;
+    listRatios.add(_buildRatio(code: 'AP_TURNOVER', category: RatioCategory.activity, periodId: periodId, numerator: totalExpense, denominator: avgPayables));
+
     return listRatios;
   }
 

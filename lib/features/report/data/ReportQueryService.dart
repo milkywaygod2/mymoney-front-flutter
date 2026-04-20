@@ -46,6 +46,20 @@ class IncomeStatementEntry {
   final int amount;
 }
 
+/// v2.0: 통화별 FX 익스포저 엔트리
+class FxExposureEntry {
+  const FxExposureEntry({
+    required this.currency,
+    required this.assetAmount,
+    required this.liabilityAmount,
+    required this.netPosition,
+  });
+  final String currency;
+  final int assetAmount;
+  final int liabilityAmount;
+  final int netPosition;
+}
+
 /// ReportQueryService — B/S, P/L 실시간 집계 쿼리 서비스
 ///
 /// [아키텍처 근거 — CW_ARCHITECTURE.md 섹션 7.1]
@@ -214,6 +228,43 @@ class ReportQueryService {
       'totalDebit': row.read<int>('total_debit'),
       'totalCredit': row.read<int>('total_credit'),
     };
+  }
+
+  /// v2.0: 통화별 FX 익스포저 집계
+  /// JEL의 original_currency별로 자산(차변)/부채(대변) 잔액을 집계
+  Future<List<FxExposureEntry>> calculateFxExposure({
+    required DateTime snapshotDate,
+  }) async {
+    final listRows = await _db.customSelect(
+      '''
+      SELECT jel.original_currency AS currency,
+        SUM(CASE WHEN a.nature IN ('ASSET') AND jel.entry_type = 'DEBIT' THEN jel.base_amount
+                 WHEN a.nature IN ('ASSET') AND jel.entry_type = 'CREDIT' THEN -jel.base_amount
+                 ELSE 0 END) AS asset_amount,
+        SUM(CASE WHEN a.nature IN ('LIABILITY') AND jel.entry_type = 'CREDIT' THEN jel.base_amount
+                 WHEN a.nature IN ('LIABILITY') AND jel.entry_type = 'DEBIT' THEN -jel.base_amount
+                 ELSE 0 END) AS liability_amount
+      FROM journal_entry_lines jel
+      JOIN accounts a ON jel.account_id = a.id
+      JOIN transactions t ON jel.transaction_id = t.id
+      WHERE t.status = 'POSTED' AND t.date <= ?
+        AND jel.original_currency != jel.base_currency
+      GROUP BY jel.original_currency
+      ''',
+      variables: [Variable.withDateTime(snapshotDate)],
+      readsFrom: {_db.journalEntryLines, _db.accounts, _db.transactions},
+    ).get();
+
+    return listRows.map((row) {
+      final assetAmt = row.read<int>('asset_amount');
+      final liabilityAmt = row.read<int>('liability_amount');
+      return FxExposureEntry(
+        currency: row.read<String>('currency'),
+        assetAmount: assetAmt,
+        liabilityAmount: liabilityAmt,
+        netPosition: assetAmt - liabilityAmt,
+      );
+    }).toList();
   }
 
   /// Perspective에서 소유자 ID 목록 추출 (owner 필터용)
