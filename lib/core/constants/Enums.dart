@@ -76,6 +76,49 @@ enum RecordingDirection {
   inverted,  // 정부회계 (예산 수령 = 대변이 "증가"로 해석)
 }
 
+// ===== v2.0 추가 열거형 =====
+
+/// CF 보고서 — Account가 현금흐름표에서 어디에 분류되는지
+enum CashFlowCategory {
+  cash,                // 현금 및 현금성자산 (기초/기말 현금)
+  receivablePayable,   // 채권/채무 (운전자본 변동 또는 투자/재무)
+  revenueExpense,      // 수익/비용 (비현금항목 가감)
+}
+
+/// Account — 거래처 입력 강제 수준 (COA Col21 기반)
+enum VendorRequirement {
+  notSet,    // 미설정 (집계/상위 노드)
+  optional,  // 선택 (거래처 입력 권장)
+  required,  // 필수 (거래처 미입력 시 저장 차단)
+}
+
+/// CF 코드 — CashFlowCodes 테이블의 indexType
+enum CfAccountIndex {
+  aggregate,  // 하위 합산 수식: SUM(children)
+  actual,     // 직접 입력/계산: Account.cashFlowCategory 기반
+  automatic,  // 타 보고서 연동: 예) C110000 = PL 당기순이익
+}
+
+/// OCI 5항목 — 기타포괄손익 분류 (CE 행 항목)
+enum OciCategory {
+  fvociValuation,              // FVOCI 금융자산 평가손익
+  foreignCurrencyTranslation,  // 해외사업환산손익
+  equityMethodChanges,         // 지분법자본변동
+  actuarialGainsLosses,        // 보험수리적손익 (확정급여 재측정)
+  otherOci,                    // 기타 (현금흐름위험회피 등, P2 세분 흡수)
+}
+
+/// CE — 자본변동표 행 유형
+enum EquityChangeType {
+  beginningBalance,   // 기초잔액
+  netIncome,          // 당기순이익
+  ociChange,          // OCI 변동 (5항목)
+  dividends,          // 배당
+  treasuryStock,      // 자사주 거래
+  other,              // 기타 자본거래
+  endingBalance,      // 기말잔액
+}
+
 /// 금액 배율 상수 — int 저장 시 소수점 표현을 위한 배율
 /// 예: 1 USD = 1,350.123456 KRW → 1350123456 (배율 1,000,000)
 const int kExchangeRateMultiplier = 1000000;

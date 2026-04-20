@@ -34,4 +34,12 @@ class Accounts extends Table {
   TextColumn get countrySpecific => text().nullable()();
 
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+
+  // --- v2.0 추가 ---
+  /// CF 보고서 자동 분류 태그: cash | receivablePayable | revenueExpense
+  TextColumn get cashFlowCategory => text().nullable()();
+  /// FX 재평가 대상 여부 (결산 외환평가 자동 선별, COA Col19 기반)
+  BoolColumn get isFxRevalTarget => boolean().withDefault(const Constant(false))();
+  /// 거래처 입력 강제 수준: notSet | optional | required
+  TextColumn get vendorRequirement => text().nullable()();
 }
