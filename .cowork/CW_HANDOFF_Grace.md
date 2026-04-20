@@ -1,8 +1,8 @@
 # CW_HANDOFF_Grace.md — Grace 인계 문서
 
-> 담당: Grace (ExchangeRate + Report + Settlement + OCI + 재무비율)
-> 워크트리: `E:/_Develop/dart/mymoney-wk-grace` (브랜치: `wk-w8-grace`)
-> 최종 갱신: 2026-04-20 (Grace-3 Opus — 아키텍처 v2.0 TF + 리서치)
+> 담당: Grace (ExchangeRate + Report + Settlement + OCI + 재무비율 + FX순포지션)
+> 워크트리: `E:/_Develop/dart/mymoney-wk-grace` (브랜치: `wk-v2-grace`)
+> 최종 갱신: 2026-04-20 (Grace-3 Opus — v2.0 W7R~W14 구현 완료)
 
 ---
 
@@ -21,6 +21,12 @@
 | **W10** | **K-IFRS 표준 계정과목 리서치** | 미커밋 | `.cowork/CW_RESEARCH_KIFRS.md` (68경로 빠짐 식별) |
 | **W10** | **TF 난상토론 3라운드 참여** | - | OCI P1 5종, 비율 8+5+16종, 세그먼트 Perspective 대체, CF 30코드 합의 |
 | **W10** | **v2.0 P1~P4 전수 분류** | - | 52항목 (P1:21 / P2:11 / P3:8 / P4:12) |
+| **W7R** | FX purpose 확장 + isFxRevalTarget 필터 | `e0ff334` | ExchangeRateDao.dart, EvaluateUnrealizedFxGain.dart |
+| **W11** | 스키마+VO+시드+인터페이스 (9건) | `e0ff334` | FiscalPeriodTable+note, FinancialRatioSnapshotTable, FinancialRatio/PeriodComparison VO, Enums+ComparisonType/RatioCategory, OCI 5종시드, IFinancialRatioRepository |
+| **W12** | 비율8종+총포괄이익+DAO/Repo+ReportBloc | `a13d27f` | CalculateFinancialRatios, GenerateComprehensiveIncome, FinancialRatioDao/Repository, ReportBloc 확장 |
+| **W13** | 기간비교+비율13종+OCI12종+ReportBloc | `11fd71d` | ComparePeriods, CalculateFinancialRatios+5종, DimensionValueSeeds OCI 12종, ReportBloc+LoadPeriodComparisons |
+| **FIX** | IncomeStatementEntry 타입에러+DI등록 | `8d681a2` | .balance→.amount 수정, _sumPlByNature/Path 헬퍼, Injection.dart 3 UseCase DI등록 |
+| **W14** | 비율29종+매각예정Path+FX순포지션 | `656aaeb` | CalculateFinancialRatios+16종, ASSET/LIABILITY.HELD_FOR_SALE시드, CalculateFxExposure+ReportQueryService.calculateFxExposure |
 
 ---
 

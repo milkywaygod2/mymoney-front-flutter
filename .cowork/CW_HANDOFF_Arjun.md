@@ -154,8 +154,50 @@ enum RelatedPartyType { parent, subsidiary, associate, affiliate, otherRelated }
 
 ---
 
+## 완료 작업 — v2.0 구현 (W7R~W14)
+
+### W7R+W11 스키마+도메인 확장 (커밋 9b375b3)
+
+- ExchangeRateTable purpose 주석에 AVERAGE/CLOSING 명시
+- CounterpartyTable +relatedPartyType +entityType
+- TransactionTable +referenceNo +reversalType, source에 systemAuditAdjustment 추가
+- Enums.dart: RelatedPartyType(5값) + EntityType(6값) + ReversalType(2값) + TransactionSource.systemAuditAdjustment
+- Counterparty.dart: +필드 + INV-C4 검증
+- Transaction.dart: +필드 + voidTransaction에서 reversalOrigin 자동 설정
+- ICounterpartyRepository: +findByRelatedPartyType +findRelatedParties
+- LegalParameterSeeds.dart 신규: 대손충당금 설정율 한도 시드
+
+### W12 규칙엔진+Repository 확장 (커밋 7429364)
+
+- TaxRuleEngine: 대손충당금 규칙 추가 (deductibleLimited), 미판정 키워드에서 '대손충당'/'채권'/'대여금' 제거
+- CounterpartyDao: +findByRelatedPartyType +findRelatedParties 쿼리
+- CounterpartyRepository: +2메서드 구현, save()에 relatedPartyType/entityType 저장, _toDomain 매핑
+- TransactionRepository: save()에 referenceNo/reversalType 저장, _toDomain 매핑, +findByReferenceNo
+- TransactionDao: +findByReferenceNo 쿼리
+
+### W13 분류엔진+Dashboard (커밋 65e4658)
+
+- ClassificationRuleTable: +creditAccountId nullable FK (대변 계정 자동결정)
+- ClassificationEngine: ClassificationResult에 creditAccountId 필드 추가, 매칭 시 반환
+- AccountTable: +isRevenueDeduction bool (매출차감 플래그)
+- DashboardPage: 전월 대비 ±% 칩 위젯 (_buildChangeChip)
+- ReportBloc DashboardSummary: +netAssetsChangeRatio/revenueChangeRatio/expenseChangeRatio
+
+### W14 UseCase (커밋 2337ba6)
+
+- CalculateBadDebtAllowance.dart 신규: LP 설정율 한도 기반 채권 연령분석, 한도 초과분 산출
+- GenerateProvisionRollforward.dart 신규: 기초+전입-사용-환입=기말 롤포워드
+
+---
+
+## 현재 상태
+
+- v2.0 W7R~W14 **전부 완료** (워크트리 wk-v2-arjun, 커밋 4건)
+- W15(Sync/Auth) + W7-OCR: **외부 의존 대기** (서버 API / ML Kit 패키지)
+- 담당 영역 구현 완료 항목: Counterparty 확장, Tax 대손충당금, Classification creditAccountId, Dashboard 기간비교 UI
+
 ## 다음 대기 중
 
 - team-lead 추가 지시 대기
-- v2.0 구현 Phase (W11 이후) 배정 대기
-- 담당 영역: Counterparty relatedPartyType/entityType 구현, TaxRuleEngine 대손충당금 규칙, ClassificationRules.creditAccountId(P2)
+- QA Loop v2.0 실행 대��� (3명 전원 구현 완료 후)
+- 잔여 후보: ComparePeriods UseCase 연동 시 DashboardPage 활성화, CounterpartyMatcher relatedPartyType 활용 확장

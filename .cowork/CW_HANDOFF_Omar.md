@@ -1,7 +1,7 @@
 # CW_HANDOFF_Omar.md — Omar 작업 인수인계
 
 > 에이전트: Omar-3 (Opus) | 담당: Sync+Auth+인프라+IFRS
-> 최종 갱신: 2026-04-20 (아키텍처 v2.0 TF + SAP 리서치)
+> 최종 갱신: 2026-04-20 (v2.0 W11~W14 구현 완료)
 > 현재 브랜치: `agent-automation`
 > 워크트리: `E:/_Develop/dart/mymoney-wk-omar` (브랜치: `wk-w7-omar`, 머지 완료)
 
@@ -64,6 +64,36 @@
 | SAP S/4HANA 리서치 | CW_RESEARCH_SAP.md (흡수 6개, 스킵 8개, §15 예약 5개) |
 | 기존 코드 vs v2.0 GAP | 8항목 전부 미구현 확인 |
 | 라운드3 보강 | 재고평가 P3, 계정자동결정 P2, 원가배부 스킵 합의 |
+
+### W12 (구현) — 커밋 `a8baa01`, `1f02869`
+
+| 작업 | 산출물 |
+|------|--------|
+| RunSettlement 플러그인훅 개편 | SettlementPlugin 인터페이스 + 플러그인 순차실행 + Step5 BS/PL 스냅샷 |
+| SettlementSnapshotDao/Repo | Drift DAO + ISettlementSnapshotRepository 구현체 |
+
+### W13 (구현) — 커밋 `618da5e`
+
+| 작업 | 산출물 |
+|------|--------|
+| GenerateCashFlowStatement | 5분류 간접법 CF (영업/투자/재무/환율/순변동) |
+| GenerateEquityChangeStatement | 자본 5구성요소 롤포워드 CE |
+| CashFlowCodeDao/Repo | ICashFlowCodeRepository 구현체 |
+
+### W14 (구현) — 커밋 `283626f`
+
+| 작업 | 산출물 |
+|------|--------|
+| CF 영업세부 확장 | 이자지급/이자수취/배당수취/법인세 4항목 분리 (C140~C170) |
+| Account.valuationMethod | InventoryValuationMethod enum + AccountTable 컬럼 |
+| DepreciationPlugin | SettlementPlugin 구현체 (order=30, 정액법 월 상각) |
+
+### 에러 수정 — 커밋 `4457c28`
+
+| 내용 |
+|------|
+| SettlementStep.fxRevaluation→executingPlugins (RunSettlement+SettlementPage) |
+| CF/CE snapshotDate required 파라미터 추가 |
 
 ---
 
