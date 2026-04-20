@@ -44,4 +44,6 @@ class Accounts extends Table {
   TextColumn get vendorRequirement => text().nullable()();
   /// 매출차감 계정 플래그 — 순액 표시 수수료 (INV-A6: nature == EXPENSE만 가능)
   BoolColumn get isRevenueDeduction => boolean().withDefault(const Constant(false))();
+  /// 재고 평가 방법 (P3 — 재고 계정만): fifo | weightedAverage | movingAverage | specificIdentification | standardCost
+  TextColumn get valuationMethod => text().nullable()();
 }

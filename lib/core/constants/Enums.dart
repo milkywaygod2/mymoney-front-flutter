@@ -146,6 +146,15 @@ const int kExchangeRateMultiplier = 1000000;
 /// 지분율 배율 — 100% = 10000, 33.33% = 3333
 const int kShareRatioMultiplier = 10000;
 
+/// 재고 평가 방법 — K-IFRS 1002호 기준 (P3 예약)
+enum InventoryValuationMethod {
+  fifo,                     // 선입선출법
+  weightedAverage,          // 가중평균법 (기간 단위)
+  movingAverage,            // 이동평균법 (거래 단위)
+  specificIdentification,   // 개별법
+  standardCost,             // 표준원가법
+}
+
 /// 특수관계자 5단계 분류 (K-IFRS 1024 / 공정거래법) — v2.0
 enum RelatedPartyType {
   parent,       // 지배기업

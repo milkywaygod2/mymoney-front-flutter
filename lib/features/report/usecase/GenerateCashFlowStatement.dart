@@ -90,6 +90,26 @@ class GenerateCashFlowStatement {
       }
     }
 
+    // 3b. 영업 세부 분리 (C140~C170) — 이자/배당/법인세
+    var interestPaid = 0;     // C140000: 이자지급
+    var interestReceived = 0; // C150000: 이자수취
+    var dividendReceived = 0; // C160000: 배당수취
+    var taxPaid = 0;          // C170000: 법인세납부
+    for (final expense in incomeStatement.listExpenses) {
+      if (expense.equityTypePath.startsWith('EXPENSE.FINANCIAL.INTEREST')) {
+        interestPaid += expense.amount;
+      } else if (expense.equityTypePath.startsWith('EXPENSE.TAX.INCOME_TAX')) {
+        taxPaid += expense.amount;
+      }
+    }
+    for (final revenue in incomeStatement.listRevenues) {
+      if (revenue.equityTypePath.startsWith('REVENUE.FINANCIAL.INTEREST')) {
+        interestReceived += revenue.amount;
+      } else if (revenue.equityTypePath.startsWith('REVENUE.FINANCIAL.DIVIDEND')) {
+        dividendReceived += revenue.amount;
+      }
+    }
+
     // 영업활동 합계
     final operatingTotal = netIncome + nonCashAdjustment + operatingWorkingCapitalChange;
 
@@ -133,6 +153,10 @@ class GenerateCashFlowStatement {
         case 'C110000': amount = netIncome; break;
         case 'C120000': amount = nonCashAdjustment; break;
         case 'C130000': amount = operatingWorkingCapitalChange; break;
+        case 'C140000': amount = -interestPaid; break;   // 이자지급 (유출 = 음수)
+        case 'C150000': amount = interestReceived; break; // 이자수취
+        case 'C160000': amount = dividendReceived; break; // 배당수취
+        case 'C170000': amount = -taxPaid; break;         // 법인세납부 (유출 = 음수)
         case 'C200000': amount = investingTotal; break;
         case 'C300000': amount = financingTotal; break;
         case 'C400000': amount = fxEffect; break;
