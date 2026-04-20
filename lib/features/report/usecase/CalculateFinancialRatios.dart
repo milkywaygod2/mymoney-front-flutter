@@ -141,6 +141,65 @@ class CalculateFinancialRatios {
       denominator: interestExpense,
     ));
 
+    // === P2 확장 +5종 (총 13종) ===
+
+    // 9. 자본유보율 = (이익잉여금 + 자본잉여금) / 납입자본금 × 100
+    final retainedEarnings = _sumByPath(mapBsCurrent, 'EQUITY.RETAINED');
+    final capitalSurplus = _sumByPath(mapBsCurrent, 'EQUITY.SURPLUS');
+    final capitalStock = _sumByPath(mapBsCurrent, 'EQUITY.CAPITAL');
+    listRatios.add(_buildRatio(
+      code: 'CAPITAL_RESERVE',
+      category: RatioCategory.stability,
+      periodId: periodId,
+      numerator: retainedEarnings + capitalSurplus,
+      denominator: capitalStock,
+    ));
+
+    // 10. 총자산회전율 = Rolling12M(매출) / 총자산
+    listRatios.add(_buildRatio(
+      code: 'ASSET_TURNOVER',
+      category: RatioCategory.activity,
+      periodId: periodId,
+      numerator: totalRevenue,
+      denominator: currentAssets,
+    ));
+
+    // 11. 자기자본회전율 = Rolling12M(매출) / 자기자본
+    listRatios.add(_buildRatio(
+      code: 'EQUITY_TURNOVER',
+      category: RatioCategory.activity,
+      periodId: periodId,
+      numerator: totalRevenue,
+      denominator: currentEquity,
+    ));
+
+    // 12. 채권회수기간 = 365 / 매출채권회전율
+    final arTurnoverValue = avgReceivables != 0
+        ? (totalRevenue * kRatioMultiplier) ~/ avgReceivables
+        : 0;
+    final arDays = arTurnoverValue != 0
+        ? (365 * kRatioMultiplier * kRatioMultiplier) ~/ arTurnoverValue
+        : 0;
+    listRatios.add(FinancialRatio(
+      ratioCode: 'AR_DAYS',
+      category: RatioCategory.activity.name,
+      periodId: periodId,
+      numerator: 365,
+      denominator: arTurnoverValue,
+      ratioValue: arDays,
+      calculatedAt: DateTime.now(),
+    ));
+
+    // 13. 기부금비율 = 기부금 / 매출
+    final donations = _sumByPath(mapPl, 'EXPENSE.OTHER').abs();
+    listRatios.add(_buildRatio(
+      code: 'DONATION_RATIO',
+      category: RatioCategory.activity,
+      periodId: periodId,
+      numerator: donations,
+      denominator: totalRevenue,
+    ));
+
     return listRatios;
   }
 
