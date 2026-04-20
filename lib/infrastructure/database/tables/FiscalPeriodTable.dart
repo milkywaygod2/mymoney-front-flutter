@@ -9,4 +9,6 @@ class FiscalPeriods extends Table {
   DateTimeColumn get endDate => dateTime()();
   /// 결산 마감 여부 — true면 해당 기간 수정 불가
   BoolColumn get isClosed => boolean().withDefault(const Constant(false))();
+  /// 결산 코멘트 — 비정형 메모 (예: "LINE Mobile 지분율 변동으로 인한 처분이익 반영")
+  TextColumn get note => text().nullable()();
 }

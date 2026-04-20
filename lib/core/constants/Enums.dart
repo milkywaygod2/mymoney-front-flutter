@@ -76,6 +76,25 @@ enum RecordingDirection {
   inverted,  // 정부회계 (예산 수령 = 대변이 "증가"로 해석)
 }
 
+/// 기간 비교 유형 — 대시보드/보고서에서 4종 증감 동시 표시 (v2.0)
+enum ComparisonType {
+  mom,         // 전월 대비 (Month-over-Month)
+  qoq,         // 전분기 대비 (Quarter-over-Quarter)
+  yoy,         // 전년동기 대비 (Year-over-Year)
+  yoyAnnual,   // 전년말 대비 (Year-over-Year Annual)
+}
+
+/// 재무비율 카테고리 — FinancialRatioSnapshots.category (v2.0)
+enum RatioCategory {
+  profitability,  // 수익성 (ROA, ROE)
+  stability,      // 안정성 (유동비율, 부채비율, 이자보상비율, 자본유보율)
+  activity,       // 활동성 (총자산회전율, 매출채권회전율, 채권회수기간, 자기자본회전율)
+  growth,         // 성장성 (순자산증가율, 저축율)
+}
+
+/// 재무비율 배율 상수 — 33.33% → 3333
+const int kRatioMultiplier = 10000;
+
 /// 금액 배율 상수 — int 저장 시 소수점 표현을 위한 배율
 /// 예: 1 USD = 1,350.123456 KRW → 1350123456 (배율 1,000,000)
 const int kExchangeRateMultiplier = 1000000;

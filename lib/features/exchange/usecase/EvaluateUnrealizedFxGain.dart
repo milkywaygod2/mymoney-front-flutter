@@ -68,18 +68,29 @@ class EvaluateUnrealizedFxGain {
   /// 전표 라인 목록에서 다통화 항목만 추출하여 미실현 손익 계산
   ///
   /// [listLines] 평가 대상 전표 라인 (다통화 JEL만 처리, 동일 통화는 건너뜀)
-  /// [accountNatureMap] accountId → AccountNature 매핑 (손익 방향 결정에 필요)
+  /// [mapAccountNature] accountId → AccountNature 매핑 (손익 방향 결정에 필요)
+  /// [mapFxRevalTarget] accountId → isFxRevalTarget 매핑 (v2.0)
+  ///   - null이면 기존 동작 (다통화 JEL 전체 평가)
+  ///   - 제공 시 isFxRevalTarget=true인 계정만 평가 (Account 테이블 기반 동적 선별)
   ///
   /// Returns: 미실현 손익이 있는 라인별 결과 목록 (손익 0인 항목 포함)
   Future<List<UnrealizedFxResult>> execute({
     required List<JournalEntryLine> listLines,
     required Map<int, AccountNature> mapAccountNature,
+    Map<int, bool>? mapFxRevalTarget,
   }) async {
     final listResults = <UnrealizedFxResult>[];
 
     for (final jel in listLines) {
       // 동일 통화 JEL은 외환 평가 불필요
       if (jel.originalCurrency == jel.baseCurrency) continue;
+
+      // v2.0: Account.isFxRevalTarget 기반 대상 선별
+      // mapFxRevalTarget이 제공되면, 해당 계정이 FX 재평가 대상인지 확인
+      if (mapFxRevalTarget != null) {
+        final isTarget = mapFxRevalTarget[jel.accountId.value] ?? false;
+        if (!isTarget) continue;
+      }
 
       // 현재 환율 조회
       final currentRateVO = await _exchangeRateRepository.getLatestRate(
