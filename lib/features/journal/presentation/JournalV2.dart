@@ -18,9 +18,67 @@ Map<int, ({String name, String kind})> _buildAccountMap(AccountState s) {
   };
 }
 
-/// V2 — 분개장 그리드 (날짜|차변|대변 3col)
-class JournalV2 extends StatelessWidget {
+/// V2 — 분개장 그리드 (날짜|차변|대변 3col) + 검색 + 월 네비게이션
+class JournalV2 extends StatefulWidget {
   const JournalV2({super.key});
+
+  @override
+  State<JournalV2> createState() => _JournalV2State();
+}
+
+class _JournalV2State extends State<JournalV2> {
+  String _searchQuery = '';
+  late DateTime _selectedMonth;
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    _selectedMonth = DateTime(now.year, now.month);
+  }
+
+  void _prevMonth() {
+    setState(() {
+      _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month - 1);
+    });
+  }
+
+  void _nextMonth() {
+    setState(() {
+      _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1);
+    });
+  }
+
+  void _showSearchDialog(BuildContext context) {
+    final ctrl = TextEditingController(text: _searchQuery);
+    showDialog<void>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('거래 검색'),
+        content: TextField(
+          autofocus: true,
+          controller: ctrl,
+          decoration: const InputDecoration(hintText: '거래 설명 입력...'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              setState(() => _searchQuery = '');
+              Navigator.pop(context);
+            },
+            child: const Text('초기화'),
+          ),
+          TextButton(
+            onPressed: () {
+              setState(() => _searchQuery = ctrl.text.trim());
+              Navigator.pop(context);
+            },
+            child: const Text('검색'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,40 +87,65 @@ class JournalV2 extends StatelessWidget {
         final accountMap = _buildAccountMap(accountState);
         return BlocBuilder<JournalBloc, JournalState>(
           builder: (context, state) {
-            final grouped = _groupByDate(state.listTransactions);
+            final grouped = _groupByDate(state.listTransactions, _selectedMonth, _searchQuery);
 
         return Column(
           children: [
             // 헤더
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
+              padding: const EdgeInsets.fromLTRB(20, 8, 12, 14),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${DateTime.now().month}월 · 분개장',
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.1 * 11, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                      ),
-                      const Text('General Journal', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
-                    ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${_selectedMonth.year}년 ${_selectedMonth.month}월 · 분개장',
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.1 * 11, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        ),
+                        const Text('General Journal', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+                      ],
+                    ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.natureAsset.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(6),
+                  // 월 네비게이션
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left),
+                    tooltip: '이전 달',
+                    onPressed: _prevMonth,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right),
+                    tooltip: '다음 달',
+                    onPressed: _nextMonth,
+                  ),
+                  // 검색
+                  if (_searchQuery.isNotEmpty)
+                    IconButton(
+                      icon: const Icon(Icons.search_off),
+                      tooltip: '검색 초기화',
+                      onPressed: () => setState(() => _searchQuery = ''),
                     ),
-                    child: const Text(
-                      '부기 ON',
-                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 0.08 * 10, color: AppColors.natureAsset),
-                    ),
+                  IconButton(
+                    icon: const Icon(Icons.search),
+                    tooltip: '검색',
+                    onPressed: () => _showSearchDialog(context),
                   ),
                 ],
               ),
             ),
+            // 검색 활성 배너
+            if (_searchQuery.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 6),
+                child: Row(
+                  children: [
+                    const Icon(Icons.search, size: 14, color: Colors.grey),
+                    const SizedBox(width: 4),
+                    Text('"$_searchQuery" 검색 중', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                  ],
+                ),
+              ),
             // 컬럼 헤더
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -76,40 +159,53 @@ class JournalV2 extends StatelessWidget {
                 ],
               ),
             ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: grouped.length,
-                itemBuilder: (context, gi) {
-                  final g = grouped[gi];
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        DayGroupHeader(date: g.date, dayNet: g.dayNet),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+            // 거래 없음
+            if (grouped.isEmpty)
+              Expanded(
+                child: Center(
+                  child: Text(
+                    _searchQuery.isNotEmpty
+                        ? '"$_searchQuery" 검색 결과 없음'
+                        : '${_selectedMonth.year}년 ${_selectedMonth.month}월 거래 없음',
+                    style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  ),
+                ),
+              )
+            else
+              Expanded(
+                child: ListView.builder(
+                  itemCount: grouped.length,
+                  itemBuilder: (context, gi) {
+                    final g = grouped[gi];
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          DayGroupHeader(date: g.date, dayNet: g.dayNet),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+                            ),
+                            clipBehavior: Clip.hardEdge,
+                            child: Column(
+                              children: [
+                                ...List.generate(g.items.length, (i) {
+                                  final tx = g.items[i];
+                                  return _JournalRow(tx: tx, isLast: i == g.items.length - 1, accountMap: accountMap);
+                                }),
+                                _DayTotalsRow(txns: g.items),
+                              ],
+                            ),
                           ),
-                          clipBehavior: Clip.hardEdge,
-                          child: Column(
-                            children: [
-                              ...List.generate(g.items.length, (i) {
-                                final tx = g.items[i];
-                                return _JournalRow(tx: tx, isLast: i == g.items.length - 1, accountMap: accountMap);
-                              }),
-                              _DayTotalsRow(txns: g.items),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
           ],
         );
           },
@@ -126,9 +222,20 @@ class _DayGroup {
   final int dayNet;
 }
 
-List<_DayGroup> _groupByDate(List<Transaction> txns) {
+List<_DayGroup> _groupByDate(
+  List<Transaction> txns,
+  DateTime selectedMonth,
+  String searchQuery,
+) {
+  final q = searchQuery.toLowerCase();
+  final filtered = txns.where((t) {
+    if (t.date.year != selectedMonth.year || t.date.month != selectedMonth.month) return false;
+    if (q.isNotEmpty && !t.description.toLowerCase().contains(q)) return false;
+    return true;
+  }).toList();
+
   final map = <String, List<Transaction>>{};
-  for (final t in txns) {
+  for (final t in filtered) {
     final key = '${t.date.year}-${t.date.month}-${t.date.day}';
     (map[key] ??= []).add(t);
   }
