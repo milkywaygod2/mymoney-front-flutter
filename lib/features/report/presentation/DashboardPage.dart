@@ -53,7 +53,11 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ],
       ),
-      body: BlocBuilder<ReportBloc, ReportState>(
+      body: BlocListener<ReportBloc, ReportState>(
+        listenWhen: (prev, curr) =>
+            prev.activePeriodId == null && curr.activePeriodId != null,
+        listener: (context, state) => _onRefresh(),
+        child: BlocBuilder<ReportBloc, ReportState>(
         builder: (context, state) {
           if (state.isLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -101,6 +105,7 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           );
         },
+        ),
       ),
     );
   }
