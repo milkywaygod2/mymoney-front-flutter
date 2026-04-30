@@ -10,6 +10,7 @@
 
 | 커밋 | 내용 |
 |------|------|
+| `8d4e36a` | STYLE: EntryAutoPlay TODO 색상 AppColors.stateSuccess로 교체 |
 | `ef15bd7` | FEAT: Wave U6 Report Dashboard 재작성 — 재무비율 그리드+B/S+P/L+CF폭포+CE테이블 |
 | `b6578a0` | FEAT: Wave U5 AccountTree 재작성 — Browse/Map/Config 3모드+ClusterMap+MetaphorIcon |
 | `98db0ad` | FEAT: Wave U4 Entry 거래입력 신규 — EntryPage+V1/V2/V3+EntryBloc+EntryAutoPlay |
@@ -37,7 +38,6 @@
 ### 미완 / TODO
 - CFWaterfall: `ReportBloc`에 `cashFlowStatement` 상태가 없어 `CFWaterfallFull`은 DashboardPage에서 미연결. 연결 시 `CFWaterfall` → `CFWaterfallFull`로 교체.
 - CETable: `ReportBloc`에 `equityChangeStatement` 상태가 없어 `comprehensiveIncome` 기반 간이 표시. 연결 시 `GenerateEquityChangeStatement` 결과 직접 수신.
-- 색상 토큰: `const Color(0x...)` 하드코딩 → U1 머지 후 `AppColors`로 교체 (TODO 주석 위치에 기재)
 
 ---
 
@@ -100,19 +100,18 @@
 
 ---
 
-## U1 머지 후 후속 작업 (색상 토큰 교체 위치)
+## U1 머지 후 색상 토큰 교체 — 완료
 
-### U6 DashboardPage.dart
-- `Theme.of(context).colorScheme.primary` → `AppColors.primary`
-- `const Color(0xFF4CAF50)` → `AppColors.income`
-- `const Color(0xFFF44336)` → `AppColors.expense`
+U1(`agent-automation`)이 워크트리에 머지된 후 모든 `const Color(0x...)` TODO를 AppColors 토큰으로 교체 완료:
 
-### U4 EntryPage/V1/V2/widgets
-- `Theme.of(context).colorScheme.surfaceContainerHighest` → `AppColors.surface`
-- FromToFlow의 출처/도착 색상 → `AppColors.debit` / `AppColors.credit`
-
-### U5 ClusterMap/TreeRow
-- `const Color(0xFF4CAF50)` 등 5색 → `AppColors.nature*` 시리즈
+| 파일 | 교체 내용 |
+|------|----------|
+| `DashboardPage.dart` | darkPrimary/natureAsset/natureExpense/stateSuccess/stateError |
+| `BSChart.dart` | natureAsset/natureLiability/natureEquity |
+| `PLChart.dart` | revenueDeep/natureExpense/stateSuccess/stateError |
+| `CFWaterfall.dart` | natureAsset/natureExpense/darkFg4 |
+| `FromToFlow.dart` | natureExpense/natureAsset |
+| `EntryAutoPlay.dart` | stateSuccess (3곳) |
 
 ---
 
