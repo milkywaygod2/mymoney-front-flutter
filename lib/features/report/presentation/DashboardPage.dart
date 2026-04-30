@@ -62,52 +62,61 @@ class _DashboardPageState extends State<DashboardPage> {
         listener: (context, state) => _onRefresh(),
         child: BlocBuilder<ReportBloc, ReportState>(
         builder: (context, state) {
-          if (state.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
           if (state.errorMessage != null) {
             return _ErrorView(
               message: state.errorMessage!,
               onRetry: _onRefresh,
             );
           }
-          if (state.dashboard == null) {
+          if (state.dashboard == null && !state.isLoading) {
             return _EmptyView(onLoad: _onRefresh);
+          }
+          if (state.dashboard == null) {
+            return const _LoadingView();
           }
 
           return RefreshIndicator(
             onRefresh: () async => _onRefresh(),
-            child: ListView(
+            child: Column(
               children: [
-                // 1. 요약 헤더 (순자산 + 수입/지출)
-                _SummaryHeader(
-                  comparisonType: _comparisonType,
+                // 로딩 중일 때 상단 진행 바
+                if (state.isLoading)
+                  const LinearProgressIndicator(),
+                Expanded(
+                  child: ListView(
+                    children: [
+                      // 1. 요약 헤더 (순자산 + 수입/지출)
+                      _SummaryHeader(
+                        comparisonType: _comparisonType,
+                      ),
+                      const Divider(height: 1),
+
+                      // 1-1. 기간 비교 변화율 카드
+                      _PeriodComparisonCard(comparisonType: _comparisonType),
+                      const Divider(height: 1),
+
+                      // 2. 재무비율 그리드 (29종)
+                      const RatioGrid(),
+                      const Divider(height: 1),
+
+                      // 3. B/S 차트
+                      const _BSSection(),
+                      const Divider(height: 1),
+
+                      // 4. P/L 차트
+                      const PLChart(),
+                      const Divider(height: 1),
+
+                      // 5. CF 폭포 차트
+                      const _CFSection(),
+                      const Divider(height: 1),
+
+                      // 6. 자본변동표
+                      const _CESection(),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
                 ),
-                const Divider(height: 1),
-
-                // 1-1. 기간 비교 변화율 카드
-                _PeriodComparisonCard(comparisonType: _comparisonType),
-                const Divider(height: 1),
-
-                // 2. 재무비율 그리드 (29종)
-                const RatioGrid(),
-                const Divider(height: 1),
-
-                // 3. B/S 차트
-                const BSChart(),
-                const Divider(height: 1),
-
-                // 4. P/L 차트
-                const PLChart(),
-                const Divider(height: 1),
-
-                // 5. CF 폭포 차트
-                const _CFSection(),
-                const Divider(height: 1),
-
-                // 6. 자본변동표
-                const _CESection(),
-                const SizedBox(height: 32),
               ],
             ),
           );
@@ -423,6 +432,15 @@ class _ErrorView extends StatelessWidget {
   }
 }
 
+class _LoadingView extends StatelessWidget {
+  const _LoadingView();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(child: CircularProgressIndicator());
+  }
+}
+
 class _EmptyView extends StatelessWidget {
   const _EmptyView({required this.onLoad});
   final VoidCallback onLoad;
@@ -430,15 +448,40 @@ class _EmptyView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.bar_chart, size: 64, color: Colors.grey),
-          const SizedBox(height: 12),
-          const Text('데이터를 불러오는 중...'),
-          const SizedBox(height: 16),
-          FilledButton(onPressed: onLoad, child: const Text('새로고침')),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.insights_outlined,
+              size: 72,
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '거래를 입력하면 분석이 시작됩니다',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '수입·지출을 기록하면\n재무비율, 자산/부채 현황이 자동으로 표시됩니다.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            OutlinedButton.icon(
+              onPressed: onLoad,
+              icon: const Icon(Icons.refresh, size: 16),
+              label: const Text('새로고침'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -533,6 +576,43 @@ class _ComparisonItem extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// B/S 차트 섹션 — balanceSheet 있으면 BSChart, 없으면 빈상태 메시지
+class _BSSection extends StatelessWidget {
+  const _BSSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ReportBloc, ReportState>(
+      buildWhen: (prev, curr) => prev.balanceSheet != curr.balanceSheet,
+      builder: (context, state) {
+        if (state.balanceSheet != null) {
+          return const BSChart();
+        }
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+          child: Row(
+            children: [
+              Icon(
+                Icons.account_balance_outlined,
+                size: 28,
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                '재무상태표 데이터를 불러오는 중...',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
