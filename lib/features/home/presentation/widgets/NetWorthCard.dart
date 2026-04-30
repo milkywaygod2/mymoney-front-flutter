@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../../../../../app/theme/AppColors.dart';
@@ -69,21 +71,28 @@ class NetWorthCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-            decoration: BoxDecoration(
-              color: AppColors.natureAsset.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: const Text(
-              '+5.1%',
-              style: TextStyle(
-                color: AppColors.natureAsset,
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
+          Builder(builder: (context) {
+            final change = _weeklyChange();
+            if (change == null) return const SizedBox.shrink();
+            final isPositive = change >= 0;
+            final chipColor = isPositive ? AppColors.stateSuccess : AppColors.stateError;
+            final sign = isPositive ? '+' : '';
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+              decoration: BoxDecoration(
+                color: chipColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(4),
               ),
-            ),
-          ),
+              child: Text(
+                '$sign${change.toStringAsFixed(1)}%',
+                style: TextStyle(
+                  color: chipColor,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            );
+          }),
           const SizedBox(height: 16),
           Sparkline(
             values: spark7d.map((v) => v.toDouble()).toList(),
@@ -95,6 +104,14 @@ class NetWorthCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  double? _weeklyChange() {
+    if (spark7d.isEmpty || spark7d.every((v) => v == 0)) return null;
+    final first = spark7d.first;
+    final last = spark7d.last;
+    final base = max(first.abs(), 1);
+    return (last - first) / base * 100;
   }
 
   String _formatAmount(int amount) {

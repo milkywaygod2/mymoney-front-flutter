@@ -15,7 +15,15 @@ class EntryPage extends StatefulWidget {
   const EntryPage({super.key});
 
   /// BottomSheet로 표시 — 320ms emphasized 모션
-  static Future<void> show(BuildContext context) {
+  static Future<void> show(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedIndex = prefs.getInt('entry_view_mode') ?? 0;
+    final savedMode = EntryMode.values[savedIndex.clamp(0, EntryMode.values.length - 1)];
+    final bloc = GetIt.instance<EntryBloc>();
+    if (bloc.state.mode != savedMode) {
+      bloc.add(EntryModeChanged(savedMode));
+    }
+    if (!context.mounted) return;
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -25,7 +33,7 @@ class EntryPage extends StatefulWidget {
         duration: const Duration(milliseconds: 320),
       ),
       builder: (_) => BlocProvider.value(
-        value: GetIt.instance<EntryBloc>(),
+        value: bloc,
         child: const EntryPage(),
       ),
     );
@@ -36,30 +44,6 @@ class EntryPage extends StatefulWidget {
 }
 
 class _EntryPageState extends State<EntryPage> {
-  static const _kPrefKey = 'entry_view_mode';
-
-  @override
-  void initState() {
-    super.initState();
-    _loadMode();
-  }
-
-  Future<void> _loadMode() async {
-    final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getString(_kPrefKey);
-    if (saved != null && mounted) {
-      final mode = EntryMode.values.where((m) => m.name == saved).firstOrNull;
-      if (mode != null) {
-        context.read<EntryBloc>().add(EntryModeChanged(mode));
-      }
-    }
-  }
-
-  static Future<void> _saveMode(EntryMode mode) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kPrefKey, mode.name);
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<EntryBloc, EntryState>(
@@ -150,7 +134,9 @@ class _EntryHeader extends StatelessWidget {
                 selected: state.mode,
                 onChanged: (mode) {
                   context.read<EntryBloc>().add(EntryModeChanged(mode));
-                  _EntryPageState._saveMode(mode);
+                  SharedPreferences.getInstance().then(
+                    (prefs) => prefs.setInt('entry_view_mode', mode.index),
+                  );
                 },
               ),
             ],

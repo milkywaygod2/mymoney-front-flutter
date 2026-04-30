@@ -20,32 +20,25 @@ class AccountTreePage extends StatefulWidget {
 }
 
 class _AccountTreePageState extends State<AccountTreePage> {
-  static const _kPrefKey = 'account_view_mode';
-
   AccountViewMode _mode = AccountViewMode.browse;
 
   @override
   void initState() {
     super.initState();
-    _loadMode();
     // 트리 초기 로딩
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AccountBloc>().add(const AccountEvent.loadTree());
     });
+    _loadViewMode();
   }
 
-  Future<void> _loadMode() async {
+  Future<void> _loadViewMode() async {
     final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getString(_kPrefKey);
-    if (saved != null && mounted) {
-      final mode = AccountViewMode.values.where((m) => m.name == saved).firstOrNull;
-      if (mode != null) setState(() => _mode = mode);
+    final saved = prefs.getInt('account_view_mode') ?? 0;
+    final mode = AccountViewMode.values[saved.clamp(0, AccountViewMode.values.length - 1)];
+    if (mounted && mode != _mode) {
+      setState(() => _mode = mode);
     }
-  }
-
-  Future<void> _saveMode(AccountViewMode mode) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kPrefKey, mode.name);
   }
 
   @override
@@ -75,7 +68,9 @@ class _AccountTreePageState extends State<AccountTreePage> {
               selected: _mode,
               onChanged: (mode) {
                 setState(() => _mode = mode);
-                _saveMode(mode);
+                SharedPreferences.getInstance().then(
+                  (prefs) => prefs.setInt('account_view_mode', mode.index),
+                );
               },
             ),
           ),
