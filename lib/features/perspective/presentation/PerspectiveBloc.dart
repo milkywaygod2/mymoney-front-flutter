@@ -41,8 +41,31 @@ class PerspectiveBloc extends Bloc<PerspectiveEvent, PerspectiveState> {
   }
 
   void _onApplyCustomFilter(ApplyCustomFilter event, Emitter<PerspectiveState> emit) {
-    // TODO: 커스텀 필터 → effectivePerspective 생성
-    emit(state.copyWith(isCustomFilterOpen: false));
+    final mapDimFilters = <String, List<DimensionValueId>>{};
+    event.mapDimensionFilters?.forEach((key, listIds) {
+      mapDimFilters[key] = listIds.map((id) => DimensionValueId(id)).toList();
+    });
+
+    final listTagFilters = (event.listTagIds ?? [])
+        .map((id) => TagId(id))
+        .toList();
+
+    final baseOwner = state.effectivePerspective?.ownerId ?? const OwnerId(1);
+
+    final customPerspective = Perspective(
+      id: const PerspectiveId(0),
+      name: '커스텀 필터',
+      ownerId: baseOwner,
+      isSystem: false,
+      mapDimensionFilters: mapDimFilters,
+      mapAccountAttributeFilters: event.mapAttributeFilters ?? {},
+      listTagFilters: listTagFilters,
+    );
+
+    emit(state.copyWith(
+      effectivePerspective: customPerspective,
+      isCustomFilterOpen: false,
+    ));
   }
 
   Future<void> _onSaveAsPreset(SaveAsPreset event, Emitter<PerspectiveState> emit) async {

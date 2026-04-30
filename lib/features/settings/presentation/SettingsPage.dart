@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/MyMoneyApp.dart';
 import '../../../app/theme/AppColors.dart';
 
 /// 앱 설정 페이지 — 통화·테마·데이터·버전 관리 (로컬 상태, SharedPreferences 연동 예정)
@@ -12,7 +13,7 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   String _currency = 'KRW';
-  bool _isDarkMode = true;
+  bool _isDarkMode = appThemeNotifier.value == ThemeMode.dark;
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +61,11 @@ class _SettingsPageState extends State<SettingsPage> {
                         label: '다크 모드',
                         subtitle: _isDarkMode ? '어두운 테마 사용 중' : '밝은 테마 사용 중',
                         value: _isDarkMode,
-                        onChanged: (v) => setState(() => _isDarkMode = v),
+                        onChanged: (v) {
+                          setState(() => _isDarkMode = v);
+                          appThemeNotifier.value =
+                              v ? ThemeMode.dark : ThemeMode.light;
+                        },
                       ),
                     ],
                   ),
