@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../../app/theme/AppColors.dart';
 
@@ -53,7 +54,10 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return InkWell(
+      onTap: () => context.go('/report'),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
       margin: const EdgeInsets.symmetric(horizontal: 4),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
@@ -83,6 +87,7 @@ class _StatCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }
