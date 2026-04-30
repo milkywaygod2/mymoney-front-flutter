@@ -88,6 +88,7 @@ class _StatCard extends StatelessWidget {
   }
 
   String _fmtCompact(int value) {
+    if (value == 0) return '-';
     if (value >= 100000000) return '${(value / 100000000).toStringAsFixed(1)}억';
     if (value >= 10000) return '${(value / 10000).toStringAsFixed(0)}만';
     return value.toString();
