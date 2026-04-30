@@ -23,7 +23,24 @@ class AccountBrowse extends StatelessWidget {
           return Center(child: Text('오류: ${state.errorMessage}'));
         }
         if (state.listRoots.isEmpty) {
-          return const Center(child: Text('계정과목이 없습니다'));
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.account_tree_outlined, size: 48, color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.4)),
+                const SizedBox(height: 12),
+                Text(
+                  '계정과목이 없습니다',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '계정과목을 추가하면 여기 표시됩니다',
+                  style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.6)),
+                ),
+              ],
+            ),
+          );
         }
 
         final searchResults = state.listSearchResults;
