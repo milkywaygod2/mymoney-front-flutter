@@ -293,16 +293,16 @@ class EntryBloc extends Bloc<EntryEvent, EntryState> {
         next = '0';
       case '⌫':
         next = current.length <= 1 ? '0' : current.substring(0, current.length - 1);
-      case '.':
-        next = current.contains('.') ? current : '$current.';
+      case '000':
+        next = current == '0' ? '0' : '${current}000';
       default:
         next = current == '0' ? e.digit : current + e.digit;
     }
 
     // 최대 12자리 제한
-    if (next.replaceAll('.', '').length > 12) return;
+    if (next.length > 12) return;
 
-    final parsed = int.tryParse(next.replaceAll('.', ''));
+    final parsed = int.tryParse(next);
     emit(state.copyWith(
       amountDisplay: _formatAmount(parsed ?? 0),
       parsedAmount: parsed,
