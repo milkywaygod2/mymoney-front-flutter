@@ -117,7 +117,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     try {
       final reportState = _reportBloc.state;
       final spark7d = await _computeSpark7d();
-      final vm = _buildViewModel(reportState, spark7d);
+      final vm = await _buildViewModel(reportState, spark7d);
       emit(state.copyWith(isLoading: false, viewModel: vm));
     } catch (e) {
       emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
@@ -155,7 +155,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     });
   }
 
-  HomeViewModel _buildViewModel(ReportState reportState, List<int> spark7d) {
+  Future<HomeViewModel> _buildViewModel(ReportState reportState, List<int> spark7d) async {
     final dashboard = reportState.dashboard;
     final bs = reportState.balanceSheet;
 
@@ -167,6 +167,38 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     final now = DateTime.now();
     final periodLabel = '${now.year}년 ${now.month}월';
 
+    // DRAFT 거래 조회 — 넓은 범위(1년)에서 status 필터
+    final far = DateTime(now.year - 1, now.month, now.day);
+    final near = DateTime(now.year + 1, now.month, now.day);
+    final allTxns = await _transactionDao.findByDateRange(far, near);
+    final drafts = allTxns.where((twl) => twl.tx.status == 'DRAFT').toList();
+
+    final listPendingExpenses = <PendingItem>[];
+    final listPendingAssets = <PendingItem>[];
+    final listPendingRevenues = <PendingItem>[];
+
+    for (final twl in drafts) {
+      final debitLine = twl.listLines
+          .where((l) => l.entryType == 'DEBIT')
+          .firstOrNull;
+      if (debitLine == null) continue;
+
+      final amt = debitLine.baseAmount;
+      final name = twl.tx.description;
+
+      // credit 라인이 있으면 수익, debit만 있으면 비용, 둘 다 동일 성격이면 자산
+      final hasCredit = twl.listLines.any((l) => l.entryType == 'CREDIT');
+      final allDebit = twl.listLines.every((l) => l.entryType == 'DEBIT');
+
+      if (allDebit) {
+        listPendingAssets.add(PendingItem(accountName: name, amount: amt));
+      } else if (hasCredit) {
+        listPendingRevenues.add(PendingItem(accountName: name, amount: amt));
+      } else {
+        listPendingExpenses.add(PendingItem(accountName: name, amount: amt));
+      }
+    }
+
     return HomeViewModel(
       netWorth: dashboard.netAssets,
       spark7d: spark7d,
@@ -176,6 +208,9 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       revenue: dashboard.totalRevenue,
       expense: dashboard.totalExpense,
       periodLabel: periodLabel,
+      listPendingExpenses: listPendingExpenses,
+      listPendingAssets: listPendingAssets,
+      listPendingRevenues: listPendingRevenues,
     );
   }
 }
