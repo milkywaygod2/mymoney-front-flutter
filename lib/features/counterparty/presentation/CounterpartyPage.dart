@@ -640,7 +640,7 @@ class _CounterpartyAddSheetState extends State<_CounterpartyAddSheet> {
 
             // 유형 선택
             DropdownButtonFormField<String>(
-              value: _strCounterpartyType,
+              initialValue: _strCounterpartyType,
               decoration: const InputDecoration(
                 labelText: '거래처 유형',
                 border: OutlineInputBorder(),
@@ -661,7 +661,7 @@ class _CounterpartyAddSheetState extends State<_CounterpartyAddSheet> {
                 SizedBox(
                   width: 120,
                   child: DropdownButtonFormField<IdentifierType>(
-                    value: _identifierType,
+                    initialValue: _identifierType,
                     decoration: const InputDecoration(
                       labelText: '번호 유형',
                       border: OutlineInputBorder(),
