@@ -9,7 +9,7 @@ class NetWorthCard extends StatelessWidget {
     super.key,
     required this.netWorth,
     required this.spark7d,
-    required this.periodLabel,
+    this.periodLabel = '',
   });
 
   final int netWorth;
@@ -35,14 +35,28 @@ class NetWorthCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '내 순자산',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              letterSpacing: 0.06 * 12,
-            ),
+          Row(
+            children: [
+              Text(
+                '내 순자산',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  letterSpacing: 0.06 * 12,
+                ),
+              ),
+              if (periodLabel.isNotEmpty) ...[
+                const SizedBox(width: 6),
+                Text(
+                  periodLabel,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                  ),
+                ),
+              ],
+            ],
           ),
           const SizedBox(height: 6),
           Text(
@@ -78,16 +92,6 @@ class NetWorthCard extends StatelessWidget {
             height: 44,
             strokeWidth: 2.0,
           ),
-          if (periodLabel.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              periodLabel,
-              style: TextStyle(
-                fontSize: 10,
-                color: Colors.grey.withValues(alpha: 0.6),
-              ),
-            ),
-          ],
         ],
       ),
     );

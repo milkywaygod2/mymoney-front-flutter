@@ -4,6 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../account/presentation/AccountBloc.dart';
 import '../../account/presentation/AccountEvent.dart';
 import '../../entry/presentation/EntryPage.dart';
+import '../../perspective/presentation/LensSwitcher.dart';
+import '../../perspective/presentation/PerspectiveBloc.dart';
+import '../../perspective/presentation/PerspectiveEvent.dart';
+import '../../perspective/presentation/PerspectiveState.dart';
 import 'JournalBloc.dart';
 import 'JournalEvent.dart';
 import 'JournalState.dart';
@@ -33,7 +37,10 @@ class _JournalPageState extends State<JournalPage> with TickerProviderStateMixin
     );
     _fadeAnim = CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut);
     _fadeController.forward();
-    context.read<JournalBloc>().add(const LoadTransactions());
+    context.read<PerspectiveBloc>().add(const LoadPresets());
+    final perspective =
+        context.read<PerspectiveBloc>().state.effectivePerspective;
+    context.read<JournalBloc>().add(LoadTransactions(perspective: perspective));
     context.read<AccountBloc>().add(const AccountEvent.loadTree());
   }
 
@@ -51,6 +58,18 @@ class _JournalPageState extends State<JournalPage> with TickerProviderStateMixin
     });
   }
 
+  void _showLensSwitcher(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => BlocProvider.value(
+        value: context.read<PerspectiveBloc>(),
+        child: const LensSwitcher(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -61,10 +80,21 @@ class _JournalPageState extends State<JournalPage> with TickerProviderStateMixin
         ),
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => EntryPage.show(context),
+          BlocBuilder<PerspectiveBloc, PerspectiveState>(
+            buildWhen: (prev, curr) =>
+                prev.effectivePerspective != curr.effectivePerspective,
+            builder: (context, state) {
+              final name = state.effectivePerspective?.name ?? '전체';
+              return ActionChip(
+                avatar: const Icon(Icons.lens, size: 14),
+                label: Text(name, style: const TextStyle(fontSize: 11)),
+                onPressed: () => _showLensSwitcher(context),
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+              );
+            },
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: BlocBuilder<JournalBloc, JournalState>(
@@ -87,25 +117,10 @@ class _JournalPageState extends State<JournalPage> with TickerProviderStateMixin
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showEntrySheet(context),
+        onPressed: () => EntryPage.show(context),
         tooltip: '거래 입력',
         child: const Icon(Icons.add),
       ),
-    );
-  }
-
-  void _showEntrySheet(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.sizeOf(context).height * 0.9,
-      ),
-      builder: (_) => const EntryPage(),
     );
   }
 

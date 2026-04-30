@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/domain/Transaction.dart';
 import '../../../core/interfaces/ITransactionRepository.dart';
 import '../usecase/CreateTransaction.dart';
 import '../usecase/PostTransaction.dart';
@@ -33,13 +34,22 @@ class JournalBloc extends Bloc<JournalEvent, JournalState> {
   ) async {
     emit(state.copyWith(isLoading: true, errorMessage: null));
     try {
-      // 최근 3개월 거래 로드
       final now = DateTime.now();
       final threeMonthsAgo = now.subtract(const Duration(days: 90));
-      final listTransactions = await _repository.findByDateRange(
-        threeMonthsAgo,
-        now,
-      );
+      final List<Transaction> listTransactions;
+      if (event.perspective != null) {
+        listTransactions = await _repository.findByPerspective(
+          event.perspective!,
+          from: threeMonthsAgo,
+          to: now,
+          limit: event.limit,
+        );
+      } else {
+        listTransactions = await _repository.findByDateRange(
+          threeMonthsAgo,
+          now,
+        );
+      }
       emit(state.copyWith(
         listTransactions: listTransactions,
         isLoading: false,

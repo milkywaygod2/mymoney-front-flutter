@@ -12,6 +12,9 @@ import '../features/tax/presentation/TaxBloc.dart';
 import 'router/AppRouter.dart';
 import 'theme/AppTheme.dart';
 
+/// 앱 전역 ThemeMode 상태 — SettingsPage에서 직접 변경
+final appThemeNotifier = ValueNotifier<ThemeMode>(ThemeMode.dark);
+
 /// MyMoney 앱 루트 위젯
 class MyMoneyApp extends StatelessWidget {
   const MyMoneyApp({super.key});
@@ -19,24 +22,29 @@ class MyMoneyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final getIt = GetIt.instance;
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider.value(value: getIt<JournalBloc>()),
-        BlocProvider.value(value: getIt<AccountBloc>()),
-        BlocProvider.value(value: getIt<EntryBloc>()),
-        BlocProvider.value(value: getIt<PerspectiveBloc>()),
-        BlocProvider.value(value: getIt<TaxBloc>()),
-        BlocProvider.value(value: getIt<ReportBloc>()),
-        BlocProvider.value(value: getIt<OcrBloc>()),
-      ],
-      child: MaterialApp.router(
-        title: 'MyMoney',
-        theme: AppTheme.light(),
-        darkTheme: AppTheme.dark(),
-        themeMode: ThemeMode.dark,
-        routerConfig: AppRouter.router,
-        debugShowCheckedModeBanner: false,
-      ),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: appThemeNotifier,
+      builder: (context, themeMode, _) {
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider.value(value: getIt<JournalBloc>()),
+            BlocProvider.value(value: getIt<AccountBloc>()),
+            BlocProvider.value(value: getIt<EntryBloc>()),
+            BlocProvider.value(value: getIt<PerspectiveBloc>()),
+            BlocProvider.value(value: getIt<TaxBloc>()),
+            BlocProvider.value(value: getIt<ReportBloc>()),
+            BlocProvider.value(value: getIt<OcrBloc>()),
+          ],
+          child: MaterialApp.router(
+            title: 'MyMoney',
+            theme: AppTheme.light(),
+            darkTheme: AppTheme.dark(),
+            themeMode: themeMode,
+            routerConfig: AppRouter.router,
+            debugShowCheckedModeBanner: false,
+          ),
+        );
+      },
     );
   }
 }

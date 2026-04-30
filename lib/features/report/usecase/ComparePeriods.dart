@@ -38,7 +38,7 @@ class ComparePeriods {
     for (final path in setPaths) {
       final current = mapCurrent[path] ?? 0;
       final previous = mapPrevious[path] ?? 0;
-      listResults.add(_buildComparison(current, previous, comparisonType));
+      listResults.add(_buildComparison(current, previous, comparisonType, label: path));
     }
 
     return listResults;
@@ -69,7 +69,7 @@ class ComparePeriods {
     for (final path in setPaths) {
       final current = mapCurrent[path] ?? 0;
       final previous = mapPrevious[path] ?? 0;
-      listResults.add(_buildComparison(current, previous, comparisonType));
+      listResults.add(_buildComparison(current, previous, comparisonType, label: path));
     }
 
     return listResults;
@@ -110,7 +110,7 @@ class ComparePeriods {
     return results;
   }
 
-  PeriodComparison _buildComparison(int current, int previous, String comparisonType) {
+  PeriodComparison _buildComparison(int current, int previous, String comparisonType, {required String label}) {
     final changeAmount = current - previous;
     final changeRatio = previous != 0
         ? (changeAmount * kRatioMultiplier) ~/ previous
@@ -119,6 +119,7 @@ class ComparePeriods {
       currentValue: current,
       previousValue: previous,
       changeAmount: changeAmount,
+      label: label,
       changeRatio: changeRatio,
       comparisonType: comparisonType,
     );

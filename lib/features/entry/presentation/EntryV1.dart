@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../account/presentation/AccountBloc.dart';
+import '../../account/presentation/AccountState.dart';
 import 'EntryBloc.dart';
 import 'widgets/AmountHero.dart';
 import 'widgets/FromToFlow.dart';
@@ -11,9 +13,17 @@ class EntryV1 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<EntryBloc, EntryState>(
-      builder: (context, state) {
-        return Padding(
+    return BlocBuilder<AccountBloc, AccountState>(
+      builder: (context, accountState) {
+        return BlocBuilder<EntryBloc, EntryState>(
+          builder: (context, state) {
+            final creditName = accountState.listAll
+                .where((a) => a.id.value == state.creditAccountId?.value)
+                .firstOrNull?.name ?? '계정 선택';
+            final debitName = accountState.listAll
+                .where((a) => a.id.value == state.debitAccountId?.value)
+                .firstOrNull?.name ?? '계정 선택';
+            return Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -28,10 +38,10 @@ class EntryV1 extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 12),
                   child: FromToFlow(
                     fromLabel: state.creditAccountId != null
-                        ? '계정 #${state.creditAccountId}'
+                        ? creditName
                         : '출처 선택',
                     toLabel: state.debitAccountId != null
-                        ? '계정 #${state.debitAccountId}'
+                        ? debitName
                         : '도착 선택',
                   ),
                 ),
@@ -80,6 +90,8 @@ class EntryV1 extends StatelessWidget {
               ],
             ],
           ),
+        );
+          },
         );
       },
     );

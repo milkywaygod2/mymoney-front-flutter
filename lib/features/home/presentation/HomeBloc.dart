@@ -22,7 +22,7 @@ class HomeViewModel {
     required this.equity,
     required this.revenue,
     required this.expense,
-    required this.periodLabel,
+    this.periodLabel = '',
     this.listPendingExpenses = const [],
     this.listPendingAssets = const [],
     this.listPendingRevenues = const [],
@@ -164,7 +164,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     final int assets = bs?.totalAssets ?? 0;
     final int liabilities = bs?.totalLiabilities ?? 0;
     final int equity = bs?.totalEquity ?? 0;
-
     final now = DateTime.now();
     final periodLabel = '${now.year}년 ${now.month}월';
 

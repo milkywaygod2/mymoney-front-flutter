@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../core/domain/Perspective.dart';
 import '../../../core/models/TypedId.dart';
 import '../usecase/CreateTransaction.dart';
 
@@ -9,7 +10,10 @@ part 'JournalEvent.freezed.dart';
 @freezed
 abstract class JournalEvent with _$JournalEvent {
   /// 거래 목록 로드
-  const factory JournalEvent.loadTransactions({int? limit}) = LoadTransactions;
+  const factory JournalEvent.loadTransactions({
+    int? limit,
+    Perspective? perspective,
+  }) = LoadTransactions;
 
   /// 거래 선택 (상세 보기)
   const factory JournalEvent.selectTransaction({

@@ -18,6 +18,17 @@ Map<int, ({String name, String kind})> _buildAccountMap(AccountState s) {
   };
 }
 
+String _emojiForKind(String kind) {
+  return switch (kind) {
+    'asset'     => '🌳',
+    'expense'   => '🍎',
+    'revenue'   => '💧',
+    'liability' => '🫙',
+    'equity'    => '🪣',
+    _           => '❓',
+  };
+}
+
 /// V1 — 단식/복식 토글, 펼침형
 class JournalV1 extends StatefulWidget {
   const JournalV1({super.key});
@@ -39,7 +50,7 @@ class _JournalV1State extends State<JournalV1> {
         final accountMap = _buildAccountMap(accountState);
         return BlocBuilder<JournalBloc, JournalState>(
           builder: (context, state) {
-            final grouped = _groupByDate(state.listTransactions, _filter, _isDoublEntry, _searchQuery);
+            final grouped = _groupByDate(state.listTransactions, _filter, _isDoublEntry, accountMap, _searchQuery);
 
         return Column(
           children: [
@@ -60,13 +71,21 @@ class _JournalV1State extends State<JournalV1> {
                       ],
                     ),
                   ),
+                  if (_searchQuery.isNotEmpty)
+                    IconButton(
+                      icon: const Icon(Icons.search_off),
+                      tooltip: '검색 초기화',
+                      onPressed: () => setState(() => _searchQuery = ''),
+                    ),
                   IconButton(
-                    onPressed: () => _showFilterSheet(context),
                     icon: const Icon(Icons.tune),
+                    tooltip: '필터',
+                    onPressed: () => _showFilterSheet(context),
                   ),
                   IconButton(
-                    onPressed: () => _showSearchDialog(context),
                     icon: const Icon(Icons.search),
+                    tooltip: '검색',
+                    onPressed: () => _showSearchDialog(context),
                   ),
                 ],
               ),
@@ -88,6 +107,18 @@ class _JournalV1State extends State<JournalV1> {
                 child: _FilterChips(selected: _filter, onChanged: (v) => setState(() => _filter = v)),
               ),
             ],
+            // 검색 활성 배너
+            if (_searchQuery.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+                child: Row(
+                  children: [
+                    const Icon(Icons.search, size: 14, color: Colors.grey),
+                    const SizedBox(width: 4),
+                    Text('"$_searchQuery" 검색 중', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                  ],
+                ),
+              ),
             // 거래 목록
             Expanded(
               child: ListView.builder(
@@ -120,6 +151,7 @@ class _JournalV1State extends State<JournalV1> {
                                     final isOpen = _openId == tx.id.value;
                                     return _SingleEntryRow(
                                       tx: tx,
+                                      accountMap: accountMap,
                                       isLast: i == g.items.length - 1,
                                       isOpen: isOpen,
                                       onTap: () => setState(() => _openId = isOpen ? null : tx.id.value),
@@ -141,30 +173,29 @@ class _JournalV1State extends State<JournalV1> {
     );
   }
 
-  Future<void> _showSearchDialog(BuildContext context) async {
-    String draft = _searchQuery;
-    await showDialog<void>(
+  void _showSearchDialog(BuildContext context) {
+    final ctrl = TextEditingController(text: _searchQuery);
+    showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (_) => AlertDialog(
         title: const Text('거래 검색'),
         content: TextField(
           autofocus: true,
-          controller: TextEditingController(text: draft),
-          decoration: const InputDecoration(hintText: '설명으로 검색...'),
-          onChanged: (v) { draft = v; },
+          controller: ctrl,
+          decoration: const InputDecoration(hintText: '거래 설명 입력...'),
         ),
         actions: [
           TextButton(
             onPressed: () {
               setState(() => _searchQuery = '');
-              Navigator.of(ctx).pop();
+              Navigator.pop(context);
             },
             child: const Text('초기화'),
           ),
           TextButton(
             onPressed: () {
-              setState(() => _searchQuery = draft);
-              Navigator.of(ctx).pop();
+              setState(() => _searchQuery = ctrl.text.trim());
+              Navigator.pop(context);
             },
             child: const Text('검색'),
           ),
@@ -176,46 +207,11 @@ class _JournalV1State extends State<JournalV1> {
   void _showFilterSheet(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheetState) {
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('필터', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                const SizedBox(height: 16),
-                const Text('거래 유형', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: ['전체', '수익', '비용', '이체'].map((c) {
-                    final active = _filter == c;
-                    return ChoiceChip(
-                      label: Text(c),
-                      selected: active,
-                      onSelected: (_) {
-                        setState(() => _filter = c);
-                        setSheetState(() {});
-                      },
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 20),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () => Navigator.of(ctx).pop(),
-                    child: const Text('닫기'),
-                  ),
-                ),
-              ],
-            ),
-          );
+      builder: (_) => _FilterSheet(
+        selected: _filter,
+        onChanged: (v) {
+          setState(() => _filter = v);
+          Navigator.pop(context);
         },
       ),
     );
@@ -231,17 +227,30 @@ class _DayGroup {
   final int dayNet;
 }
 
-List<_DayGroup> _groupByDate(List<Transaction> txns, String filter, bool isDouble, String searchQuery) {
-  final q = searchQuery.toLowerCase();
+List<_DayGroup> _groupByDate(
+  List<Transaction> txns,
+  String filter,
+  bool isDouble,
+  Map<int, ({String name, String kind})> accountMap,
+  String searchQuery,
+) {
   final filtered = txns.where((t) {
-    if (q.isNotEmpty && !t.description.toLowerCase().contains(q)) return false;
+    if (searchQuery.isNotEmpty &&
+        !t.description.toLowerCase().contains(searchQuery.toLowerCase())) {
+      return false;
+    }
     if (isDouble) return true;
-    if (filter == '전체') return true;
-    final hasRevenue = t.listLines.any((l) => l.entryType == EntryType.credit);
-    if (filter == '수익') return hasRevenue;
-    if (filter == '비용') return !hasRevenue;
-    return true;
-  }).toList();
+          if (filter == '전체') return true;
+          if (filter == '이체') {
+            return t.listLines.every(
+              (l) => accountMap[l.accountId.value]?.kind == 'asset',
+            );
+          }
+          final hasRevenue = t.listLines.any((l) => l.entryType == EntryType.credit);
+          if (filter == '수익') return hasRevenue;
+          if (filter == '비용') return !hasRevenue;
+          return true;
+        }).toList();
 
   final map = <String, List<Transaction>>{};
   for (final t in filtered) {
@@ -464,14 +473,15 @@ class _DoubleEntryCard extends StatelessWidget {
                 child: Column(
                   children: List.generate(debits.length, (i) {
                     final info = accountMap[debits[i].accountId.value];
+                    final kind = info?.kind ?? 'expense';
                     return Padding(
                       padding: EdgeInsets.only(bottom: i < debits.length - 1 ? 6 : 0),
                       child: SizedBox(
                         height: layout.debitHs[i],
                         child: MiniPosting(
-                          accountName: info?.name ?? '계정 ${debits[i].accountId.value}',
-                          kind: info?.kind ?? 'expense',
-                          icon: '🍎',
+                          accountName: info?.name ?? '?',
+                          kind: kind,
+                          icon: _emojiForKind(kind),
                           amount: debits[i].baseAmount,
                           isDebit: true,
                         ),
@@ -485,14 +495,15 @@ class _DoubleEntryCard extends StatelessWidget {
                 child: Column(
                   children: List.generate(credits.length, (i) {
                     final info = accountMap[credits[i].accountId.value];
+                    final kind = info?.kind ?? 'asset';
                     return Padding(
                       padding: EdgeInsets.only(bottom: i < credits.length - 1 ? 6 : 0),
                       child: SizedBox(
                         height: layout.creditHs[i],
                         child: MiniPosting(
-                          accountName: info?.name ?? '계정 ${credits[i].accountId.value}',
-                          kind: info?.kind ?? 'asset',
-                          icon: '🌳',
+                          accountName: info?.name ?? '?',
+                          kind: kind,
+                          icon: _emojiForKind(kind),
                           amount: credits[i].baseAmount,
                           isDebit: false,
                         ),
@@ -510,8 +521,9 @@ class _DoubleEntryCard extends StatelessWidget {
 }
 
 class _SingleEntryRow extends StatelessWidget {
-  const _SingleEntryRow({required this.tx, required this.isLast, required this.isOpen, required this.onTap});
+  const _SingleEntryRow({required this.tx, required this.accountMap, required this.isLast, required this.isOpen, required this.onTap});
   final Transaction tx;
+  final Map<int, ({String name, String kind})> accountMap;
   final bool isLast;
   final bool isOpen;
   final VoidCallback onTap;
@@ -562,7 +574,7 @@ class _SingleEntryRow extends StatelessWidget {
             ),
           ),
         ),
-        if (isOpen) _ExpandedPosting(tx: tx),
+        if (isOpen) _ExpandedPosting(tx: tx, accountMap: accountMap),
         if (!isLast || isOpen) const Divider(height: 1),
       ],
     );
@@ -580,8 +592,9 @@ class _SingleEntryRow extends StatelessWidget {
 }
 
 class _ExpandedPosting extends StatelessWidget {
-  const _ExpandedPosting({required this.tx});
+  const _ExpandedPosting({required this.tx, required this.accountMap});
   final Transaction tx;
+  final Map<int, ({String name, String kind})> accountMap;
 
   @override
   Widget build(BuildContext context) {
@@ -603,30 +616,70 @@ class _ExpandedPosting extends StatelessWidget {
             children: [
               Expanded(
                 child: Column(
-                  children: debits.map((l) => LedgerPosting(
-                    side: '차',
-                    accountName: '계정 ${l.accountId.value}',
-                    kind: 'expense',
-                    icon: '🍎',
-                    amount: l.baseAmount,
-                  )).toList(),
+                  children: debits.map((l) {
+                    final info = accountMap[l.accountId.value];
+                    final kind = info?.kind ?? 'expense';
+                    return LedgerPosting(
+                      side: '차',
+                      accountName: info?.name ?? '?',
+                      kind: kind,
+                      icon: _emojiForKind(kind),
+                      amount: l.baseAmount,
+                    );
+                  }).toList(),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
-                  children: credits.map((l) => LedgerPosting(
-                    side: '대',
-                    accountName: '계정 ${l.accountId.value}',
-                    kind: 'asset',
-                    icon: '🌳',
-                    amount: l.baseAmount,
-                  )).toList(),
+                  children: credits.map((l) {
+                    final info = accountMap[l.accountId.value];
+                    final kind = info?.kind ?? 'asset';
+                    return LedgerPosting(
+                      side: '대',
+                      accountName: info?.name ?? '?',
+                      kind: kind,
+                      icon: _emojiForKind(kind),
+                      amount: l.baseAmount,
+                    );
+                  }).toList(),
                 ),
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _FilterSheet extends StatelessWidget {
+  const _FilterSheet({required this.selected, required this.onChanged});
+  final String selected;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('필터', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface)),
+            const SizedBox(height: 12),
+            ...['전체', '수익', '비용', '이체'].map((opt) => ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(
+                opt == selected ? Icons.check_circle : Icons.radio_button_unchecked,
+                color: opt == selected ? Theme.of(context).colorScheme.primary : null,
+              ),
+              title: Text(opt),
+              onTap: () => onChanged(opt),
+            )),
+          ],
+        ),
       ),
     );
   }
