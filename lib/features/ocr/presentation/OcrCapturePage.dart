@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../app/theme/AppColors.dart';
 import 'OcrBloc.dart';
 
 /// 이미지 소스 — image_picker 패키지 설치 전 임시 정의
@@ -186,7 +187,7 @@ class OcrCapturePage extends StatelessWidget {
                     ' (신뢰도 ${(state.classified!.confidence * 100).toStringAsFixed(0)}%)')
                 : const Text(
                     '자동 분류 실패 — 계정과목을 직접 선택해 주세요',
-                    style: TextStyle(color: Colors.orange),
+                    style: TextStyle(color: AppColors.stateDraft),
                   ),
           ),
           const SizedBox(height: 12),
@@ -233,7 +234,7 @@ class OcrCapturePage extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.check_circle_outline, size: 64, color: Colors.green),
+          const Icon(Icons.check_circle_outline, size: 64, color: AppColors.stateSuccess),
           const SizedBox(height: 16),
           const Text('Draft 거래가 생성되었습니다'),
           const SizedBox(height: 24),
@@ -320,10 +321,10 @@ class _ConfidenceBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = confidence >= 0.8
-        ? Colors.green
+        ? AppColors.stateSuccess
         : confidence >= 0.5
-            ? Colors.orange
-            : Colors.red;
+            ? AppColors.stateDraft
+            : AppColors.stateError;
     final label = confidence >= 0.8
         ? '높음'
         : confidence >= 0.5

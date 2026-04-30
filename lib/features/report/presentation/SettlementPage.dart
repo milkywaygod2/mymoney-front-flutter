@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../app/di/Injection.dart';
+import '../../../app/theme/AppColors.dart';
 import '../../../core/constants/Enums.dart';
 import '../../../core/interfaces/IAccountRepository.dart';
 import '../usecase/RunSettlement.dart' show SettlementStep, SettlementResult;
@@ -219,7 +220,7 @@ class _SettlementResultView extends StatelessWidget {
           children: [
             Icon(
               result.isCompleted ? Icons.check_circle : Icons.error,
-              color: result.isCompleted ? Colors.green : Colors.red,
+              color: result.isCompleted ? AppColors.stateSuccess : AppColors.stateError,
               size: 32,
             ),
             const SizedBox(width: 12),
@@ -234,7 +235,7 @@ class _SettlementResultView extends StatelessWidget {
           '당기순이익: ₩${result.netIncome}',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: result.netIncome >= 0 ? Colors.teal : Colors.orange,
+            color: result.netIncome >= 0 ? AppColors.assetDeep : AppColors.stateDraft,
           ),
         ),
         const Divider(height: 24),
@@ -242,7 +243,7 @@ class _SettlementResultView extends StatelessWidget {
         ...result.listStepResults.map((stepResult) => ListTile(
               leading: Icon(
                 stepResult.isSuccess ? Icons.check : Icons.close,
-                color: stepResult.isSuccess ? Colors.green : Colors.red,
+                color: stepResult.isSuccess ? AppColors.stateSuccess : AppColors.stateError,
               ),
               title: Text(_stepLabel(stepResult.step)),
               subtitle: stepResult.message != null

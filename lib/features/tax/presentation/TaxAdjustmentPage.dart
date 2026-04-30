@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../app/theme/AppColors.dart';
 import '../../../core/constants/Enums.dart';
 import '../usecase/AutoClassifyDeductibility.dart';
 import 'TaxBloc.dart';
@@ -56,7 +57,7 @@ class TaxAdjustmentPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.assignment_outlined, size: 64, color: Colors.grey),
+          const Icon(Icons.assignment_outlined, size: 64, color: AppColors.darkFg3),
           const SizedBox(height: 16),
           const Text('자동 판정 결과가 없습니다'),
           const SizedBox(height: 8),
@@ -143,7 +144,7 @@ class TaxAdjustmentPage extends StatelessWidget {
     return ListTile(
       leading: Icon(
         isPending ? Icons.help_outline : Icons.check_circle_outline,
-        color: isPending ? Colors.orange : Colors.green,
+        color: isPending ? AppColors.stateDraft : AppColors.stateSuccess,
       ),
       title: Text(item.accountName),
       subtitle: Column(
@@ -153,7 +154,7 @@ class TaxAdjustmentPage extends StatelessWidget {
           if (item.reason != null)
             Text(
               item.reason!,
-              style: const TextStyle(fontSize: 11, color: Colors.grey),
+              style: const TextStyle(fontSize: 11, color: AppColors.darkFg3),
             ),
         ],
       ),

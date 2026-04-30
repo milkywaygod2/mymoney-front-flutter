@@ -139,7 +139,7 @@ class _AccountTreeTile extends StatelessWidget {
                             ? Icons.expand_more
                             : Icons.chevron_right,
                         size: 20,
-                        color: Colors.grey,
+                        color: AppColors.darkFg3,
                       )
                     else
                       const SizedBox(width: 20),
