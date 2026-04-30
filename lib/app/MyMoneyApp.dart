@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../features/account/presentation/AccountBloc.dart';
+import '../features/journal/presentation/JournalBloc.dart';
+import '../features/ocr/presentation/OcrBloc.dart';
+import '../features/perspective/presentation/PerspectiveBloc.dart';
+import '../features/report/presentation/ReportBloc.dart';
+import '../features/tax/presentation/TaxBloc.dart';
+import 'di/Injection.dart';
 import 'router/AppRouter.dart';
 import 'theme/AppTheme.dart';
 
@@ -9,13 +17,23 @@ class MyMoneyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'MyMoney',
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
-      themeMode: ThemeMode.dark,
-      routerConfig: AppRouter.router,
-      debugShowCheckedModeBanner: false,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: getIt<AccountBloc>()),
+        BlocProvider.value(value: getIt<JournalBloc>()),
+        BlocProvider.value(value: getIt<PerspectiveBloc>()),
+        BlocProvider.value(value: getIt<ReportBloc>()),
+        BlocProvider.value(value: getIt<TaxBloc>()),
+        BlocProvider.value(value: getIt<OcrBloc>()),
+      ],
+      child: MaterialApp.router(
+        title: 'MyMoney',
+        theme: AppTheme.light(),
+        darkTheme: AppTheme.dark(),
+        themeMode: ThemeMode.dark,
+        routerConfig: AppRouter.router,
+        debugShowCheckedModeBanner: false,
+      ),
     );
   }
 }

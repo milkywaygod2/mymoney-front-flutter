@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/report/presentation/DashboardPage.dart';
+
 /// 앱 라우터 — 4탭 셸 네비게이션
 class AppRouter {
   AppRouter._();
@@ -22,8 +24,7 @@ class AppRouter {
           ),
           GoRoute(
             path: '/report',
-            builder: (context, state) =>
-                const _PlaceholderPage(title: '분석'),
+            builder: (context, state) => const DashboardPage(),
           ),
           GoRoute(
             path: '/more',

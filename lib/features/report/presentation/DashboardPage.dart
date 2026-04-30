@@ -29,6 +29,13 @@ class _DashboardPageState extends State<DashboardPage> {
   };
 
   @override
+  void initState() {
+    super.initState();
+    // 페이지 진입 시 대시보드 초기 로드
+    context.read<ReportBloc>().add(const LoadDashboard());
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
