@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:get_it/get_it.dart';
+
 import '../../features/account/presentation/AccountBloc.dart';
 import '../../features/account/presentation/AccountEvent.dart';
 import '../../features/account/presentation/AccountTreePage.dart';
 import '../../features/home/presentation/HomeBloc.dart';
 import '../../features/home/presentation/HomePage.dart';
+import '../../features/journal/data/TransactionDao.dart';
 import '../../features/journal/presentation/JournalPage.dart';
 import '../../features/report/presentation/DashboardPage.dart';
 import '../../features/report/presentation/ReportBloc.dart';
@@ -24,7 +27,10 @@ class AppRouter {
           GoRoute(
             path: '/home',
             builder: (context, state) => BlocProvider(
-              create: (ctx) => HomeBloc(reportBloc: ctx.read<ReportBloc>()),
+              create: (ctx) => HomeBloc(
+                reportBloc: ctx.read<ReportBloc>(),
+                transactionDao: GetIt.instance<TransactionDao>(),
+              ),
               child: const HomePage(),
             ),
           ),
