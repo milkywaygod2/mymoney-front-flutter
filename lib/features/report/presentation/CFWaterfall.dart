@@ -14,11 +14,9 @@ class CFWaterfall extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<ReportBloc, ReportState>(
       builder: (context, state) {
-        // TODO: U6 확장 시 ReportBloc에 cashFlowStatement 상태 추가 후 연결
-        // 현재는 대시보드 요약에서 가용한 데이터로 표시
         if (state.dashboard == null) return const SizedBox.shrink();
 
-        // stub 데이터: DashboardSummary에서 간이 CF 구성
+        // dashboard 요약에서 간이 CF 구성 (cashFlowStatement 없을 때 fallback)
         final d = state.dashboard!;
         final listItems = <_WaterfallBar>[
           _WaterfallBar(
