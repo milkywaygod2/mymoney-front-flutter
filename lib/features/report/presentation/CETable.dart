@@ -205,3 +205,35 @@ class _Cell extends StatelessWidget {
     );
   }
 }
+
+/// CETableFull — EquityChangeStatement 실데이터 직접 수신 버전
+class CETableFull extends StatelessWidget {
+  const CETableFull({super.key, required this.listItems});
+  final List<EquityChangeItem> listItems;
+
+  @override
+  Widget build(BuildContext context) {
+    if (listItems.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '자본변동표',
+            style: Theme.of(context)
+                .textTheme
+                .titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: _CETableContent(listItems: listItems),
+          ),
+        ],
+      ),
+    );
+  }
+}

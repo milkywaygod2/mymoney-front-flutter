@@ -90,11 +90,11 @@ class _DashboardPageState extends State<DashboardPage> {
                 const Divider(height: 1),
 
                 // 5. CF 폭포 차트
-                const CFWaterfall(),
+                const _CFSection(),
                 const Divider(height: 1),
 
                 // 6. 자본변동표
-                const CETable(),
+                const _CESection(),
                 const SizedBox(height: 32),
               ],
             ),
@@ -115,6 +115,8 @@ class _DashboardPageState extends State<DashboardPage> {
       bloc.add(LoadIncomeStatement(periodId: pid));
       bloc.add(LoadComprehensiveIncome(periodId: pid));
       bloc.add(LoadPeriodComparisons(asOfDate: now, currentPeriodId: pid));
+      bloc.add(LoadCashFlowStatement(periodId: pid, snapshotDate: now));
+      bloc.add(LoadEquityChangeStatement(periodId: pid, snapshotDate: now));
     }
   }
 }
@@ -409,6 +411,46 @@ class _EmptyView extends StatelessWidget {
           FilledButton(onPressed: onLoad, child: const Text('새로고침')),
         ],
       ),
+    );
+  }
+}
+
+/// CF 폭포 차트 섹션 — cashFlowStatement 있으면 CFWaterfallFull, 없으면 CFWaterfall(stub)
+class _CFSection extends StatelessWidget {
+  const _CFSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ReportBloc, ReportState>(
+      buildWhen: (prev, curr) =>
+          prev.cashFlowStatement != curr.cashFlowStatement,
+      builder: (context, state) {
+        final cf = state.cashFlowStatement;
+        if (cf != null) {
+          return CFWaterfallFull(listItems: cf.listItems);
+        }
+        return const CFWaterfall();
+      },
+    );
+  }
+}
+
+/// 자본변동표 섹션 — equityChangeStatement 있으면 실데이터, 없으면 stub CETable
+class _CESection extends StatelessWidget {
+  const _CESection();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ReportBloc, ReportState>(
+      buildWhen: (prev, curr) =>
+          prev.equityChangeStatement != curr.equityChangeStatement,
+      builder: (context, state) {
+        final ce = state.equityChangeStatement;
+        if (ce != null) {
+          return CETableFull(listItems: ce.listItems);
+        }
+        return const CETable();
+      },
     );
   }
 }
