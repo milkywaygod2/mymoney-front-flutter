@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/constants/Enums.dart';
 import 'AccountBloc.dart';
@@ -19,15 +20,32 @@ class AccountTreePage extends StatefulWidget {
 }
 
 class _AccountTreePageState extends State<AccountTreePage> {
+  static const _kPrefKey = 'account_view_mode';
+
   AccountViewMode _mode = AccountViewMode.browse;
 
   @override
   void initState() {
     super.initState();
+    _loadMode();
     // 트리 초기 로딩
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AccountBloc>().add(const AccountEvent.loadTree());
     });
+  }
+
+  Future<void> _loadMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString(_kPrefKey);
+    if (saved != null && mounted) {
+      final mode = AccountViewMode.values.where((m) => m.name == saved).firstOrNull;
+      if (mode != null) setState(() => _mode = mode);
+    }
+  }
+
+  Future<void> _saveMode(AccountViewMode mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kPrefKey, mode.name);
   }
 
   @override
@@ -55,7 +73,10 @@ class _AccountTreePageState extends State<AccountTreePage> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: ModeToggle(
               selected: _mode,
-              onChanged: (mode) => setState(() => _mode = mode),
+              onChanged: (mode) {
+                setState(() => _mode = mode);
+                _saveMode(mode);
+              },
             ),
           ),
         ),

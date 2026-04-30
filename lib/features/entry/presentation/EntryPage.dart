@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'EntryBloc.dart';
 import 'EntryV1.dart';
@@ -35,6 +36,30 @@ class EntryPage extends StatefulWidget {
 }
 
 class _EntryPageState extends State<EntryPage> {
+  static const _kPrefKey = 'entry_view_mode';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMode();
+  }
+
+  Future<void> _loadMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString(_kPrefKey);
+    if (saved != null && mounted) {
+      final mode = EntryMode.values.where((m) => m.name == saved).firstOrNull;
+      if (mode != null) {
+        context.read<EntryBloc>().add(EntryModeChanged(mode));
+      }
+    }
+  }
+
+  static Future<void> _saveMode(EntryMode mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kPrefKey, mode.name);
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<EntryBloc, EntryState>(
@@ -125,6 +150,7 @@ class _EntryHeader extends StatelessWidget {
                 selected: state.mode,
                 onChanged: (mode) {
                   context.read<EntryBloc>().add(EntryModeChanged(mode));
+                  _EntryPageState._saveMode(mode);
                 },
               ),
             ],
