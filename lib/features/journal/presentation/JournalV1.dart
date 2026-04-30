@@ -29,6 +29,7 @@ class JournalV1 extends StatefulWidget {
 class _JournalV1State extends State<JournalV1> {
   bool _isDoublEntry = true;
   String _filter = '전체';
+  String _searchQuery = '';
   int? _openId;
 
   @override
@@ -38,7 +39,7 @@ class _JournalV1State extends State<JournalV1> {
         final accountMap = _buildAccountMap(accountState);
         return BlocBuilder<JournalBloc, JournalState>(
           builder: (context, state) {
-            final grouped = _groupByDate(state.listTransactions, _filter, _isDoublEntry);
+            final grouped = _groupByDate(state.listTransactions, _filter, _isDoublEntry, _searchQuery);
 
         return Column(
           children: [
@@ -59,8 +60,14 @@ class _JournalV1State extends State<JournalV1> {
                       ],
                     ),
                   ),
-                  IconButton(onPressed: () {}, icon: const Icon(Icons.tune)),
-                  IconButton(onPressed: () {}, icon: const Icon(Icons.search)),
+                  IconButton(
+                    onPressed: () => _showFilterSheet(context),
+                    icon: const Icon(Icons.tune),
+                  ),
+                  IconButton(
+                    onPressed: () => _showSearchDialog(context),
+                    icon: const Icon(Icons.search),
+                  ),
                 ],
               ),
             ),
@@ -133,6 +140,86 @@ class _JournalV1State extends State<JournalV1> {
       },
     );
   }
+
+  Future<void> _showSearchDialog(BuildContext context) async {
+    String draft = _searchQuery;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('거래 검색'),
+        content: TextField(
+          autofocus: true,
+          controller: TextEditingController(text: draft),
+          decoration: const InputDecoration(hintText: '설명으로 검색...'),
+          onChanged: (v) { draft = v; },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              setState(() => _searchQuery = '');
+              Navigator.of(ctx).pop();
+            },
+            child: const Text('초기화'),
+          ),
+          TextButton(
+            onPressed: () {
+              setState(() => _searchQuery = draft);
+              Navigator.of(ctx).pop();
+            },
+            child: const Text('검색'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFilterSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('필터', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 16),
+                const Text('거래 유형', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: ['전체', '수익', '비용', '이체'].map((c) {
+                    final active = _filter == c;
+                    return ChoiceChip(
+                      label: Text(c),
+                      selected: active,
+                      onSelected: (_) {
+                        setState(() => _filter = c);
+                        setSheetState(() {});
+                      },
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 20),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: const Text('닫기'),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
 }
 
 // ─── 그루핑 헬퍼 ────────────────────────────────────────────────
@@ -144,17 +231,17 @@ class _DayGroup {
   final int dayNet;
 }
 
-List<_DayGroup> _groupByDate(List<Transaction> txns, String filter, bool isDouble) {
-  final filtered = isDouble
-      ? txns
-      : txns.where((t) {
-          if (filter == '전체') return true;
-          // flow 판단: 대변 수익 > 0 이면 in, 대변 비용 > 0 이면 out 등 단순 처리
-          final hasRevenue = t.listLines.any((l) => l.entryType == EntryType.credit);
-          if (filter == '수익') return hasRevenue;
-          if (filter == '비용') return !hasRevenue;
-          return true;
-        }).toList();
+List<_DayGroup> _groupByDate(List<Transaction> txns, String filter, bool isDouble, String searchQuery) {
+  final q = searchQuery.toLowerCase();
+  final filtered = txns.where((t) {
+    if (q.isNotEmpty && !t.description.toLowerCase().contains(q)) return false;
+    if (isDouble) return true;
+    if (filter == '전체') return true;
+    final hasRevenue = t.listLines.any((l) => l.entryType == EntryType.credit);
+    if (filter == '수익') return hasRevenue;
+    if (filter == '비용') return !hasRevenue;
+    return true;
+  }).toList();
 
   final map = <String, List<Transaction>>{};
   for (final t in filtered) {
