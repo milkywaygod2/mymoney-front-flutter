@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../account/presentation/AccountBloc.dart';
+import '../../account/presentation/AccountEvent.dart';
+import '../../entry/presentation/EntryPage.dart';
 import 'JournalBloc.dart';
 import 'JournalEvent.dart';
 import 'JournalState.dart';
 import 'JournalV1.dart';
 import 'JournalV2.dart';
 import 'JournalV3.dart';
-import 'TransactionForm.dart';
 
 /// JournalPage — V1/V2/V3 토글 컨테이너 (재작성)
 class JournalPage extends StatefulWidget {
@@ -32,6 +34,7 @@ class _JournalPageState extends State<JournalPage> with TickerProviderStateMixin
     _fadeAnim = CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut);
     _fadeController.forward();
     context.read<JournalBloc>().add(const LoadTransactions());
+    context.read<AccountBloc>().add(const AccountEvent.loadTree());
   }
 
   @override
@@ -60,7 +63,7 @@ class _JournalPageState extends State<JournalPage> with TickerProviderStateMixin
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () => TransactionForm.show(context),
+            onPressed: () => EntryPage.show(context),
           ),
         ],
       ),
@@ -83,6 +86,26 @@ class _JournalPageState extends State<JournalPage> with TickerProviderStateMixin
           );
         },
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showEntrySheet(context),
+        tooltip: '거래 입력',
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  void _showEntrySheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.9,
+      ),
+      builder: (_) => const EntryPage(),
     );
   }
 

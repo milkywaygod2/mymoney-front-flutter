@@ -4,11 +4,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/account/presentation/AccountBloc.dart';
 import '../../features/account/presentation/AccountEvent.dart';
+import '../../features/account/presentation/AccountTreePage.dart';
 import '../../features/home/presentation/HomeBloc.dart';
 import '../../features/home/presentation/HomePage.dart';
 import '../../features/journal/data/TransactionDao.dart';
-import '../../features/journal/presentation/JournalBloc.dart';
 import '../../features/journal/presentation/JournalPage.dart';
+import '../../features/report/presentation/DashboardPage.dart';
 import '../../features/report/presentation/ReportBloc.dart';
 import '../di/Injection.dart';
 
@@ -34,20 +35,18 @@ class AppRouter {
           ),
           GoRoute(
             path: '/journal',
-            builder: (context, state) => MultiBlocProvider(
-              providers: [
-                BlocProvider.value(value: getIt<JournalBloc>()),
-                BlocProvider.value(
-                  value: getIt<AccountBloc>()..add(const LoadAccountTree()),
-                ),
-              ],
-              child: const JournalPage(),
-            ),
+            builder: (context, state) => const JournalPage(),
           ),
           GoRoute(
             path: '/report',
-            builder: (context, state) =>
-                const _PlaceholderPage(title: '분석'),
+            builder: (context, state) => const DashboardPage(),
+          ),
+          GoRoute(
+            path: '/account',
+            builder: (context, state) {
+              context.read<AccountBloc>().add(const AccountEvent.loadTree());
+              return const AccountTreePage();
+            },
           ),
           GoRoute(
             path: '/more',
@@ -70,10 +69,10 @@ class _ShellScaffold extends StatelessWidget {
     NavigationDestination(icon: Icon(Icons.home), label: '홈'),
     NavigationDestination(icon: Icon(Icons.receipt_long), label: '거래'),
     NavigationDestination(icon: Icon(Icons.analytics), label: '분석'),
-    NavigationDestination(icon: Icon(Icons.more_horiz), label: '더보기'),
+    NavigationDestination(icon: Icon(Icons.account_tree), label: '계정'),
   ];
 
-  static const _listPaths = ['/home', '/journal', '/report', '/more'];
+  static const _listPaths = ['/home', '/journal', '/report', '/account'];
 
   int _getCurrentIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;

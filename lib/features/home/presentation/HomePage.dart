@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../entry/presentation/EntryPage.dart';
 import 'HomeBloc.dart';
 import 'HomeV1.dart';
 import 'HomeV2.dart';
@@ -60,6 +61,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             onPressed: () => context.read<HomeBloc>().add(const RefreshHome()),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => EntryPage.show(context),
+        tooltip: '거래 입력',
+        child: const Icon(Icons.add),
       ),
       body: BlocBuilder<HomeBloc, HomeState>(
         builder: (context, state) {
