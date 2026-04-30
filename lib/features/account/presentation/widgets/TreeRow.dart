@@ -37,6 +37,11 @@ class TreeRow extends StatelessWidget {
     }).toList();
   }
 
+  int get _descendantCount {
+    final parentPath = account.equityTypePath;
+    return allAccounts.where((a) => a.equityTypePath.startsWith('$parentPath.')).length;
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AccountBloc, AccountState>(
@@ -80,17 +85,31 @@ class TreeRow extends StatelessWidget {
                     MetaphorIcon(nature: account.nature, size: 16),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        account.name,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: depth == 0
-                              ? FontWeight.w600
-                              : FontWeight.normal,
-                          color: account.isActive
-                              ? null
-                              : Colors.grey,
-                        ),
+                      child: Row(
+                        children: [
+                          Text(
+                            account.name,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: depth == 0
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                              color: account.isActive
+                                  ? null
+                                  : Colors.grey,
+                            ),
+                          ),
+                          if (depth == 0 && _descendantCount > 0) ...[
+                            const SizedBox(width: 6),
+                            Text(
+                              '(하위 $_descendantCount개)',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                     if (depth == 0)
