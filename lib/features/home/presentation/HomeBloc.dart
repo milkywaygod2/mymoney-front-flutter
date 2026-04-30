@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../features/journal/data/TransactionDao.dart';
 import '../../../features/report/presentation/ReportBloc.dart';
 
 // ─────────────────────────────────────────────────────────────────
@@ -97,21 +98,23 @@ class HomeState {
 // ─────────────────────────────────────────────────────────────────
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
-  HomeBloc({required ReportBloc reportBloc})
+  HomeBloc({required ReportBloc reportBloc, required TransactionDao transactionDao})
       : _reportBloc = reportBloc,
+        _transactionDao = transactionDao,
         super(const HomeState()) {
     on<LoadHome>(_onLoad);
     on<RefreshHome>(_onRefresh);
   }
 
   final ReportBloc _reportBloc;
+  final TransactionDao _transactionDao;
 
   Future<void> _onLoad(LoadHome event, Emitter<HomeState> emit) async {
     emit(state.copyWith(isLoading: true));
     try {
-      // ReportBloc의 현재 대시보드 상태를 읽어 ViewModel 구성
       final reportState = _reportBloc.state;
-      final vm = _buildViewModel(reportState);
+      final spark7d = await _computeSpark7d();
+      final vm = _buildViewModel(reportState, spark7d);
       emit(state.copyWith(isLoading: false, viewModel: vm));
     } catch (e) {
       emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
@@ -119,12 +122,37 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   }
 
   Future<void> _onRefresh(RefreshHome event, Emitter<HomeState> emit) async {
-    // ReportBloc에 대시보드 재로드 트리거
     _reportBloc.add(const LoadDashboard());
     add(const LoadHome());
   }
 
-  HomeViewModel _buildViewModel(ReportState reportState) {
+  /// 최근 7일 일별 순수익(revenue - expense) 합산 리스트
+  Future<List<int>> _computeSpark7d() async {
+    final now = DateTime.now();
+    final from = DateTime(now.year, now.month, now.day - 6);
+    final to = DateTime(now.year, now.month, now.day, 23, 59, 59);
+    final listTxns = await _transactionDao.findByDateRange(from, to);
+
+    final Map<String, int> mapDailyNet = {};
+    for (final twl in listTxns) {
+      final key = '${twl.tx.date.year}-${twl.tx.date.month}-${twl.tx.date.day}';
+      final revenue = twl.listLines
+          .where((l) => l.entryType == 'CREDIT')
+          .fold<int>(0, (s, l) => s + l.baseAmount);
+      final expense = twl.listLines
+          .where((l) => l.entryType == 'DEBIT')
+          .fold<int>(0, (s, l) => s + l.baseAmount);
+      mapDailyNet[key] = (mapDailyNet[key] ?? 0) + revenue - expense;
+    }
+
+    return List.generate(7, (i) {
+      final d = DateTime(now.year, now.month, now.day - (6 - i));
+      final key = '${d.year}-${d.month}-${d.day}';
+      return mapDailyNet[key] ?? 0;
+    });
+  }
+
+  HomeViewModel _buildViewModel(ReportState reportState, List<int> spark7d) {
     final dashboard = reportState.dashboard;
     final bs = reportState.balanceSheet;
 
@@ -136,8 +164,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
     return HomeViewModel(
       netWorth: dashboard.netAssets,
-      // 7일 추이는 현재 단순화 — TODO: 일별 스냅샷 쿼리 연동
-      spark7d: List.generate(7, (i) => (dashboard.netAssets * (0.94 + i * 0.01)).round()),
+      spark7d: spark7d,
       assets: assets,
       liabilities: liabilities,
       equity: equity,

@@ -12,6 +12,9 @@ abstract class AccountState with _$AccountState {
     /// 최상위 계정 목록 (5대 분류: 자산/부채/자본/수익/비용)
     @Default([]) List<Account> listRoots,
 
+    /// 전체 활성 계정 flat 목록 — 계정명 조회용
+    @Default([]) List<Account> listAll,
+
     /// 펼쳐진 노드 ID 집합 — 렌더링 시 해당 노드만 자식 표시
     @Default({}) Set<AccountId> setExpandedIds,
 
