@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/AppColors.dart';
 import '../../../core/domain/Counterparty.dart';
 import '../../../core/domain/CounterpartyAlias.dart';
 import '../../../core/interfaces/ICounterpartyRepository.dart';
@@ -95,7 +96,7 @@ class _CounterpartyPageState extends State<CounterpartyPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(_strError!, style: const TextStyle(color: Colors.red)),
+            Text(_strError!, style: const TextStyle(color: AppColors.stateError)),
             const SizedBox(height: 8),
             TextButton(onPressed: _loadAll, child: const Text('다시 시도')),
           ],
@@ -252,11 +253,11 @@ class _ConfidenceBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (Color color, String label) = switch (level) {
-      ConfidenceLevel.verified => (Colors.green, '인증'),
-      ConfidenceLevel.high => (Colors.blue, '높음'),
-      ConfidenceLevel.medium => (Colors.orange, '보통'),
-      ConfidenceLevel.low => (Colors.red, '낮음'),
-      ConfidenceLevel.unknown => (Colors.grey, '미상'),
+      ConfidenceLevel.verified => (AppColors.stateSuccess, '인증'),
+      ConfidenceLevel.high => (AppColors.revenueDeep, '높음'),
+      ConfidenceLevel.medium => (AppColors.stateDraft, '보통'),
+      ConfidenceLevel.low => (AppColors.stateError, '낮음'),
+      ConfidenceLevel.unknown => (AppColors.darkFg3, '미상'),
     };
     return Container(
       margin: const EdgeInsets.only(right: 4),
@@ -473,7 +474,7 @@ class _CounterpartyDetailSheetState extends State<_CounterpartyDetailSheet> {
                 if (_counterparty.listAliases.isEmpty)
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 8),
-                    child: Text('등록된 별칭 없음', style: TextStyle(color: Colors.grey)),
+                    child: Text('등록된 별칭 없음', style: TextStyle(color: AppColors.darkFg3)),
                   )
                 else
                   ..._counterparty.listAliases.map(
@@ -794,7 +795,7 @@ class _InfoRow extends StatelessWidget {
             width: 80,
             child: Text(
               label,
-              style: const TextStyle(color: Colors.grey, fontSize: 13),
+              style: const TextStyle(color: AppColors.darkFg3, fontSize: 13),
             ),
           ),
           Expanded(child: Text(value, style: const TextStyle(fontSize: 13))),

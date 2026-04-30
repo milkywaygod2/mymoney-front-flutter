@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/AppColors.dart';
 import '../../../core/constants/Enums.dart';
 import '../../../core/domain/Transaction.dart';
 import '../../../core/domain/JournalEntryLine.dart';
@@ -36,14 +37,14 @@ class FlowCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // 차변 노드들 (왼쪽)
-                Expanded(child: _buildNodeColumn(context, listDebitLines, '차변', Colors.blue)),
+                Expanded(child: _buildNodeColumn(context, listDebitLines, '차변', AppColors.revenueDeep)),
                 // 중앙 엣지 (화살표)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                   child: Icon(Icons.arrow_forward, color: colorScheme.outline),
                 ),
                 // 대변 노드들 (오른쪽)
-                Expanded(child: _buildNodeColumn(context, listCreditLines, '대변', Colors.red)),
+                Expanded(child: _buildNodeColumn(context, listCreditLines, '대변', AppColors.stateError)),
               ],
             ),
             const SizedBox(height: 8),
@@ -57,9 +58,9 @@ class FlowCard extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context) {
     final (statusColor, statusLabel) = switch (transaction.status) {
-      TransactionStatus.draft => (Colors.orange, 'Draft'),
-      TransactionStatus.posted => (Colors.green, 'Posted'),
-      TransactionStatus.voided => (Colors.red, 'Voided'),
+      TransactionStatus.draft => (AppColors.stateDraft, 'Draft'),
+      TransactionStatus.posted => (AppColors.stateSuccess, 'Posted'),
+      TransactionStatus.voided => (AppColors.stateError, 'Voided'),
     };
 
     return Row(
@@ -136,12 +137,12 @@ class FlowCard extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Icon(isBalanced ? Icons.check_circle : Icons.warning,
-            color: isBalanced ? Colors.green : Colors.orange, size: 16),
+            color: isBalanced ? AppColors.stateSuccess : AppColors.stateDraft, size: 16),
         const SizedBox(width: 4),
         Text(
           isBalanced ? '균형' : '불균형 (차:${_fmt(debitSum)} / 대:${_fmt(creditSum)})',
           style: TextStyle(
-            color: isBalanced ? Colors.green : Colors.orange,
+            color: isBalanced ? AppColors.stateSuccess : AppColors.stateDraft,
             fontSize: 12,
           ),
         ),

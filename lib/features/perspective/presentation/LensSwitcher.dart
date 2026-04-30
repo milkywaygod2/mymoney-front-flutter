@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../app/theme/AppColors.dart';
 import '../../../core/models/CurrencyCode.dart';
 import 'PerspectiveBloc.dart';
 import 'PerspectiveEvent.dart';
@@ -242,7 +243,7 @@ class _CustomFilterPanelState extends State<_CustomFilterPanel>
                 style: Theme.of(context)
                     .textTheme
                     .labelSmall
-                    ?.copyWith(color: Colors.grey),
+                    ?.copyWith(color: AppColors.darkFg3),
               ),
             ),
         ],
@@ -502,7 +503,7 @@ class _CustomFilterPanelState extends State<_CustomFilterPanel>
         children: [
           for (int i = 0; i < crumbs.length; i++) ...[
             if (i > 0)
-              const Icon(Icons.chevron_right, size: 16, color: Colors.grey),
+              const Icon(Icons.chevron_right, size: 16, color: AppColors.darkFg3),
             GestureDetector(
               onTap: () => onTap(i),
               child: Text(
@@ -511,7 +512,7 @@ class _CustomFilterPanelState extends State<_CustomFilterPanel>
                   fontSize: 12,
                   color: i == crumbs.length - 1
                       ? Theme.of(context).colorScheme.primary
-                      : Colors.grey,
+                      : AppColors.darkFg3,
                   fontWeight: i == crumbs.length - 1
                       ? FontWeight.bold
                       : FontWeight.normal,
