@@ -87,35 +87,54 @@ class EntryV1 extends StatelessWidget {
               const SizedBox(height: 8),
               Align(
                 alignment: Alignment.centerRight,
-                child: TextButton.icon(
-                  onPressed: state.naturalText.isEmpty
-                      ? null
-                      : () => context
-                          .read<EntryBloc>()
-                          .add(const EntryParseNaturalText()),
-                  icon: const Icon(Icons.auto_fix_high, size: 16),
-                  label: const Text('자동 분석'),
+                child: state.status == EntryStatus.parsing
+                    ? const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 6),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
+                            SizedBox(width: 8),
+                            Text('AI 분석 중...', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                          ],
+                        ),
+                      )
+                    : TextButton.icon(
+                        onPressed: state.naturalText.isEmpty
+                            ? null
+                            : () => context
+                                .read<EntryBloc>()
+                                .add(const EntryParseNaturalText()),
+                        icon: const Icon(Icons.auto_fix_high, size: 16),
+                        label: const Text('자동 분석'),
+                      ),
+              ),
+              AnimatedOpacity(
+                opacity: state.parsedAmount != null ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 300),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Divider(),
+                    _ParsedResultRow(label: '인식 금액', value: '₩${state.amountDisplay}'),
+                    if (state.parsedDescription != null)
+                      _ParsedResultRow(
+                        label: '설명',
+                        value: state.parsedDescription!,
+                      ),
+                    if (state.parsedDate != null)
+                      _ParsedResultRow(
+                        label: '날짜',
+                        value: '${state.parsedDate!.month}/${state.parsedDate!.day}',
+                      ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      '※ 계정과목은 V2 탭에서 선택 가능합니다',
+                      style: TextStyle(fontSize: 11, color: Colors.grey),
+                    ),
+                  ],
                 ),
               ),
-              if (state.parsedAmount != null) ...[
-                const Divider(),
-                _ParsedResultRow(label: '인식 금액', value: '₩${state.amountDisplay}'),
-                if (state.parsedDescription != null)
-                  _ParsedResultRow(
-                    label: '설명',
-                    value: state.parsedDescription!,
-                  ),
-                if (state.parsedDate != null)
-                  _ParsedResultRow(
-                    label: '날짜',
-                    value: '${state.parsedDate!.month}/${state.parsedDate!.day}',
-                  ),
-                const SizedBox(height: 4),
-                const Text(
-                  '※ 계정과목은 V2 탭에서 선택 가능합니다',
-                  style: TextStyle(fontSize: 11, color: Colors.grey),
-                ),
-              ],
             ],
           ),
         );
