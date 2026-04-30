@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 
 import 'EntryBloc.dart';
 import 'EntryV1.dart';
@@ -22,8 +23,8 @@ class EntryPage extends StatefulWidget {
         vsync: Navigator.of(context),
         duration: const Duration(milliseconds: 320),
       ),
-      builder: (_) => BlocProvider(
-        create: (_) => EntryBloc(),
+      builder: (_) => BlocProvider.value(
+        value: GetIt.instance<EntryBloc>(),
         child: const EntryPage(),
       ),
     );
