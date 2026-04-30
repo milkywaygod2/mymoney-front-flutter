@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/domain/Account.dart';
 import '../../../core/constants/Enums.dart';
+import '../../../core/models/TypedId.dart';
 import 'AccountBloc.dart';
 import 'AccountState.dart';
 import 'widgets/TreeRow.dart';
@@ -30,15 +31,16 @@ class AccountBrowse extends StatelessWidget {
           return _SearchResultList(results: searchResults);
         }
 
-        return _AccountTree(roots: state.listRoots);
+        return _AccountTree(roots: state.listRoots, mapBalances: state.mapBalances);
       },
     );
   }
 }
 
 class _AccountTree extends StatelessWidget {
-  const _AccountTree({required this.roots});
+  const _AccountTree({required this.roots, required this.mapBalances});
   final List<Account> roots;
+  final Map<AccountId, int> mapBalances;
 
   /// equityTypePath 기반 1단계 자식 추출
   List<Account> _childrenOf(Account parent, List<Account> allRoots) {
@@ -62,6 +64,7 @@ class _AccountTree extends StatelessWidget {
           account: root,
           depth: 0,
           children: _childrenOf(root, roots),
+          balance: mapBalances[root.id],
         );
       },
     );

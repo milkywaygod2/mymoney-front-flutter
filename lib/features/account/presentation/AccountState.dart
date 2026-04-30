@@ -21,6 +21,9 @@ abstract class AccountState with _$AccountState {
     /// 검색 결과 — 검색어에 매칭되는 계정 목록
     @Default([]) List<Account> listSearchResults,
 
+    /// 계정별 잔액 맵 — accountId → 잔액(원화 기준)
+    @Default({}) Map<AccountId, int> mapBalances,
+
     /// 로딩 상태
     @Default(false) bool isLoading,
 
