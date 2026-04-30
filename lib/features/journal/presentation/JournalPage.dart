@@ -83,6 +83,26 @@ class _JournalPageState extends State<JournalPage> with TickerProviderStateMixin
           );
         },
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showEntrySheet(context),
+        tooltip: '거래 입력',
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  void _showEntrySheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.9,
+      ),
+      builder: (_) => const EntryPage(),
     );
   }
 
