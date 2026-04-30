@@ -18,6 +18,17 @@ Map<int, ({String name, String kind})> _buildAccountMap(AccountState s) {
   };
 }
 
+String _emojiForKind(String kind) {
+  return switch (kind) {
+    'asset'     => '🌳',
+    'expense'   => '🍎',
+    'revenue'   => '💧',
+    'liability' => '🫙',
+    'equity'    => '🪣',
+    _           => '❓',
+  };
+}
+
 /// V1 — 단식/복식 토글, 펼침형
 class JournalV1 extends StatefulWidget {
   const JournalV1({super.key});
@@ -113,6 +124,7 @@ class _JournalV1State extends State<JournalV1> {
                                     final isOpen = _openId == tx.id.value;
                                     return _SingleEntryRow(
                                       tx: tx,
+                                      accountMap: accountMap,
                                       isLast: i == g.items.length - 1,
                                       isOpen: isOpen,
                                       onTap: () => setState(() => _openId = isOpen ? null : tx.id.value),
@@ -377,14 +389,15 @@ class _DoubleEntryCard extends StatelessWidget {
                 child: Column(
                   children: List.generate(debits.length, (i) {
                     final info = accountMap[debits[i].accountId.value];
+                    final kind = info?.kind ?? 'expense';
                     return Padding(
                       padding: EdgeInsets.only(bottom: i < debits.length - 1 ? 6 : 0),
                       child: SizedBox(
                         height: layout.debitHs[i],
                         child: MiniPosting(
-                          accountName: info?.name ?? '계정 ${debits[i].accountId.value}',
-                          kind: info?.kind ?? 'expense',
-                          icon: '🍎',
+                          accountName: info?.name ?? '?',
+                          kind: kind,
+                          icon: _emojiForKind(kind),
                           amount: debits[i].baseAmount,
                           isDebit: true,
                         ),
@@ -398,14 +411,15 @@ class _DoubleEntryCard extends StatelessWidget {
                 child: Column(
                   children: List.generate(credits.length, (i) {
                     final info = accountMap[credits[i].accountId.value];
+                    final kind = info?.kind ?? 'asset';
                     return Padding(
                       padding: EdgeInsets.only(bottom: i < credits.length - 1 ? 6 : 0),
                       child: SizedBox(
                         height: layout.creditHs[i],
                         child: MiniPosting(
-                          accountName: info?.name ?? '계정 ${credits[i].accountId.value}',
-                          kind: info?.kind ?? 'asset',
-                          icon: '🌳',
+                          accountName: info?.name ?? '?',
+                          kind: kind,
+                          icon: _emojiForKind(kind),
                           amount: credits[i].baseAmount,
                           isDebit: false,
                         ),
@@ -423,8 +437,9 @@ class _DoubleEntryCard extends StatelessWidget {
 }
 
 class _SingleEntryRow extends StatelessWidget {
-  const _SingleEntryRow({required this.tx, required this.isLast, required this.isOpen, required this.onTap});
+  const _SingleEntryRow({required this.tx, required this.accountMap, required this.isLast, required this.isOpen, required this.onTap});
   final Transaction tx;
+  final Map<int, ({String name, String kind})> accountMap;
   final bool isLast;
   final bool isOpen;
   final VoidCallback onTap;
@@ -475,7 +490,7 @@ class _SingleEntryRow extends StatelessWidget {
             ),
           ),
         ),
-        if (isOpen) _ExpandedPosting(tx: tx),
+        if (isOpen) _ExpandedPosting(tx: tx, accountMap: accountMap),
         if (!isLast || isOpen) const Divider(height: 1),
       ],
     );
@@ -493,8 +508,9 @@ class _SingleEntryRow extends StatelessWidget {
 }
 
 class _ExpandedPosting extends StatelessWidget {
-  const _ExpandedPosting({required this.tx});
+  const _ExpandedPosting({required this.tx, required this.accountMap});
   final Transaction tx;
+  final Map<int, ({String name, String kind})> accountMap;
 
   @override
   Widget build(BuildContext context) {
@@ -516,25 +532,33 @@ class _ExpandedPosting extends StatelessWidget {
             children: [
               Expanded(
                 child: Column(
-                  children: debits.map((l) => LedgerPosting(
-                    side: '차',
-                    accountName: '계정 ${l.accountId.value}',
-                    kind: 'expense',
-                    icon: '🍎',
-                    amount: l.baseAmount,
-                  )).toList(),
+                  children: debits.map((l) {
+                    final info = accountMap[l.accountId.value];
+                    final kind = info?.kind ?? 'expense';
+                    return LedgerPosting(
+                      side: '차',
+                      accountName: info?.name ?? '?',
+                      kind: kind,
+                      icon: _emojiForKind(kind),
+                      amount: l.baseAmount,
+                    );
+                  }).toList(),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
-                  children: credits.map((l) => LedgerPosting(
-                    side: '대',
-                    accountName: '계정 ${l.accountId.value}',
-                    kind: 'asset',
-                    icon: '🌳',
-                    amount: l.baseAmount,
-                  )).toList(),
+                  children: credits.map((l) {
+                    final info = accountMap[l.accountId.value];
+                    final kind = info?.kind ?? 'asset';
+                    return LedgerPosting(
+                      side: '대',
+                      accountName: info?.name ?? '?',
+                      kind: kind,
+                      icon: _emojiForKind(kind),
+                      amount: l.baseAmount,
+                    );
+                  }).toList(),
                 ),
               ),
             ],
