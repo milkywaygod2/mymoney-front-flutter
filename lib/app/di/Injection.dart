@@ -27,6 +27,7 @@ import '../../features/exchange/usecase/ConvertCurrency.dart';
 import '../../features/exchange/usecase/EvaluateUnrealizedFxGain.dart';
 import '../../features/journal/data/TransactionDao.dart';
 import '../../features/journal/data/TransactionRepository.dart';
+import '../../features/entry/presentation/EntryBloc.dart';
 import '../../features/journal/presentation/JournalBloc.dart';
 import '../../features/journal/usecase/CreateTransaction.dart';
 import '../../features/journal/usecase/DetectDuplicate.dart';
@@ -253,6 +254,9 @@ Future<void> configureDependencies() async {
       createTransaction: getIt<CreateTransaction>(),
       accountRepository: getIt<IAccountRepository>(),
     ),
+  );
+  getIt.registerSingleton<EntryBloc>(
+    EntryBloc(createTransaction: getIt<CreateTransaction>()),
   );
 
   // ─────────────────────────────────────────────

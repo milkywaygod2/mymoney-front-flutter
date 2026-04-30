@@ -1,6 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/constants/Enums.dart';
+import '../../../core/models/CurrencyCode.dart';
 import '../../../core/models/TypedId.dart';
+import '../../../features/journal/usecase/CreateTransaction.dart';
 import '../../../features/ocr/presentation/OcrBloc.dart';
 
 // =============================================================================
@@ -157,7 +160,7 @@ class EntryState {
 
 /// EntryBloc — 거래 입력 관리 (V1 자연어 / V2 숫자패드 / V3 OCR)
 class EntryBloc extends Bloc<EntryEvent, EntryState> {
-  EntryBloc() : super(const EntryState()) {
+  EntryBloc({required this.createTransaction}) : super(const EntryState()) {
     on<EntryNaturalTextChanged>(_onTextChanged);
     on<EntryParseNaturalText>(_onParseText);
     on<EntryNumPadPressed>(_onNumPad);
@@ -169,6 +172,8 @@ class EntryBloc extends Bloc<EntryEvent, EntryState> {
     on<EntryAnimationFinished>(_onAnimationFinished);
     on<EntryReset>(_onReset);
   }
+
+  final CreateTransaction createTransaction;
 
   void _onTextChanged(EntryNaturalTextChanged e, Emitter<EntryState> emit) {
     emit(state.copyWith(naturalText: e.text));
@@ -254,14 +259,42 @@ class EntryBloc extends Bloc<EntryEvent, EntryState> {
     if (!state.canSave) return;
     emit(state.copyWith(status: EntryStatus.saving));
 
-    // TODO: CreateTransaction UseCase 연동 (DI 구성 후)
-    // 현재는 1초 stub 딜레이로 저장 시뮬레이션
-    await Future<void>.delayed(const Duration(milliseconds: 300));
-
-    emit(state.copyWith(
-      status: EntryStatus.done,
-      savedTransactionDescription: state.parsedDescription ?? '거래 입력',
-    ));
+    try {
+      final amount = state.parsedAmount ?? int.tryParse(state.amountDisplay.replaceAll(',', '')) ?? 0;
+      await createTransaction.execute(
+        date: DateTime.now(),
+        description: state.parsedDescription ?? state.naturalText,
+        listLineInputs: [
+          JournalEntryLineInput(
+            accountId: state.debitAccountId!,
+            entryType: EntryType.debit,
+            originalAmount: amount,
+            originalCurrency: CurrencyCode.KRW,
+            exchangeRateAtTrade: 1,
+            baseCurrency: CurrencyCode.KRW,
+            baseAmount: amount,
+          ),
+          JournalEntryLineInput(
+            accountId: state.creditAccountId!,
+            entryType: EntryType.credit,
+            originalAmount: amount,
+            originalCurrency: CurrencyCode.KRW,
+            exchangeRateAtTrade: 1,
+            baseCurrency: CurrencyCode.KRW,
+            baseAmount: amount,
+          ),
+        ],
+      );
+      emit(state.copyWith(
+        status: EntryStatus.done,
+        savedTransactionDescription: state.parsedDescription ?? state.naturalText,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        status: EntryStatus.error,
+        errorMessage: e.toString(),
+      ));
+    }
   }
 
   void _onAnimationFinished(EntryAnimationFinished _, Emitter<EntryState> emit) {
