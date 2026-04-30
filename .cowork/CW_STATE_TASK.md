@@ -1,7 +1,20 @@
 # 태스크 상황판 (CW_STATE_TASK)
 
 [CURRENT_PHASE: 7]
-[CURRENT_WAVE: 14 완료 — W15/W7-OCR 외부 의존 대기]
+[CURRENT_WAVE: U1 진행 중 — Design System (Foundation)]
+
+## UI Wave 현황 (Wave U1~U6)
+
+| Wave | 내용 | 담당 | 상태 |
+|------|------|------|------|
+| U1 | Design System (AppColors/TextStyles/Spacing/Radius/Shadows/Motion/AppTheme/공통위젯) | Raj | ✅ 완료 (c237bd3) |
+| U2 | Home (HomePage + HomeV1/V2/V3 + HomeBloc) | Ken | ⏳ U1 대기 |
+| U3 | Journal (JournalPage 재작성 + V1/V2/V3) | Ken | ⏳ U1 대기 |
+| U4 | Entry (EntryPage + V1/V2/V3 + EntryAutoPlay) | Carlos | ⏳ U1 대기 |
+| U5 | AccountTree (재작성 + Browse/Map/Config) | Carlos | ⏳ U1 대기 |
+| U6 | Report Dashboard (재작성 + 차트 6종) | Carlos | ⏳ U1 대기 |
+
+---
 
 ## 완료 이력
 
