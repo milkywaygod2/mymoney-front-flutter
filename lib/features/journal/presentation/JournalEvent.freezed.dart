@@ -131,10 +131,10 @@ return deleteTransaction(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( int? limit)?  loadTransactions,TResult Function( TransactionId id)?  selectTransaction,TResult Function( DateTime date,  String description,  List<JournalEntryLineInput> listLineInputs,  CounterpartyId? counterpartyId,  String? counterpartyName)?  createTransaction,TResult Function( TransactionId id,  PeriodId periodId)?  postTransaction,TResult Function( TransactionId id)?  deleteTransaction,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( int? limit,  Perspective? perspective)?  loadTransactions,TResult Function( TransactionId id)?  selectTransaction,TResult Function( DateTime date,  String description,  List<JournalEntryLineInput> listLineInputs,  CounterpartyId? counterpartyId,  String? counterpartyName)?  createTransaction,TResult Function( TransactionId id,  PeriodId periodId)?  postTransaction,TResult Function( TransactionId id)?  deleteTransaction,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case LoadTransactions() when loadTransactions != null:
-return loadTransactions(_that.limit);case SelectTransaction() when selectTransaction != null:
+return loadTransactions(_that.limit,_that.perspective);case SelectTransaction() when selectTransaction != null:
 return selectTransaction(_that.id);case CreateTransactionEvent() when createTransaction != null:
 return createTransaction(_that.date,_that.description,_that.listLineInputs,_that.counterpartyId,_that.counterpartyName);case PostTransactionEvent() when postTransaction != null:
 return postTransaction(_that.id,_that.periodId);case DeleteTransactionEvent() when deleteTransaction != null:
@@ -156,10 +156,10 @@ return deleteTransaction(_that.id);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( int? limit)  loadTransactions,required TResult Function( TransactionId id)  selectTransaction,required TResult Function( DateTime date,  String description,  List<JournalEntryLineInput> listLineInputs,  CounterpartyId? counterpartyId,  String? counterpartyName)  createTransaction,required TResult Function( TransactionId id,  PeriodId periodId)  postTransaction,required TResult Function( TransactionId id)  deleteTransaction,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( int? limit,  Perspective? perspective)  loadTransactions,required TResult Function( TransactionId id)  selectTransaction,required TResult Function( DateTime date,  String description,  List<JournalEntryLineInput> listLineInputs,  CounterpartyId? counterpartyId,  String? counterpartyName)  createTransaction,required TResult Function( TransactionId id,  PeriodId periodId)  postTransaction,required TResult Function( TransactionId id)  deleteTransaction,}) {final _that = this;
 switch (_that) {
 case LoadTransactions():
-return loadTransactions(_that.limit);case SelectTransaction():
+return loadTransactions(_that.limit,_that.perspective);case SelectTransaction():
 return selectTransaction(_that.id);case CreateTransactionEvent():
 return createTransaction(_that.date,_that.description,_that.listLineInputs,_that.counterpartyId,_that.counterpartyName);case PostTransactionEvent():
 return postTransaction(_that.id,_that.periodId);case DeleteTransactionEvent():
@@ -180,10 +180,10 @@ return deleteTransaction(_that.id);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( int? limit)?  loadTransactions,TResult? Function( TransactionId id)?  selectTransaction,TResult? Function( DateTime date,  String description,  List<JournalEntryLineInput> listLineInputs,  CounterpartyId? counterpartyId,  String? counterpartyName)?  createTransaction,TResult? Function( TransactionId id,  PeriodId periodId)?  postTransaction,TResult? Function( TransactionId id)?  deleteTransaction,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( int? limit,  Perspective? perspective)?  loadTransactions,TResult? Function( TransactionId id)?  selectTransaction,TResult? Function( DateTime date,  String description,  List<JournalEntryLineInput> listLineInputs,  CounterpartyId? counterpartyId,  String? counterpartyName)?  createTransaction,TResult? Function( TransactionId id,  PeriodId periodId)?  postTransaction,TResult? Function( TransactionId id)?  deleteTransaction,}) {final _that = this;
 switch (_that) {
 case LoadTransactions() when loadTransactions != null:
-return loadTransactions(_that.limit);case SelectTransaction() when selectTransaction != null:
+return loadTransactions(_that.limit,_that.perspective);case SelectTransaction() when selectTransaction != null:
 return selectTransaction(_that.id);case CreateTransactionEvent() when createTransaction != null:
 return createTransaction(_that.date,_that.description,_that.listLineInputs,_that.counterpartyId,_that.counterpartyName);case PostTransactionEvent() when postTransaction != null:
 return postTransaction(_that.id,_that.periodId);case DeleteTransactionEvent() when deleteTransaction != null:
@@ -199,10 +199,11 @@ return deleteTransaction(_that.id);case _:
 
 
 class LoadTransactions implements JournalEvent {
-  const LoadTransactions({this.limit});
+  const LoadTransactions({this.limit, this.perspective});
   
 
  final  int? limit;
+ final  Perspective? perspective;
 
 /// Create a copy of JournalEvent
 /// with the given fields replaced by the non-null parameter values.
@@ -214,16 +215,16 @@ $LoadTransactionsCopyWith<LoadTransactions> get copyWith => _$LoadTransactionsCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LoadTransactions&&(identical(other.limit, limit) || other.limit == limit));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LoadTransactions&&(identical(other.limit, limit) || other.limit == limit)&&(identical(other.perspective, perspective) || other.perspective == perspective));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,limit);
+int get hashCode => Object.hash(runtimeType,limit,perspective);
 
 @override
 String toString() {
-  return 'JournalEvent.loadTransactions(limit: $limit)';
+  return 'JournalEvent.loadTransactions(limit: $limit, perspective: $perspective)';
 }
 
 
@@ -234,11 +235,11 @@ abstract mixin class $LoadTransactionsCopyWith<$Res> implements $JournalEventCop
   factory $LoadTransactionsCopyWith(LoadTransactions value, $Res Function(LoadTransactions) _then) = _$LoadTransactionsCopyWithImpl;
 @useResult
 $Res call({
- int? limit
+ int? limit, Perspective? perspective
 });
 
 
-
+$PerspectiveCopyWith<$Res>? get perspective;
 
 }
 /// @nodoc
@@ -251,14 +252,27 @@ class _$LoadTransactionsCopyWithImpl<$Res>
 
 /// Create a copy of JournalEvent
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? limit = freezed,}) {
+@pragma('vm:prefer-inline') $Res call({Object? limit = freezed,Object? perspective = freezed,}) {
   return _then(LoadTransactions(
 limit: freezed == limit ? _self.limit : limit // ignore: cast_nullable_to_non_nullable
-as int?,
+as int?,perspective: freezed == perspective ? _self.perspective : perspective // ignore: cast_nullable_to_non_nullable
+as Perspective?,
   ));
 }
 
+/// Create a copy of JournalEvent
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PerspectiveCopyWith<$Res>? get perspective {
+    if (_self.perspective == null) {
+    return null;
+  }
 
+  return $PerspectiveCopyWith<$Res>(_self.perspective!, (value) {
+    return _then(_self.copyWith(perspective: value));
+  });
+}
 }
 
 /// @nodoc
