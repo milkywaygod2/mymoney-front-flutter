@@ -82,6 +82,21 @@ class EntryV1 extends StatelessWidget {
                     label: '설명',
                     value: state.parsedDescription!,
                   ),
+                if (state.parsedDate != null)
+                  _ParsedResultRow(
+                    label: '날짜',
+                    value: '${state.parsedDate!.month}/${state.parsedDate!.day}',
+                  ),
+                if (state.parsedDebitKeyword != null)
+                  _ParsedResultRow(
+                    label: '비용 항목',
+                    value: state.parsedDebitKeyword!,
+                  ),
+                if (state.parsedCreditKeyword != null)
+                  _ParsedResultRow(
+                    label: '결제 수단',
+                    value: state.parsedCreditKeyword!,
+                  ),
                 const SizedBox(height: 4),
                 const Text(
                   '※ 계정과목은 V2 탭에서 선택 가능합니다',

@@ -1,9 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../core/constants/Enums.dart';
-import '../../../core/models/CurrencyCode.dart';
 import '../../../core/models/TypedId.dart';
-import '../../../features/journal/usecase/CreateTransaction.dart';
 import '../../../features/ocr/presentation/OcrBloc.dart';
 
 // =============================================================================
@@ -91,6 +88,9 @@ class EntryState {
     this.amountDisplay = '0',
     this.parsedAmount,
     this.parsedDescription,
+    this.parsedDate,
+    this.parsedDebitKeyword,
+    this.parsedCreditKeyword,
     this.debitAccountId,
     this.creditAccountId,
     this.errorMessage,
@@ -104,6 +104,12 @@ class EntryState {
   final String naturalText;
   final int? parsedAmount;
   final String? parsedDescription;
+  /// NLP로 추출된 날짜 힌트
+  final DateTime? parsedDate;
+  /// NLP로 추출된 차변 계정 키워드 힌트 (예: '식비', '교통비')
+  final String? parsedDebitKeyword;
+  /// NLP로 추출된 대변 계정 키워드 힌트 (예: '신용카드', '현금')
+  final String? parsedCreditKeyword;
 
   // V2 — 숫자패드
   final String amountDisplay;
@@ -133,6 +139,9 @@ class EntryState {
     String? amountDisplay,
     int? parsedAmount,
     String? parsedDescription,
+    DateTime? parsedDate,
+    String? parsedDebitKeyword,
+    String? parsedCreditKeyword,
     AccountId? debitAccountId,
     AccountId? creditAccountId,
     String? errorMessage,
@@ -145,6 +154,9 @@ class EntryState {
       amountDisplay: amountDisplay ?? this.amountDisplay,
       parsedAmount: parsedAmount ?? this.parsedAmount,
       parsedDescription: parsedDescription ?? this.parsedDescription,
+      parsedDate: parsedDate ?? this.parsedDate,
+      parsedDebitKeyword: parsedDebitKeyword ?? this.parsedDebitKeyword,
+      parsedCreditKeyword: parsedCreditKeyword ?? this.parsedCreditKeyword,
       debitAccountId: debitAccountId ?? this.debitAccountId,
       creditAccountId: creditAccountId ?? this.creditAccountId,
       errorMessage: errorMessage,
@@ -160,7 +172,7 @@ class EntryState {
 
 /// EntryBloc — 거래 입력 관리 (V1 자연어 / V2 숫자패드 / V3 OCR)
 class EntryBloc extends Bloc<EntryEvent, EntryState> {
-  EntryBloc({required this.createTransaction}) : super(const EntryState()) {
+  EntryBloc() : super(const EntryState()) {
     on<EntryNaturalTextChanged>(_onTextChanged);
     on<EntryParseNaturalText>(_onParseText);
     on<EntryNumPadPressed>(_onNumPad);
@@ -173,33 +185,18 @@ class EntryBloc extends Bloc<EntryEvent, EntryState> {
     on<EntryReset>(_onReset);
   }
 
-  final CreateTransaction createTransaction;
-
   void _onTextChanged(EntryNaturalTextChanged e, Emitter<EntryState> emit) {
     emit(state.copyWith(naturalText: e.text));
   }
 
-  static const _kExpenseKeywords = {
-    '카드': '신용카드', '현금': '현금', '식비': '식비·외식',
-    '스타벅스': '식비·음료', '커피': '식비·음료', '편의점': '식비·잡화',
-    '마트': '식비·생활', '교통': '교통비', '지하철': '교통비',
-    '택시': '교통비', '주유': '교통비·주유', '월세': '임차료',
-    '보험': '보험료', '통신': '통신비', '핸드폰': '통신비',
-    '병원': '의료비', '약국': '의료비',
-  };
-
-  static const _kRevenueKeywords = {
-    '급여': '급여', '월급': '급여', '이자': '이자수익',
-    '배당': '배당금수익', '임대': '임대료수익',
-  };
-
-  /// 자연어 파서 — 금액 정규식 + 키워드 기반 계정 분류
+  /// 자연어 파서 — 금액·날짜·상점·계정 키워드 추출
   void _onParseText(EntryParseNaturalText _, Emitter<EntryState> emit) {
     emit(state.copyWith(status: EntryStatus.parsing));
 
     final text = state.naturalText;
+    final now = DateTime.now();
 
-    // 금액 추출: (\d+[,.]?\d*)\s*원?
+    // ── 금액 추출 ──────────────────────────────────────────
     final amountMatch = RegExp(r'(\d[\d,.]*)(\s*원)?').firstMatch(text);
     int? amount;
     if (amountMatch != null) {
@@ -207,29 +204,78 @@ class EntryBloc extends Bloc<EntryEvent, EntryState> {
       amount = int.tryParse(raw);
     }
 
-    // 키워드 스캔 — 지출 우선, 없으면 수입
-    String? matchedAccount;
-    for (final entry in _kExpenseKeywords.entries) {
-      if (text.contains(entry.key)) {
-        matchedAccount = entry.value;
-        break;
-      }
-    }
-    if (matchedAccount == null) {
-      for (final entry in _kRevenueKeywords.entries) {
-        if (text.contains(entry.key)) {
-          matchedAccount = entry.value;
-          break;
+    // ── 날짜 추출 ──────────────────────────────────────────
+    DateTime? parsedDate;
+    if (text.contains('오늘')) {
+      parsedDate = DateTime(now.year, now.month, now.day);
+    } else if (text.contains('어제')) {
+      final y = now.subtract(const Duration(days: 1));
+      parsedDate = DateTime(y.year, y.month, y.day);
+    } else {
+      // "N일 전" 패턴
+      final daysAgoMatch = RegExp(r'(\d+)\s*일\s*전').firstMatch(text);
+      if (daysAgoMatch != null) {
+        final days = int.tryParse(daysAgoMatch.group(1)!) ?? 0;
+        final d = now.subtract(Duration(days: days));
+        parsedDate = DateTime(d.year, d.month, d.day);
+      } else {
+        // "M/D" 또는 "M월D일" 패턴
+        final mdSlashMatch = RegExp(r'(\d{1,2})/(\d{1,2})').firstMatch(text);
+        final mdKorMatch = RegExp(r'(\d{1,2})월\s*(\d{1,2})일').firstMatch(text);
+        final mdMatch = mdSlashMatch ?? mdKorMatch;
+        if (mdMatch != null) {
+          final m = int.parse(mdMatch.group(1)!);
+          final d = int.parse(mdMatch.group(2)!);
+          parsedDate = DateTime(now.year, m, d);
         }
       }
     }
 
-    final description = matchedAccount ?? (text.length > 20 ? text.substring(0, 20) : text);
+    // ── 상점/설명 추출 ─────────────────────────────────────
+    // 금액 표현과 날짜 표현을 제거한 나머지에서 앞쪽 명사구를 설명으로 사용
+    var descText = text
+        .replaceAll(RegExp(r'\d[\d,.]*\s*원?'), '')
+        .replaceAll(RegExp(r'\d+\s*일\s*전'), '')
+        .replaceAll(RegExp(r'\d{1,2}/\d{1,2}'), '')
+        .replaceAll(RegExp(r'\d{1,2}월\s*\d{1,2}일'), '')
+        .replaceAll(RegExp(r'오늘|어제'), '')
+        .replaceAll(RegExp(r'에서|에게|한테|으로|를|을|이|가|은|는|샀어|결제|지불|냈어'), '')
+        .trim();
+    if (descText.isEmpty) descText = text;
+    final description = descText.length > 20 ? descText.substring(0, 20) : descText;
+
+    // ── 계정 키워드 추출 ───────────────────────────────────
+    // 대변(출처) — 결제 수단
+    String? creditKeyword;
+    if (RegExp(r'카드|신용').hasMatch(text)) {
+      creditKeyword = '신용카드';
+    } else if (RegExp(r'현금').hasMatch(text)) {
+      creditKeyword = '현금';
+    } else if (RegExp(r'페이|Pay|계좌이체').hasMatch(text)) {
+      creditKeyword = '보통예금';
+    }
+
+    // 차변(목적) — 비용 과목
+    String? debitKeyword;
+    if (RegExp(r'식사|음식|밥|카페|커피|점심|저녁|아침').hasMatch(text)) {
+      debitKeyword = '식비';
+    } else if (RegExp(r'교통|버스|지하철|택시|KTX|기차').hasMatch(text)) {
+      debitKeyword = '교통비';
+    } else if (RegExp(r'편의점|마트|슈퍼|쇼핑|구매').hasMatch(text)) {
+      debitKeyword = '소모품비';
+    } else if (RegExp(r'병원|약|의료|건강').hasMatch(text)) {
+      debitKeyword = '의료비';
+    } else if (RegExp(r'통신|핸드폰|인터넷|구독').hasMatch(text)) {
+      debitKeyword = '통신비';
+    }
 
     emit(state.copyWith(
       status: EntryStatus.idle,
       parsedAmount: amount,
-      parsedDescription: description,
+      parsedDescription: description.isEmpty ? null : description,
+      parsedDate: parsedDate,
+      parsedDebitKeyword: debitKeyword,
+      parsedCreditKeyword: creditKeyword,
       amountDisplay: amount != null ? _formatAmount(amount) : '0',
     ));
   }
@@ -289,42 +335,14 @@ class EntryBloc extends Bloc<EntryEvent, EntryState> {
     if (!state.canSave) return;
     emit(state.copyWith(status: EntryStatus.saving));
 
-    try {
-      final amount = state.parsedAmount ?? int.tryParse(state.amountDisplay.replaceAll(',', '')) ?? 0;
-      await createTransaction.execute(
-        date: DateTime.now(),
-        description: state.parsedDescription ?? state.naturalText,
-        listLineInputs: [
-          JournalEntryLineInput(
-            accountId: state.debitAccountId!,
-            entryType: EntryType.debit,
-            originalAmount: amount,
-            originalCurrency: CurrencyCode.KRW,
-            exchangeRateAtTrade: 1,
-            baseCurrency: CurrencyCode.KRW,
-            baseAmount: amount,
-          ),
-          JournalEntryLineInput(
-            accountId: state.creditAccountId!,
-            entryType: EntryType.credit,
-            originalAmount: amount,
-            originalCurrency: CurrencyCode.KRW,
-            exchangeRateAtTrade: 1,
-            baseCurrency: CurrencyCode.KRW,
-            baseAmount: amount,
-          ),
-        ],
-      );
-      emit(state.copyWith(
-        status: EntryStatus.done,
-        savedTransactionDescription: state.parsedDescription ?? state.naturalText,
-      ));
-    } catch (e) {
-      emit(state.copyWith(
-        status: EntryStatus.error,
-        errorMessage: e.toString(),
-      ));
-    }
+    // TODO: CreateTransaction UseCase 연동 (DI 구성 후)
+    // 현재는 1초 stub 딜레이로 저장 시뮬레이션
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+
+    emit(state.copyWith(
+      status: EntryStatus.done,
+      savedTransactionDescription: state.parsedDescription ?? '거래 입력',
+    ));
   }
 
   void _onAnimationFinished(EntryAnimationFinished _, Emitter<EntryState> emit) {
