@@ -27,6 +27,7 @@ class HomeV2 extends StatelessWidget {
                 const _SectionLabel(text: '액체 축 · 이번 달'),
                 const SizedBox(height: 14),
                 _LiquidAxisPanel(
+                  assets: vm.assets,
                   revenue: vm.revenue,
                   equity: vm.equity,
                   liabilities: vm.liabilities,
@@ -139,21 +140,23 @@ class _TreeHero extends StatelessWidget {
 
 class _LiquidAxisPanel extends StatelessWidget {
   const _LiquidAxisPanel({
+    required this.assets,
     required this.revenue,
     required this.equity,
     required this.liabilities,
   });
+  final int assets;
   final int revenue;
   final int equity;
   final int liabilities;
 
   @override
   Widget build(BuildContext context) {
-    final maxVal = [revenue, equity, liabilities].reduce((a, b) => a > b ? a : b);
+    final base = assets == 0 ? 1 : assets;
     final items = [
-      _LiquidItem(label: '수익 · 물 한 컵', value: revenue, fill: maxVal > 0 ? (revenue / maxVal * 0.6).clamp(0.05, 1.0) : 0.1, color: AppColors.equitySoft),
-      _LiquidItem(label: '자본 · 물 한 통', value: equity, fill: maxVal > 0 ? (equity / maxVal * 0.9).clamp(0.05, 1.0) : 0.5, color: AppColors.natureEquity),
-      _LiquidItem(label: '부채 · 포도주', value: liabilities, fill: maxVal > 0 ? (liabilities / maxVal * 0.5).clamp(0.05, 1.0) : 0.2, color: AppColors.natureLiability),
+      _LiquidItem(label: '수익 · 물 한 컵', value: revenue, fill: (revenue / base).clamp(0.05, 1.0), color: AppColors.equitySoft),
+      _LiquidItem(label: '자본 · 물 한 통', value: equity, fill: (equity / base).clamp(0.05, 1.0), color: AppColors.natureEquity),
+      _LiquidItem(label: '부채 · 포도주', value: liabilities, fill: (liabilities / base).clamp(0.05, 1.0), color: AppColors.natureLiability),
     ];
 
     return Container(
