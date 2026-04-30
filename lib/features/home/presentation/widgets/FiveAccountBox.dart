@@ -218,53 +218,58 @@ class _Segment extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: px,
-      decoration: BoxDecoration(
-        gradient: seg.gradient,
-        border: isLast
-            ? null
-            : Border(
-                bottom: BorderSide(
-                  color: seg.kind == 'flow'
-                      ? Colors.white.withValues(alpha: 0.35)
-                      : Colors.white.withValues(alpha: 0.25),
-                  width: 1,
-                  style: seg.kind == 'flow' ? BorderStyle.none : BorderStyle.solid,
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: px),
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeOutCubic,
+      builder: (_, h, __) => Container(
+        height: h,
+        decoration: BoxDecoration(
+          gradient: seg.gradient,
+          border: isLast
+              ? null
+              : Border(
+                  bottom: BorderSide(
+                    color: seg.kind == 'flow'
+                        ? Colors.white.withValues(alpha: 0.35)
+                        : Colors.white.withValues(alpha: 0.25),
+                    width: 1,
+                    style: seg.kind == 'flow' ? BorderStyle.none : BorderStyle.solid,
+                  ),
                 ),
-              ),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Text(seg.icon, style: const TextStyle(fontSize: 15)),
-              const SizedBox(width: 6),
-              Text(
-                seg.label,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                  letterSpacing: 0.06 * 11,
-                  shadows: [Shadow(color: Colors.black45, offset: Offset(0, 1), blurRadius: 2)],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Text(seg.icon, style: const TextStyle(fontSize: 15)),
+                const SizedBox(width: 6),
+                Text(
+                  seg.label,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: 0.06 * 11,
+                    shadows: [Shadow(color: Colors.black45, offset: Offset(0, 1), blurRadius: 2)],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          Text(
-            _fmtCompact(seg.value),
-            style: const TextStyle(
-              fontFamily: 'monospace',
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              shadows: [Shadow(color: Colors.black45, offset: Offset(0, 1), blurRadius: 2)],
+              ],
             ),
-          ),
-        ],
+            Text(
+              _fmtCompact(seg.value),
+              style: const TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                shadows: [Shadow(color: Colors.black45, offset: Offset(0, 1), blurRadius: 2)],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
