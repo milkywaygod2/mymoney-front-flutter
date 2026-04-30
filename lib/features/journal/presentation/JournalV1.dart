@@ -40,6 +40,7 @@ class JournalV1 extends StatefulWidget {
 class _JournalV1State extends State<JournalV1> {
   bool _isDoublEntry = true;
   String _filter = '전체';
+  String _searchQuery = '';
   int? _openId;
 
   @override
@@ -49,7 +50,7 @@ class _JournalV1State extends State<JournalV1> {
         final accountMap = _buildAccountMap(accountState);
         return BlocBuilder<JournalBloc, JournalState>(
           builder: (context, state) {
-            final grouped = _groupByDate(state.listTransactions, _filter, _isDoublEntry, accountMap);
+            final grouped = _groupByDate(state.listTransactions, _filter, _isDoublEntry, accountMap, _searchQuery);
 
         return Column(
           children: [
@@ -70,8 +71,22 @@ class _JournalV1State extends State<JournalV1> {
                       ],
                     ),
                   ),
-                  IconButton(onPressed: () {}, icon: const Icon(Icons.tune)),
-                  IconButton(onPressed: () {}, icon: const Icon(Icons.search)),
+                  if (_searchQuery.isNotEmpty)
+                    IconButton(
+                      icon: const Icon(Icons.search_off),
+                      tooltip: '검색 초기화',
+                      onPressed: () => setState(() => _searchQuery = ''),
+                    ),
+                  IconButton(
+                    icon: const Icon(Icons.tune),
+                    tooltip: '필터',
+                    onPressed: () => _showFilterSheet(context),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.search),
+                    tooltip: '검색',
+                    onPressed: () => _showSearchDialog(context),
+                  ),
                 ],
               ),
             ),
@@ -92,6 +107,18 @@ class _JournalV1State extends State<JournalV1> {
                 child: _FilterChips(selected: _filter, onChanged: (v) => setState(() => _filter = v)),
               ),
             ],
+            // 검색 활성 배너
+            if (_searchQuery.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+                child: Row(
+                  children: [
+                    const Icon(Icons.search, size: 14, color: Colors.grey),
+                    const SizedBox(width: 4),
+                    Text('"$_searchQuery" 검색 중', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                  ],
+                ),
+              ),
             // 거래 목록
             Expanded(
               child: ListView.builder(
@@ -145,6 +172,50 @@ class _JournalV1State extends State<JournalV1> {
       },
     );
   }
+
+  void _showSearchDialog(BuildContext context) {
+    final ctrl = TextEditingController(text: _searchQuery);
+    showDialog<void>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('거래 검색'),
+        content: TextField(
+          autofocus: true,
+          controller: ctrl,
+          decoration: const InputDecoration(hintText: '거래 설명 입력...'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              setState(() => _searchQuery = '');
+              Navigator.pop(context);
+            },
+            child: const Text('초기화'),
+          ),
+          TextButton(
+            onPressed: () {
+              setState(() => _searchQuery = ctrl.text.trim());
+              Navigator.pop(context);
+            },
+            child: const Text('검색'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFilterSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (_) => _FilterSheet(
+        selected: _filter,
+        onChanged: (v) {
+          setState(() => _filter = v);
+          Navigator.pop(context);
+        },
+      ),
+    );
+  }
 }
 
 // ─── 그루핑 헬퍼 ────────────────────────────────────────────────
@@ -161,13 +232,16 @@ List<_DayGroup> _groupByDate(
   String filter,
   bool isDouble,
   Map<int, ({String name, String kind})> accountMap,
+  String searchQuery,
 ) {
-  final filtered = isDouble
-      ? txns
-      : txns.where((t) {
+  final filtered = txns.where((t) {
+    if (searchQuery.isNotEmpty &&
+        !t.description.toLowerCase().contains(searchQuery.toLowerCase())) {
+      return false;
+    }
+    if (isDouble) return true;
           if (filter == '전체') return true;
           if (filter == '이체') {
-            // 모든 분개 라인의 계정이 asset인 경우만 이체로 간주
             return t.listLines.every(
               (l) => accountMap[l.accountId.value]?.kind == 'asset',
             );
@@ -574,6 +648,38 @@ class _ExpandedPosting extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _FilterSheet extends StatelessWidget {
+  const _FilterSheet({required this.selected, required this.onChanged});
+  final String selected;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('필터', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface)),
+            const SizedBox(height: 12),
+            ...['전체', '수익', '비용', '이체'].map((opt) => ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(
+                opt == selected ? Icons.check_circle : Icons.radio_button_unchecked,
+                color: opt == selected ? Theme.of(context).colorScheme.primary : null,
+              ),
+              title: Text(opt),
+              onTap: () => onChanged(opt),
+            )),
+          ],
+        ),
       ),
     );
   }
