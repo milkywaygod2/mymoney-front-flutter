@@ -4,15 +4,20 @@ import '../../../../core/constants/Enums.dart';
 import 'MetaphorIcon.dart';
 
 /// 메타포 선택 위젯 — 설정 모드에서 계정 메타포 등록
+///
+/// [accountId]가 제공되면 선택 시 SharedPreferences에 영구 저장됩니다.
 class MetaphorPicker extends StatelessWidget {
   const MetaphorPicker({
     super.key,
     required this.selectedNature,
     required this.onSelected,
+    this.accountId,
   });
 
   final AccountNature? selectedNature;
   final ValueChanged<AccountNature> onSelected;
+  /// non-null이면 선택 시 `metaphor_${accountId}` 키로 이모지를 저장
+  final int? accountId;
 
   static const _kNatureLabels = {
     AccountNature.asset: '자산',
@@ -51,7 +56,12 @@ class MetaphorPicker extends StatelessWidget {
             label: _kNatureLabels[nature]!,
             description: _kNatureDescriptions[nature]!,
             isSelected: selectedNature == nature,
-            onTap: () => onSelected(nature),
+            onTap: () {
+              onSelected(nature);
+              if (accountId != null) {
+                MetaphorIcon.saveCustomEmoji(accountId!, MetaphorIcon.emojiFor(nature));
+              }
+            },
           ),
         ),
       ],
