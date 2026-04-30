@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../app/theme/AppColors.dart';
 import '../../../core/domain/Account.dart';
 import '../../../core/constants/Enums.dart';
 import 'AccountBloc.dart';
 import 'AccountEvent.dart';
 import 'AccountState.dart';
 
-/// Nature별 색상 매핑 — Balance Flow Card와 동일 체계
+/// Nature별 색상 매핑 — AppColors 토큰 기준
 Color _natureColor(AccountNature nature) {
   return switch (nature) {
-    AccountNature.asset => const Color(0xFF4CAF50),     // 초록
-    AccountNature.liability => const Color(0xFFF44336), // 빨강
-    AccountNature.equity => const Color(0xFF9C27B0),    // 보라
-    AccountNature.revenue => const Color(0xFF2196F3),   // 파랑
-    AccountNature.expense => const Color(0xFFFF9800),   // 주황
+    AccountNature.asset => AppColors.natureAsset,
+    AccountNature.liability => AppColors.natureLiability,
+    AccountNature.equity => AppColors.equitySoft,
+    AccountNature.revenue => AppColors.revenueDeep,
+    AccountNature.expense => AppColors.natureExpense,
   };
 }
 

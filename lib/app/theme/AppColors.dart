@@ -113,6 +113,9 @@ class AppColors {
   static const Color lightLiabilitySurface = Color(0x247F1D3A); // 14%
   static const Color lightEquitySurface = Color(0x1E6B3F8B);    // 12%
 
+  // ─── 에러 컨테이너 ───
+  static const Color darkErrorContainer = Color(0xFF7F1D1D);
+
   // ─── 그래디언트용 원색 (불투명) ───
   static const Color gradKickerStart = Color(0xFF10B981);
   static const Color gradKickerMid1 = Color(0xFF38BDF8);
