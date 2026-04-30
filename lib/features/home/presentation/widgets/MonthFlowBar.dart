@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../../app/theme/AppColors.dart';
 
@@ -16,26 +17,33 @@ class MonthFlowBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (revenue == 0 && expense == 0) {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-        ),
-        child: Center(
-          child: Text(
-            '이번 달 거래 없음',
-            style: TextStyle(
-              fontSize: 13,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+      return InkWell(
+        onTap: () => context.go('/report'),
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+          ),
+          child: Center(
+            child: Text(
+              '이번 달 거래 없음',
+              style: TextStyle(
+                fontSize: 13,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
         ),
       );
     }
     final net = revenue - expense;
-    return Container(
+    return InkWell(
+      onTap: () => context.go('/report'),
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHigh,
@@ -151,6 +159,7 @@ class MonthFlowBar extends StatelessWidget {
             ],
           ),
         ],
+      ),
       ),
     );
   }
