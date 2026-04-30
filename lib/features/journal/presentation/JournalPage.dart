@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../account/presentation/AccountBloc.dart';
 import '../../account/presentation/AccountEvent.dart';
 import '../../entry/presentation/EntryPage.dart';
+import '../../perspective/presentation/PerspectiveBloc.dart';
 import 'JournalBloc.dart';
 import 'JournalEvent.dart';
 import 'JournalState.dart';
@@ -33,7 +34,9 @@ class _JournalPageState extends State<JournalPage> with TickerProviderStateMixin
     );
     _fadeAnim = CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut);
     _fadeController.forward();
-    context.read<JournalBloc>().add(const LoadTransactions());
+    final perspective =
+        context.read<PerspectiveBloc>().state.effectivePerspective;
+    context.read<JournalBloc>().add(LoadTransactions(perspective: perspective));
     context.read<AccountBloc>().add(const AccountEvent.loadTree());
   }
 
