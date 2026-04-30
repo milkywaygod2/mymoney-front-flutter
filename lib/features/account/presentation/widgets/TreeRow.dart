@@ -11,7 +11,7 @@ import '../AccountState.dart';
 import 'MetaphorIcon.dart';
 
 /// 계정과목 트리 행 — 들여쓰기 + 메타포 아이콘 + 잔액 표시 (재귀 렌더링)
-class TreeRow extends StatelessWidget {
+class TreeRow extends StatefulWidget {
   const TreeRow({
     super.key,
     required this.account,
@@ -27,9 +27,24 @@ class TreeRow extends StatelessWidget {
   final Map<AccountId, int> mapBalances;
   final int? balance;
 
+  @override
+  State<TreeRow> createState() => _TreeRowState();
+}
+
+class _TreeRowState extends State<TreeRow> {
+  String? _customEmoji;
+
+  @override
+  void initState() {
+    super.initState();
+    MetaphorIcon.loadCustomEmoji(widget.account.id.value).then((emoji) {
+      if (mounted && emoji != null) setState(() => _customEmoji = emoji);
+    });
+  }
+
   List<Account> get _children {
-    final parentPath = account.equityTypePath;
-    return allAccounts.where((a) {
+    final parentPath = widget.account.equityTypePath;
+    return widget.allAccounts.where((a) {
       final path = a.equityTypePath;
       if (!path.startsWith('$parentPath.')) return false;
       final suffix = path.substring(parentPath.length + 1);
@@ -38,8 +53,8 @@ class TreeRow extends StatelessWidget {
   }
 
   int get _descendantCount {
-    final parentPath = account.equityTypePath;
-    return allAccounts.where((a) => a.equityTypePath.startsWith('$parentPath.')).length;
+    final parentPath = widget.account.equityTypePath;
+    return widget.allAccounts.where((a) => a.equityTypePath.startsWith('$parentPath.')).length;
   }
 
   @override
@@ -48,7 +63,7 @@ class TreeRow extends StatelessWidget {
       buildWhen: (prev, curr) =>
           prev.setExpandedIds != curr.setExpandedIds,
       builder: (context, state) {
-        final isExpanded = state.setExpandedIds.contains(account.id);
+        final isExpanded = state.setExpandedIds.contains(widget.account.id);
         final children = _children;
         final hasChildren = children.isNotEmpty;
 
@@ -61,7 +76,7 @@ class TreeRow extends StatelessWidget {
                   : null,
               child: Padding(
                 padding: EdgeInsets.only(
-                  left: 16.0 + depth * 20.0,
+                  left: 16.0 + widget.depth * 20.0,
                   top: 10,
                   bottom: 10,
                   right: 16,
@@ -82,24 +97,24 @@ class TreeRow extends StatelessWidget {
                           : const SizedBox.shrink(),
                     ),
                     const SizedBox(width: 6),
-                    MetaphorIcon(nature: account.nature, size: 16),
+                    MetaphorIcon(nature: widget.account.nature, customEmoji: _customEmoji, size: 16),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Row(
                         children: [
                           Text(
-                            account.name,
+                            widget.account.name,
                             style: TextStyle(
                               fontSize: 14,
-                              fontWeight: depth == 0
+                              fontWeight: widget.depth == 0
                                   ? FontWeight.w600
                                   : FontWeight.normal,
-                              color: account.isActive
+                              color: widget.account.isActive
                                   ? null
                                   : Colors.grey,
                             ),
                           ),
-                          if (depth == 0 && _descendantCount > 0) ...[
+                          if (widget.depth == 0 && _descendantCount > 0) ...[
                             const SizedBox(width: 6),
                             Text(
                               '(하위 $_descendantCount개)',
@@ -112,23 +127,23 @@ class TreeRow extends StatelessWidget {
                         ],
                       ),
                     ),
-                    if (depth == 0)
-                      _NatureChip(nature: account.nature),
-                    if (balance != null && balance != 0)
+                    if (widget.depth == 0)
+                      _NatureChip(nature: widget.account.nature),
+                    if (widget.balance != null && widget.balance != 0)
                       Padding(
                         padding: const EdgeInsets.only(left: 6),
                         child: Text(
-                          '₩${_fmtCompact(balance!)}',
+                          '₩${_fmtCompact(widget.balance!)}',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: balance! >= 0
+                            color: widget.balance! >= 0
                                 ? AppColors.natureAsset
                                 : AppColors.natureExpense,
                           ),
                         ),
                       ),
-                    if (!account.isActive)
+                    if (!widget.account.isActive)
                       const Padding(
                         padding: EdgeInsets.only(left: 4),
                         child: Icon(
@@ -146,13 +161,13 @@ class TreeRow extends StatelessWidget {
               ...children.map(
                 (child) => TreeRow(
                   account: child,
-                  depth: depth + 1,
-                  allAccounts: allAccounts,
-                  mapBalances: mapBalances,
-                  balance: mapBalances[child.id],
+                  depth: widget.depth + 1,
+                  allAccounts: widget.allAccounts,
+                  mapBalances: widget.mapBalances,
+                  balance: widget.mapBalances[child.id],
                 ),
               ),
-            if (depth == 0) const Divider(height: 1),
+            if (widget.depth == 0) const Divider(height: 1),
           ],
         );
       },
@@ -163,11 +178,11 @@ class TreeRow extends StatelessWidget {
       BuildContext context, AccountState state, bool isExpanded) {
     if (isExpanded) {
       context.read<AccountBloc>().add(
-            AccountEvent.collapseNode(id: account.id),
+            AccountEvent.collapseNode(id: widget.account.id),
           );
     } else {
       context.read<AccountBloc>().add(
-            AccountEvent.expandNode(id: account.id),
+            AccountEvent.expandNode(id: widget.account.id),
           );
     }
   }
