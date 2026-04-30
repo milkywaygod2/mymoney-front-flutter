@@ -38,7 +38,7 @@ class ComparePeriods {
     for (final path in setPaths) {
       final current = mapCurrent[path] ?? 0;
       final previous = mapPrevious[path] ?? 0;
-      listResults.add(_buildComparison(current, previous, comparisonType));
+      listResults.add(_buildComparison(current, previous, comparisonType, label: path));
     }
 
     return listResults;
@@ -69,14 +69,14 @@ class ComparePeriods {
     for (final path in setPaths) {
       final current = mapCurrent[path] ?? 0;
       final previous = mapPrevious[path] ?? 0;
-      listResults.add(_buildComparison(current, previous, comparisonType));
+      listResults.add(_buildComparison(current, previous, comparisonType, label: path));
     }
 
     return listResults;
   }
 
   /// 4종 비교를 한번에 (대시보드용)
-  /// 반환: comparisonType → List<PeriodComparison>
+  /// 반환: comparisonType → `List<PeriodComparison>`
   Future<Map<String, List<PeriodComparison>>> compareAllTypes({
     required DateTime asOfDate,
     required int currentPeriodId,
@@ -110,7 +110,7 @@ class ComparePeriods {
     return results;
   }
 
-  PeriodComparison _buildComparison(int current, int previous, String comparisonType) {
+  PeriodComparison _buildComparison(int current, int previous, String comparisonType, {required String label}) {
     final changeAmount = current - previous;
     final changeRatio = previous != 0
         ? (changeAmount * kRatioMultiplier) ~/ previous
@@ -119,6 +119,7 @@ class ComparePeriods {
       currentValue: current,
       previousValue: previous,
       changeAmount: changeAmount,
+      label: label,
       changeRatio: changeRatio,
       comparisonType: comparisonType,
     );

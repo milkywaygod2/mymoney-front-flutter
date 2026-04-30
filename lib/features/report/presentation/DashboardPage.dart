@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../app/theme/AppColors.dart';
+import '../../../core/models/PeriodComparison.dart';
 import 'ReportBloc.dart';
 import 'RatioGrid.dart';
 import 'BSChart.dart';
@@ -31,7 +32,6 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   void initState() {
     super.initState();
-    // 페이지 진입 시 대시보드 초기 로드
     context.read<ReportBloc>().add(const LoadDashboard());
   }
 
@@ -53,7 +53,11 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ],
       ),
-      body: BlocBuilder<ReportBloc, ReportState>(
+      body: BlocListener<ReportBloc, ReportState>(
+        listenWhen: (prev, curr) =>
+            prev.activePeriodId == null && curr.activePeriodId != null,
+        listener: (context, state) => _onRefresh(),
+        child: BlocBuilder<ReportBloc, ReportState>(
         builder: (context, state) {
           if (state.isLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -101,6 +105,7 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           );
         },
+        ),
       ),
     );
   }
@@ -238,10 +243,16 @@ class _SummaryHeader extends StatelessWidget {
   }
 
   int? _extractChangeRatio(
-    Map<String, dynamic>? mapComp,
+    Map<String, List<PeriodComparison>>? mapComp,
     String comparisonType,
   ) {
-    return null; // PeriodComparison 연동 후 순자산 path 추출 구현
+    if (mapComp == null) return null;
+    final list = mapComp[comparisonType];
+    if (list == null || list.isEmpty) return null;
+    final equityEntry = list.where(
+      (c) => c.label.startsWith('EQUITY') || c.label == 'net_assets',
+    ).firstOrNull;
+    return equityEntry?.changeRatio;
   }
 
   String _fmtDate(DateTime dt) =>

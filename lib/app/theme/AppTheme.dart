@@ -26,7 +26,7 @@ class AppTheme {
           onTertiaryContainer: AppColors.darkFg1,
           error: AppColors.stateError,
           onError: AppColors.darkFg1,
-          errorContainer: Color(0xFF7F1D1D),
+          errorContainer: AppColors.darkErrorContainer,
           onErrorContainer: AppColors.expenseSoft,
           surface: AppColors.darkSurface,
           onSurface: AppColors.darkFg1,

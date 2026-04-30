@@ -2,13 +2,19 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/domain/Account.dart';
 import '../../../core/interfaces/IAccountRepository.dart';
+import '../../../core/interfaces/ITransactionRepository.dart';
 import '../../../core/models/TypedId.dart';
 import 'AccountEvent.dart';
 import 'AccountState.dart';
 
 /// 계정과목 BLoC — 트리 CRUD + 펼치기/접기 + 검색
 class AccountBloc extends Bloc<AccountEvent, AccountState> {
-  AccountBloc(this._repository) : super(const AccountState()) {
+  AccountBloc({
+    required IAccountRepository repository,
+    required ITransactionRepository transactionRepository,
+  })  : _repository = repository,
+        _transactionRepository = transactionRepository,
+        super(const AccountState()) {
     on<LoadAccountTree>(_onLoadTree);
     on<CreateAccount>(_onCreateAccount);
     on<DeactivateAccount>(_onDeactivateAccount);
@@ -18,6 +24,7 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
   }
 
   final IAccountRepository _repository;
+  final ITransactionRepository _transactionRepository;
 
   /// 계정과목 트리 로딩 — 활성 계정만 조회 후 nature별 루트 구성
   Future<void> _onLoadTree(
@@ -31,7 +38,15 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
       final listRoots = listAccounts
           .where((a) => !a.equityTypePath.contains('.'))
           .toList();
-      emit(state.copyWith(listRoots: listRoots, isLoading: false));
+      emit(state.copyWith(listRoots: listRoots, listAll: listAccounts, isLoading: false));
+      try {
+        final mapBalances = await _transactionRepository.calculateBalances(
+          periodId: const PeriodId(1),
+        );
+        emit(state.copyWith(mapBalances: mapBalances));
+      } catch (_) {
+        // 잔액 로드 실패 시 빈 맵 유지
+      }
     } on Exception catch (e) {
       emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
     }

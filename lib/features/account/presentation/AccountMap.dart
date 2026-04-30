@@ -16,7 +16,7 @@ class AccountMap extends StatelessWidget {
         if (state.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
-        if (state.listRoots.isEmpty) {
+        if (state.listAll.isEmpty) {
           return const Center(child: Text('계정과목이 없습니다'));
         }
 
@@ -31,12 +31,16 @@ class AccountMap extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               const Text(
-                '버블을 탭하면 해당 분류 계정 목록을 확인할 수 있습니다',
+                '버블을 탭하면 해당 분류 계정 목록, 핀치로 확대/축소합니다',
                 style: TextStyle(fontSize: 12, color: Colors.grey),
               ),
               const SizedBox(height: 16),
               Expanded(
-                child: ClusterMap(listAccounts: state.listRoots),
+                child: InteractiveViewer(
+                  minScale: 0.5,
+                  maxScale: 3.0,
+                  child: ClusterMap(listAccounts: state.listAll),
+                ),
               ),
             ],
           ),

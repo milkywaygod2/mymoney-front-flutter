@@ -179,7 +179,7 @@ class ReportState {
   final List<FinancialRatio>? listRatios;
   /// v2.0: 총포괄이익 결과
   final ComprehensiveIncomeResult? comprehensiveIncome;
-  /// v2.0: 기간 비교 결과 (comparisonType → List<PeriodComparison>)
+  /// v2.0: 기간 비교 결과 (comparisonType → `List<PeriodComparison>`)
   final Map<String, List<PeriodComparison>>? mapPeriodComparisons;
   /// 현금흐름표
   final CashFlowStatement? cashFlowStatement;
@@ -226,7 +226,7 @@ class ReportState {
 /// ReportBloc — 보고서 및 결산 관리
 ///
 /// [BLoC 간 통신 — CW_ARCHITECTURE.md 섹션 9.2]
-/// - PerspectiveBloc.Stream<Perspective> → ReportBloc 리필터링
+/// - `PerspectiveBloc.Stream<Perspective>` → ReportBloc 리필터링
 /// - TaxBloc.DeductibilityUpdated → ReportBloc (세무 보고서 갱신) [TODO: S08a 연동]
 /// - JournalBloc.TransactionUpdated → ReportBloc [TODO: Stream 연결]
 class ReportBloc extends Bloc<ReportEvent, ReportState> {

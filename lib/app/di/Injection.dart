@@ -27,6 +27,7 @@ import '../../features/exchange/usecase/ConvertCurrency.dart';
 import '../../features/exchange/usecase/EvaluateUnrealizedFxGain.dart';
 import '../../features/journal/data/TransactionDao.dart';
 import '../../features/journal/data/TransactionRepository.dart';
+import '../../features/entry/presentation/EntryBloc.dart';
 import '../../features/journal/presentation/JournalBloc.dart';
 import '../../features/journal/usecase/CreateTransaction.dart';
 import '../../features/journal/usecase/DetectDuplicate.dart';
@@ -236,7 +237,10 @@ Future<void> configureDependencies() async {
     ),
   );
   getIt.registerSingleton<AccountBloc>(
-    AccountBloc(getIt<IAccountRepository>()),
+    AccountBloc(
+      repository: getIt<IAccountRepository>(),
+      transactionRepository: getIt<ITransactionRepository>(),
+    ),
   );
   getIt.registerSingleton<PerspectiveBloc>(
     PerspectiveBloc(repository: getIt<IPerspectiveRepository>()),
@@ -277,6 +281,9 @@ Future<void> configureDependencies() async {
       createTransaction: getIt<CreateTransaction>(),
       accountRepository: getIt<IAccountRepository>(),
     ),
+  );
+  getIt.registerSingleton<EntryBloc>(
+    EntryBloc(createTransaction: getIt<CreateTransaction>()),
   );
 
   // ─────────────────────────────────────────────
@@ -332,6 +339,14 @@ void _connectBlocStreams() {
   journalBloc.stream.listen((state) {
     if (!state.isLoading && state.listTransactions.isNotEmpty) {
       reportBloc.add(const LoadDashboard());
+    }
+  });
+
+  // 6. EntryBloc → JournalBloc (거래 저장 완료 → 거래 목록 갱신)
+  final entryBloc = getIt<EntryBloc>();
+  entryBloc.stream.listen((state) {
+    if (state.status == EntryStatus.done) {
+      journalBloc.add(LoadTransactions(perspective: perspectiveBloc.state.effectivePerspective));
     }
   });
 }

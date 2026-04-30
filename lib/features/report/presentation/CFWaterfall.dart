@@ -20,7 +20,6 @@ class CFWaterfall extends StatelessWidget {
       builder: (context, state) {
         final cf = state.cashFlowStatement;
 
-        // 실데이터 있으면 CFWaterfallFull과 동일한 로직으로 표시
         if (cf != null) {
           return CFWaterfallFull(listItems: cf.listItems);
         }

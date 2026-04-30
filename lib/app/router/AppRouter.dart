@@ -1,7 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:get_it/get_it.dart';
+
+import '../../features/account/presentation/AccountBloc.dart';
+import '../../features/account/presentation/AccountEvent.dart';
+import '../../features/account/presentation/AccountTreePage.dart';
+import '../../features/home/presentation/HomeBloc.dart';
+import '../../features/home/presentation/HomePage.dart';
+import '../../features/journal/data/TransactionDao.dart';
+import '../../features/journal/presentation/JournalPage.dart';
 import '../../features/report/presentation/DashboardPage.dart';
+import '../../features/report/presentation/ReportBloc.dart';
+import '../../features/settings/presentation/SettingsPage.dart';
 
 /// 앱 라우터 — 4탭 셸 네비게이션
 class AppRouter {
@@ -15,21 +27,32 @@ class AppRouter {
         routes: [
           GoRoute(
             path: '/home',
-            builder: (context, state) => const _PlaceholderPage(title: '홈'),
+            builder: (context, state) => BlocProvider(
+              create: (ctx) => HomeBloc(
+                reportBloc: ctx.read<ReportBloc>(),
+                transactionDao: GetIt.instance<TransactionDao>(),
+              ),
+              child: const HomePage(),
+            ),
           ),
           GoRoute(
             path: '/journal',
-            builder: (context, state) =>
-                const _PlaceholderPage(title: '거래'),
+            builder: (context, state) => const JournalPage(),
           ),
           GoRoute(
             path: '/report',
             builder: (context, state) => const DashboardPage(),
           ),
           GoRoute(
+            path: '/account',
+            builder: (context, state) {
+              context.read<AccountBloc>().add(const AccountEvent.loadTree());
+              return const AccountTreePage();
+            },
+          ),
+          GoRoute(
             path: '/more',
-            builder: (context, state) =>
-                const _PlaceholderPage(title: '더보기'),
+            builder: (context, state) => const SettingsPage(),
           ),
         ],
       ),
@@ -47,10 +70,11 @@ class _ShellScaffold extends StatelessWidget {
     NavigationDestination(icon: Icon(Icons.home), label: '홈'),
     NavigationDestination(icon: Icon(Icons.receipt_long), label: '거래'),
     NavigationDestination(icon: Icon(Icons.analytics), label: '분석'),
-    NavigationDestination(icon: Icon(Icons.more_horiz), label: '더보기'),
+    NavigationDestination(icon: Icon(Icons.account_tree), label: '계정'),
+    NavigationDestination(icon: Icon(Icons.settings), label: '설정'),
   ];
 
-  static const _listPaths = ['/home', '/journal', '/report', '/more'];
+  static const _listPaths = ['/home', '/journal', '/report', '/account', '/more'];
 
   int _getCurrentIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
@@ -75,7 +99,7 @@ class _ShellScaffold extends StatelessWidget {
               destinations: _listDestinations
                   .map((d) => NavigationRailDestination(
                         icon: d.icon,
-                        label: Text(d.label),
+                        label: Text(d.label, style: const TextStyle(fontSize: 11)),
                       ))
                   .toList(),
             ),
@@ -97,19 +121,3 @@ class _ShellScaffold extends StatelessWidget {
   }
 }
 
-/// 임시 플레이스홀더 — Wave 1+ 에서 실제 페이지로 교체
-class _PlaceholderPage extends StatelessWidget {
-  const _PlaceholderPage({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.headlineMedium,
-      ),
-    );
-  }
-}
