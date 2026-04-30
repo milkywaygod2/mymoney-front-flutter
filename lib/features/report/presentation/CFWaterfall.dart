@@ -78,20 +78,32 @@ class CFWaterfall extends StatelessWidget {
   }
 }
 
+/// CF 분류 코드 접두어 → 색상 키
+enum _CfCategory { operating, investing, financing, netChange, baseline }
+
 class _WaterfallBar {
   const _WaterfallBar({
     required this.label,
     required this.value,
     required this.isBaseline,
+    this.category,
   });
   final String label;
   final int value;
   final bool isBaseline;
+  final _CfCategory? category;
 }
 
 class _WaterfallPainterWidget extends StatelessWidget {
   const _WaterfallPainterWidget({required this.bars});
   final List<_WaterfallBar> bars;
+
+  // 카테고리별 고정 색상
+  static const _colorOperating  = Color(0xFF10B981); // 영업: 녹
+  static const _colorInvesting  = Color(0xFF3B82F6); // 투자: 파
+  static const _colorFinancing  = Color(0xFFF59E0B); // 재무: 노
+  static const _colorNetChange  = Color(0xFF9CA3AF); // 순증감: 회
+  static const _colorBaseline   = Color(0xFF8B5CF6); // 기초/기말: 보라
 
   @override
   Widget build(BuildContext context) {
@@ -101,6 +113,11 @@ class _WaterfallPainterWidget extends StatelessWidget {
         positiveColor: AppColors.natureAsset,
         negativeColor: AppColors.natureExpense,
         baselineColor: AppColors.darkFg4,
+        colorOperating: _colorOperating,
+        colorInvesting: _colorInvesting,
+        colorFinancing: _colorFinancing,
+        colorNetChange: _colorNetChange,
+        colorCategoryBaseline: _colorBaseline,
         labelStyle: Theme.of(context).textTheme.labelSmall ??
             const TextStyle(fontSize: 10),
       ),
@@ -116,6 +133,11 @@ class _WaterfallPainter extends CustomPainter {
     required this.negativeColor,
     required this.baselineColor,
     required this.labelStyle,
+    this.colorOperating,
+    this.colorInvesting,
+    this.colorFinancing,
+    this.colorNetChange,
+    this.colorCategoryBaseline,
   });
 
   final List<_WaterfallBar> bars;
@@ -123,6 +145,25 @@ class _WaterfallPainter extends CustomPainter {
   final Color negativeColor;
   final Color baselineColor;
   final TextStyle labelStyle;
+  final Color? colorOperating;
+  final Color? colorInvesting;
+  final Color? colorFinancing;
+  final Color? colorNetChange;
+  final Color? colorCategoryBaseline;
+
+  Color _colorFor(_WaterfallBar bar) {
+    if (bar.isBaseline) return colorCategoryBaseline ?? baselineColor;
+    return switch (bar.category) {
+      _CfCategory.operating => colorOperating ?? positiveColor,
+      _CfCategory.investing =>
+        colorInvesting ?? (bar.value >= 0 ? positiveColor : negativeColor),
+      _CfCategory.financing =>
+        colorFinancing ?? (bar.value >= 0 ? positiveColor : negativeColor),
+      _CfCategory.netChange => colorNetChange ?? baselineColor,
+      _CfCategory.baseline => colorCategoryBaseline ?? baselineColor,
+      null => bar.value >= 0 ? positiveColor : negativeColor,
+    };
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -160,9 +201,7 @@ class _WaterfallPainter extends CustomPainter {
       final startY = baseline - totals[i] * scale;
       final barH = bar.value * scale;
 
-      paintFill.color = bar.isBaseline
-          ? baselineColor
-          : (bar.value >= 0 ? positiveColor : negativeColor);
+      paintFill.color = _colorFor(bar);
 
       final rect = Rect.fromLTWH(
         x,
@@ -221,7 +260,10 @@ class _WaterfallPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_WaterfallPainter oldDelegate) =>
-      oldDelegate.bars != bars;
+      oldDelegate.bars != bars ||
+      oldDelegate.colorOperating != colorOperating ||
+      oldDelegate.colorInvesting != colorInvesting ||
+      oldDelegate.colorFinancing != colorFinancing;
 }
 
 /// CFWaterfallFull — GenerateCashFlowStatement 결과 직접 수신 버전
@@ -237,13 +279,27 @@ class CFWaterfallFull extends StatelessWidget {
         listItems.where((i) => i.level == 1).toList();
 
     final bars = topLevel.map((item) {
+      final isBaseline = item.indexType == CfAccountIndex.aggregate &&
+          (item.code == 'C6000000' || item.code == 'C7000000');
+      _CfCategory? cat;
+      if (!isBaseline) {
+        if (item.code.startsWith('C1')) {
+          cat = _CfCategory.operating;
+        } else if (item.code.startsWith('C2')) {
+          cat = _CfCategory.investing;
+        } else if (item.code.startsWith('C3')) {
+          cat = _CfCategory.financing;
+        } else if (item.code.startsWith('C5')) {
+          cat = _CfCategory.netChange;
+        }
+      }
       return _WaterfallBar(
         label: item.name.length > 4
             ? '${item.name.substring(0, 4)}..'
             : item.name,
         value: item.amount,
-        isBaseline: item.indexType == CfAccountIndex.aggregate &&
-            (item.code == 'C6000000' || item.code == 'C7000000'),
+        isBaseline: isBaseline,
+        category: cat,
       );
     }).toList();
 
