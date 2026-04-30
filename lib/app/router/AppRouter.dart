@@ -13,6 +13,7 @@ import '../../features/journal/data/TransactionDao.dart';
 import '../../features/journal/presentation/JournalPage.dart';
 import '../../features/report/presentation/DashboardPage.dart';
 import '../../features/report/presentation/ReportBloc.dart';
+import '../../features/report/presentation/SettlementPage.dart';
 import '../../features/settings/presentation/SettingsPage.dart';
 
 /// 앱 라우터 — 4탭 셸 네비게이션
@@ -53,6 +54,13 @@ class AppRouter {
           GoRoute(
             path: '/more',
             builder: (context, state) => const SettingsPage(),
+          ),
+          GoRoute(
+            path: '/settlement',
+            builder: (context, state) => BlocProvider.value(
+              value: GetIt.instance<ReportBloc>(),
+              child: const SettlementPage(),
+            ),
           ),
         ],
       ),

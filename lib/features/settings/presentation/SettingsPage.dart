@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../app/MyMoneyApp.dart';
@@ -88,6 +89,19 @@ class _SettingsPageState extends State<SettingsPage> {
                           final prefs = await SharedPreferences.getInstance();
                           await prefs.setBool('isDarkMode', v);
                         },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  _SectionHeader(label: '회계'),
+                  _SettingsCard(
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.calculate_outlined),
+                        title: const Text('결산'),
+                        subtitle: const Text('기말 결산 프로세스 실행'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.push('/settlement'),
                       ),
                     ],
                   ),
