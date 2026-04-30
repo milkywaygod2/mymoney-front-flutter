@@ -7,7 +7,9 @@ import '../data/ReportQueryService.dart';
 import '../usecase/CalculateFinancialRatios.dart';
 import '../usecase/ComparePeriods.dart';
 import '../usecase/GenerateBalanceSheet.dart';
+import '../usecase/GenerateCashFlowStatement.dart';
 import '../usecase/GenerateComprehensiveIncome.dart';
+import '../usecase/GenerateEquityChangeStatement.dart';
 import '../usecase/GenerateIncomeStatement.dart';
 import '../usecase/RunSettlement.dart';
 
@@ -89,6 +91,26 @@ class LoadPeriodComparisons extends ReportEvent {
   final int currentPeriodId;
 }
 
+/// 현금흐름표 로드
+class LoadCashFlowStatement extends ReportEvent {
+  const LoadCashFlowStatement({
+    required this.periodId,
+    required this.snapshotDate,
+  });
+  final int periodId;
+  final DateTime snapshotDate;
+}
+
+/// 자본변동표 로드
+class LoadEquityChangeStatement extends ReportEvent {
+  const LoadEquityChangeStatement({
+    required this.periodId,
+    required this.snapshotDate,
+  });
+  final int periodId;
+  final DateTime snapshotDate;
+}
+
 // ─────────────────────────────────────────────────────────────────
 // 상태
 // ─────────────────────────────────────────────────────────────────
@@ -138,6 +160,8 @@ class ReportState {
     this.listRatios,
     this.comprehensiveIncome,
     this.mapPeriodComparisons,
+    this.cashFlowStatement,
+    this.equityChangeStatement,
   });
 
   final bool isLoading;
@@ -157,6 +181,10 @@ class ReportState {
   final ComprehensiveIncomeResult? comprehensiveIncome;
   /// v2.0: 기간 비교 결과 (comparisonType → List<PeriodComparison>)
   final Map<String, List<PeriodComparison>>? mapPeriodComparisons;
+  /// 현금흐름표
+  final CashFlowStatement? cashFlowStatement;
+  /// 자본변동표
+  final EquityChangeStatement? equityChangeStatement;
 
   ReportState copyWith({
     bool? isLoading,
@@ -170,6 +198,8 @@ class ReportState {
     List<FinancialRatio>? listRatios,
     ComprehensiveIncomeResult? comprehensiveIncome,
     Map<String, List<PeriodComparison>>? mapPeriodComparisons,
+    CashFlowStatement? cashFlowStatement,
+    EquityChangeStatement? equityChangeStatement,
   }) {
     return ReportState(
       isLoading: isLoading ?? this.isLoading,
@@ -183,6 +213,8 @@ class ReportState {
       listRatios: listRatios ?? this.listRatios,
       comprehensiveIncome: comprehensiveIncome ?? this.comprehensiveIncome,
       mapPeriodComparisons: mapPeriodComparisons ?? this.mapPeriodComparisons,
+      cashFlowStatement: cashFlowStatement ?? this.cashFlowStatement,
+      equityChangeStatement: equityChangeStatement ?? this.equityChangeStatement,
     );
   }
 }
@@ -206,6 +238,8 @@ class ReportBloc extends Bloc<ReportEvent, ReportState> {
     required CalculateFinancialRatios calculateFinancialRatios,
     required GenerateComprehensiveIncome generateComprehensiveIncome,
     required ComparePeriods comparePeriods,
+    required GenerateCashFlowStatement generateCashFlowStatement,
+    required GenerateEquityChangeStatement generateEquityChangeStatement,
   })  : _generateBalanceSheet = generateBalanceSheet,
         _generateIncomeStatement = generateIncomeStatement,
         _runSettlement = runSettlement,
@@ -213,6 +247,8 @@ class ReportBloc extends Bloc<ReportEvent, ReportState> {
         _calculateFinancialRatios = calculateFinancialRatios,
         _generateComprehensiveIncome = generateComprehensiveIncome,
         _comparePeriods = comparePeriods,
+        _generateCashFlowStatement = generateCashFlowStatement,
+        _generateEquityChangeStatement = generateEquityChangeStatement,
         super(const ReportState()) {
     on<LoadDashboard>(_onLoadDashboard);
     on<LoadBalanceSheet>(_onLoadBalanceSheet);
@@ -222,6 +258,8 @@ class ReportBloc extends Bloc<ReportEvent, ReportState> {
     on<LoadFinancialRatios>(_onLoadFinancialRatios);
     on<LoadComprehensiveIncome>(_onLoadComprehensiveIncome);
     on<LoadPeriodComparisons>(_onLoadPeriodComparisons);
+    on<LoadCashFlowStatement>(_onLoadCashFlowStatement);
+    on<LoadEquityChangeStatement>(_onLoadEquityChangeStatement);
   }
 
   final GenerateBalanceSheet _generateBalanceSheet;
@@ -231,6 +269,8 @@ class ReportBloc extends Bloc<ReportEvent, ReportState> {
   final CalculateFinancialRatios _calculateFinancialRatios;
   final GenerateComprehensiveIncome _generateComprehensiveIncome;
   final ComparePeriods _comparePeriods;
+  final GenerateCashFlowStatement _generateCashFlowStatement;
+  final GenerateEquityChangeStatement _generateEquityChangeStatement;
 
   // ─────────────────────────────────────────────────────────────
   // 대시보드 로드 — B/S + P/L 요약 합산
@@ -429,6 +469,44 @@ class ReportBloc extends Bloc<ReportEvent, ReportState> {
         currentPeriodId: event.currentPeriodId,
       );
       emit(state.copyWith(isLoading: false, mapPeriodComparisons: mapResults));
+    } catch (e) {
+      emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 현금흐름표 로드
+  // ─────────────────────────────────────────────────────────────
+  Future<void> _onLoadCashFlowStatement(
+    LoadCashFlowStatement event,
+    Emitter<ReportState> emit,
+  ) async {
+    emit(state.copyWith(isLoading: true));
+    try {
+      final cf = await _generateCashFlowStatement.execute(
+        periodId: event.periodId,
+        snapshotDate: event.snapshotDate,
+      );
+      emit(state.copyWith(isLoading: false, cashFlowStatement: cf));
+    } catch (e) {
+      emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 자본변동표 로드
+  // ─────────────────────────────────────────────────────────────
+  Future<void> _onLoadEquityChangeStatement(
+    LoadEquityChangeStatement event,
+    Emitter<ReportState> emit,
+  ) async {
+    emit(state.copyWith(isLoading: true));
+    try {
+      final ce = await _generateEquityChangeStatement.execute(
+        periodId: event.periodId,
+        snapshotDate: event.snapshotDate,
+      );
+      emit(state.copyWith(isLoading: false, equityChangeStatement: ce));
     } catch (e) {
       emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
     }

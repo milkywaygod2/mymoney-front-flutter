@@ -38,6 +38,9 @@ import '../../features/ocr/presentation/OcrBloc.dart';
 import '../../features/perspective/data/PerspectiveDao.dart';
 import '../../features/perspective/data/PerspectiveRepository.dart';
 import '../../features/perspective/presentation/PerspectiveBloc.dart';
+import '../../core/interfaces/ICashFlowCodeRepository.dart';
+import '../../features/report/data/CashFlowCodeDao.dart';
+import '../../features/report/data/CashFlowCodeRepository.dart';
 import '../../features/report/data/ReportQueryService.dart';
 import '../../features/journal/presentation/JournalEvent.dart';
 import '../../features/report/presentation/ReportBloc.dart';
@@ -45,7 +48,9 @@ import '../../features/tax/presentation/TaxEvent.dart';
 import '../../features/report/usecase/CalculateFinancialRatios.dart';
 import '../../features/report/usecase/ComparePeriods.dart';
 import '../../features/report/usecase/GenerateBalanceSheet.dart';
+import '../../features/report/usecase/GenerateCashFlowStatement.dart';
 import '../../features/report/usecase/GenerateComprehensiveIncome.dart';
+import '../../features/report/usecase/GenerateEquityChangeStatement.dart';
 import '../../features/report/usecase/GenerateIncomeStatement.dart';
 import '../../features/report/usecase/RunSettlement.dart';
 import '../../features/sync/data/ConnectivityMonitor.dart'
@@ -81,6 +86,7 @@ Future<void> configureDependencies() async {
   getIt.registerSingleton<CounterpartyDao>(CounterpartyDao(db));
   getIt.registerSingleton<ExchangeRateDao>(ExchangeRateDao(db));
   getIt.registerSingleton<LegalParameterDao>(LegalParameterDao(db));
+  getIt.registerSingleton<CashFlowCodeDao>(CashFlowCodeDao(db));
 
   // ─────────────────────────────────────────────
   // 3. Repositories
@@ -140,6 +146,9 @@ Future<void> configureDependencies() async {
   // 6. Report / Tax 인프라
   // ─────────────────────────────────────────────
   getIt.registerSingleton<ReportQueryService>(ReportQueryService(db));
+  getIt.registerSingleton<ICashFlowCodeRepository>(
+    CashFlowCodeRepository(dao: getIt<CashFlowCodeDao>()),
+  );
   getIt.registerSingleton<TaxRuleEngine>(const TaxRuleEngine());
 
   // ─────────────────────────────────────────────
@@ -190,6 +199,19 @@ Future<void> configureDependencies() async {
       transactionRepository: getIt<ITransactionRepository>(),
       accountRepository: getIt<IAccountRepository>(),
       db: db,
+    ),
+  );
+  getIt.registerSingleton<GenerateCashFlowStatement>(
+    GenerateCashFlowStatement(
+      queryService: getIt<ReportQueryService>(),
+      generateIncomeStatement: getIt<GenerateIncomeStatement>(),
+      cashFlowCodeRepository: getIt<ICashFlowCodeRepository>(),
+    ),
+  );
+  getIt.registerSingleton<GenerateEquityChangeStatement>(
+    GenerateEquityChangeStatement(
+      queryService: getIt<ReportQueryService>(),
+      generateIncomeStatement: getIt<GenerateIncomeStatement>(),
     ),
   );
 
@@ -243,6 +265,8 @@ Future<void> configureDependencies() async {
       calculateFinancialRatios: getIt<CalculateFinancialRatios>(),
       generateComprehensiveIncome: getIt<GenerateComprehensiveIncome>(),
       comparePeriods: getIt<ComparePeriods>(),
+      generateCashFlowStatement: getIt<GenerateCashFlowStatement>(),
+      generateEquityChangeStatement: getIt<GenerateEquityChangeStatement>(),
     ),
   );
   getIt.registerSingleton<OcrBloc>(
