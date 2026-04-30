@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/account/presentation/AccountBloc.dart';
+import '../../features/account/presentation/AccountEvent.dart';
 import '../../features/home/presentation/HomeBloc.dart';
 import '../../features/home/presentation/HomePage.dart';
+import '../../features/journal/data/TransactionDao.dart';
+import '../../features/journal/presentation/JournalBloc.dart';
 import '../../features/journal/presentation/JournalPage.dart';
 import '../../features/report/presentation/ReportBloc.dart';
+import '../di/Injection.dart';
 
 /// 앱 라우터 — 4탭 셸 네비게이션
 class AppRouter {
@@ -20,13 +25,24 @@ class AppRouter {
           GoRoute(
             path: '/home',
             builder: (context, state) => BlocProvider(
-              create: (ctx) => HomeBloc(reportBloc: ctx.read<ReportBloc>()),
+              create: (ctx) => HomeBloc(
+                reportBloc: ctx.read<ReportBloc>(),
+                transactionDao: getIt<TransactionDao>(),
+              ),
               child: const HomePage(),
             ),
           ),
           GoRoute(
             path: '/journal',
-            builder: (context, state) => const JournalPage(),
+            builder: (context, state) => MultiBlocProvider(
+              providers: [
+                BlocProvider.value(value: getIt<JournalBloc>()),
+                BlocProvider.value(
+                  value: getIt<AccountBloc>()..add(const LoadAccountTree()),
+                ),
+              ],
+              child: const JournalPage(),
+            ),
           ),
           GoRoute(
             path: '/report',

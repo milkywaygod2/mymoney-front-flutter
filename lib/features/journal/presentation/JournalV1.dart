@@ -3,11 +3,20 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/constants/Enums.dart';
 import '../../../core/domain/Transaction.dart';
+import '../../account/presentation/AccountBloc.dart';
+import '../../account/presentation/AccountState.dart';
 import 'JournalBloc.dart';
 import 'JournalState.dart';
 import 'widgets/DayGroupHeader.dart';
 import 'widgets/LedgerPosting.dart';
 import 'widgets/MiniPosting.dart';
+
+Map<int, ({String name, String kind})> _buildAccountMap(AccountState s) {
+  return {
+    for (final a in s.listAll)
+      a.id.value: (name: a.name, kind: a.nature.name),
+  };
+}
 
 /// V1 — 단식/복식 토글, 펼침형
 class JournalV1 extends StatefulWidget {
@@ -24,9 +33,12 @@ class _JournalV1State extends State<JournalV1> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<JournalBloc, JournalState>(
-      builder: (context, state) {
-        final grouped = _groupByDate(state.listTransactions, _filter, _isDoublEntry);
+    return BlocBuilder<AccountBloc, AccountState>(
+      builder: (context, accountState) {
+        final accountMap = _buildAccountMap(accountState);
+        return BlocBuilder<JournalBloc, JournalState>(
+          builder: (context, state) {
+            final grouped = _groupByDate(state.listTransactions, _filter, _isDoublEntry);
 
         return Column(
           children: [
@@ -85,7 +97,7 @@ class _JournalV1State extends State<JournalV1> {
                         child: _isDoublEntry
                             ? Column(
                                 children: g.items
-                                    .map((tx) => _DoubleEntryCard(tx: tx))
+                                    .map((tx) => _DoubleEntryCard(tx: tx, accountMap: accountMap))
                                     .toList(),
                               )
                             : Container(
@@ -115,6 +127,8 @@ class _JournalV1State extends State<JournalV1> {
               ),
             ),
           ],
+        );
+          },
         );
       },
     );
@@ -313,8 +327,9 @@ class _SumCol extends StatelessWidget {
 }
 
 class _DoubleEntryCard extends StatelessWidget {
-  const _DoubleEntryCard({required this.tx});
+  const _DoubleEntryCard({required this.tx, required this.accountMap});
   final Transaction tx;
+  final Map<int, ({String name, String kind})> accountMap;
 
   @override
   Widget build(BuildContext context) {
@@ -361,13 +376,14 @@ class _DoubleEntryCard extends StatelessWidget {
               Expanded(
                 child: Column(
                   children: List.generate(debits.length, (i) {
+                    final info = accountMap[debits[i].accountId.value];
                     return Padding(
                       padding: EdgeInsets.only(bottom: i < debits.length - 1 ? 6 : 0),
                       child: SizedBox(
                         height: layout.debitHs[i],
                         child: MiniPosting(
-                          accountName: '계정 ${debits[i].accountId.value}',
-                          kind: 'expense',
+                          accountName: info?.name ?? '계정 ${debits[i].accountId.value}',
+                          kind: info?.kind ?? 'expense',
                           icon: '🍎',
                           amount: debits[i].baseAmount,
                           isDebit: true,
@@ -381,13 +397,14 @@ class _DoubleEntryCard extends StatelessWidget {
               Expanded(
                 child: Column(
                   children: List.generate(credits.length, (i) {
+                    final info = accountMap[credits[i].accountId.value];
                     return Padding(
                       padding: EdgeInsets.only(bottom: i < credits.length - 1 ? 6 : 0),
                       child: SizedBox(
                         height: layout.creditHs[i],
                         child: MiniPosting(
-                          accountName: '계정 ${credits[i].accountId.value}',
-                          kind: 'asset',
+                          accountName: info?.name ?? '계정 ${credits[i].accountId.value}',
+                          kind: info?.kind ?? 'asset',
                           icon: '🌳',
                           amount: credits[i].baseAmount,
                           isDebit: false,
