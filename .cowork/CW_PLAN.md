@@ -1037,4 +1037,407 @@ PerspectiveBloc 변경 → JournalBloc/ReportBloc 리필터링 (fade 200ms). 탭
 4. `build_runner build`는 각 Wave 머지 후 1회 실행
 5. 테스트는 Wave 단위로 작성 (test/ 하위 mirror 구조)
 6. **섹션 14(코딩 컨벤션)은 전 Wave에 공통 적용** — 코드 리뷰 시 체크리스트로 사용
+
+---
+
+---
+
+# MyMoney UI 구현 플랜 (design-reference 기반)
+
+## Context
+
+MyMoney 프로젝트는 W0~W14 (도메인·DB·UseCase·BLoC) **백엔드 레이어 100% 구현 완료** 상태이지만,
+Presentation 레이어는 기본 스캐폴드 수준만 갖춰져 있다. (AppRouter는 placeholder, AppTheme은 ColorScheme.fromSeed 기본값, Page들은 ListTile 수준)
+
+`design-reference/` 폴더에는 Claude Designer가 작업한 **프리미엄 UI/UX 레퍼런스**가 추가되었다:
+- 저울(시소) 기반 복식부기 시각화 (Home V3)
+- 차변/대변 비례 높이 카드 (Journal V1)
+- 자연어 입력 + AI 자동분개 (Entry V1)
+- 5대 계정 자연 은유 (🌳자산·🍎비용·💧수익·🫙부채·🪣자본)
+- K-IFRS 계정 트리 메타포 시각화
+
+**이 플랜의 목표**: 기존 BLoC/Repository는 그대로 재사용하면서, **Presentation 레이어를 design-reference 기준으로 전면 재구축**한다.
+
+## 사용자 결정 (확정)
+
+| 항목 | 선택 |
+|------|------|
+| 변주 범위 | **V1+V2+V3 모두 구현** (각 화면 3개 변주) |
+| 토큰 적용 | **AppTheme 전면 재정의** (기존 ColorScheme.fromSeed 폐기) |
+| V1/V2/V3 전환 | **각 페이지 상단 세그먼트 토글** (StatefulWidget local state) |
+| 우선순위 | U1~U6 **전체 진행** |
+
+---
+
+## 디렉토리 구조 (신규)
+
+```
+lib/
+├── app/
+│   └── theme/
+│       ├── AppTheme.dart           ★ 재정의 (Material 3 + design tokens)
+│       ├── AppColors.dart          ★ 신규 (Nature 5색 + tonal + semantic)
+│       ├── AppTextStyles.dart      ★ 신규 (display/headline/title/body/label)
+│       ├── AppSpacing.dart         ★ 신규 (sp-1 ~ sp-8)
+│       ├── AppRadius.dart          ★ 신규 (xs/sm/md/lg/xl/full)
+│       ├── AppShadows.dart         ★ 신규 (1/2/3 + glow-leaf/well/amber)
+│       └── AppMotion.dart          ★ 신규 (Durations + Curves)
+│
+├── shared/                          ★ 신규 디렉토리 (공통 위젯)
+│   └── widgets/
+│       ├── KickerBar.dart          ・ 2px 레인보우 브랜드 라인
+│       ├── MoneyText.dart          ・ JetBrains Mono + tabular-nums
+│       ├── NatureBadge.dart        ・ 자산/부채/자본/수익/비용 뱃지
+│       ├── IconBtn.dart            ・ 36px 라운드 아이콘 버튼
+│       ├── SegmentToggle.dart      ・ 단식/복식, V1/V2/V3 토글
+│       ├── Chip.dart               ・ 1층 칩 (Lens Switcher용)
+│       ├── KindIcon.dart           ・ 5대 계정 이모지/SVG
+│       ├── Sparkline.dart          ・ CustomPainter (HomeV1)
+│       ├── LiquidGauge.dart        ・ CustomPainter (HomeV2 물/포도주 게이지)
+│       ├── GrowthTree.dart         ・ CustomPainter (HomeV2 나무)
+│       └── DensityScope.dart       ・ minimal/normal/dense 컨텍스트
+│
+└── features/
+    ├── home/                       ★ 신규 feature (DashboardPage 흡수)
+    │   └── presentation/
+    │       ├── HomePage.dart       ・ V1/V2/V3 세그먼트 토글 컨테이너
+    │       ├── HomeV1.dart         ・ Toss형 (순자산 카드 + 3-up + 흐름)
+    │       ├── HomeV2.dart         ・ 나무·물 은유 (GrowthTree + LiquidGauge × 3)
+    │       ├── HomeV3.dart         ・ 저울 (도전) — ProportionalScale + FiveAccountBox
+    │       ├── widgets/
+    │       │   ├── ProportionalScale.dart   ・ CustomPainter (시소 저울)
+    │       │   ├── FiveAccountBox.dart      ・ 자산+비용 = 부채+자본+수익 박스
+    │       │   ├── PendingBox.dart          ・ 예약 거래 대시 박스
+    │       │   ├── NetWorthCard.dart        ・ HomeV1 순자산 카드
+    │       │   ├── ThreeUpStats.dart        ・ HomeV1 자산/부채/자본 3분할
+    │       │   └── MonthFlowBar.dart        ・ HomeV1 수익/비용 가로 바
+    │       └── HomeBloc.dart                ・ 신규 BLoC (ReportBloc 합성)
+    │
+    ├── journal/
+    │   └── presentation/
+    │       ├── JournalPage.dart    ★ 재작성 (V1/V2/V3 토글 컨테이너)
+    │       ├── JournalV1.dart      ・ 단식/복식 토글, 펼침형
+    │       ├── JournalV2.dart      ・ 분개장 (Day Journal) 형식
+    │       ├── JournalV3.dart      ・ 흐름 모드 (FROM → TO 다이어그램)
+    │       ├── widgets/
+    │       │   ├── MiniPosting.dart         ・ 차변/대변 셀 + 배경 화살표 (CustomPainter)
+    │       │   ├── PostingCell.dart         ・ V2 분개장용 셀
+    │       │   ├── FlowNode.dart            ・ V3 노드
+    │       │   ├── FlowArrow.dart           ・ V3 그래디언트 화살표
+    │       │   ├── DCBadge.dart             ・ 차/대 뱃지
+    │       │   ├── LedgerPosting.dart       ・ V1 펼침 분개
+    │       │   └── DayGroupHeader.dart      ・ 날짜 그룹 헤더
+    │       ├── FlowCard.dart       (기존 유지 — V1 펼침에서 재사용)
+    │       └── TransactionForm.dart (기존 유지 — Entry V2가 흡수)
+    │
+    ├── entry/                      ★ 신규 feature
+    │   └── presentation/
+    │       ├── EntryPage.dart      ・ V1/V2/V3 세그먼트 토글 컨테이너 (BottomSheet 진입)
+    │       ├── EntryV1.dart        ・ 자연어 입력 + AI 자동분개 결과
+    │       ├── EntryV2.dart        ・ 숫자패드 + 계정 2개 선택 (모바일 표준)
+    │       ├── EntryV3.dart        ・ OCR 영수증 (카메라 + 결과)
+    │       ├── widgets/
+    │       │   ├── EntryAutoPlay.dart       ・ 2초 거래 애니메이션 쉘
+    │       │   ├── AmountHero.dart          ・ 큰 금액 표시 영역
+    │       │   ├── FromToFlow.dart          ・ 출처 → 도착 칩
+    │       │   ├── NumPad.dart              ・ V2 숫자패드
+    │       │   ├── AccountPicker.dart       ・ V2 계정 선택 모달
+    │       │   ├── OcrCaptureView.dart      ・ V3 카메라 프리뷰
+    │       │   └── OcrResultPanel.dart      ・ V3 자동분개 결과
+    │       └── EntryBloc.dart      ・ 자연어 파서 stub + OcrBloc 위임
+    │
+    ├── account/
+    │   └── presentation/
+    │       ├── AccountTreePage.dart ★ 재작성 (조회/지도/설정 3모드 토글)
+    │       ├── AccountBrowse.dart   ・ 들여쓰기 트리 + 메타포 + 사용량
+    │       ├── AccountMap.dart      ・ 5클러스터 시각화 ("내 살림살이 지도")
+    │       ├── AccountConfig.dart   ・ 사용자 메타포 등록 UI
+    │       ├── widgets/
+    │       │   ├── ModeToggle.dart          ・ 조회/지도/설정 토글
+    │       │   ├── TreeRow.dart             ・ 들여쓰기 행
+    │       │   ├── MetaphorIcon.dart        ・ K-IFRS 카탈로그 → 메타포 매핑
+    │       │   ├── ClusterMap.dart          ・ CustomPainter (지도 모드)
+    │       │   └── MetaphorPicker.dart      ・ 설정 모드 메타포 선택
+    │       └── (AccountBloc 등 기존 유지)
+    │
+    └── report/
+        └── presentation/
+            ├── DashboardPage.dart  ★ 재작성 (재무비율 + B/S + P/L + CF + CE)
+            ├── RatioGrid.dart      ・ 13~29종 비율 카드
+            ├── BSChart.dart        ・ 자산/부채/자본 막대 차트
+            ├── PLChart.dart        ・ 수익/비용/순이익 차트
+            ├── CFWaterfall.dart    ・ 현금흐름 5분류 폭포 차트
+            ├── CETable.dart        ・ 자본변동표 5구성요소 롤포워드
+            └── (ReportBloc 기존 유지 — W12~W14 결과 활용)
+```
+
+---
+
+## Wave 정의
+
+> **Wave U는 design-reference 기반 UI 구현. 백엔드 W0~W14는 변경 없음.**
+
+### Wave U1: Design System (Foundation)
+
+**목표**: 모든 후속 Wave의 시각·인터랙션 기반.
+
+| 작업 | 파일 | 비고 |
+|------|------|------|
+| AppColors 정의 | `lib/app/theme/AppColors.dart` | colors_and_type.css 1:1 변환. nature/primary tonal/semantic/state/confidence/surface |
+| AppTextStyles | `lib/app/theme/AppTextStyles.dart` | display/headline/title/body/label + amount-lg/md/sm |
+| AppSpacing/Radius/Shadows/Motion | 4파일 | 토큰 1:1 |
+| AppTheme 재정의 | `lib/app/theme/AppTheme.dart` | ColorScheme.fromSeed 폐기, 직접 정의 |
+| 폰트 등록 | `pubspec.yaml` + `assets/fonts/` | Pretendard Variable, JetBrains Mono, Material Symbols Rounded |
+| 공통 위젯 | `lib/shared/widgets/*.dart` | KickerBar, MoneyText, NatureBadge, IconBtn, SegmentToggle, Chip, KindIcon, DensityScope |
+| CustomPainter 기초 | Sparkline, LiquidGauge, GrowthTree | 후속 Wave에서 재사용 |
+| MyMoneyApp 갱신 | `lib/app/MyMoneyApp.dart` | 다크 기본 + 폰트 적용 확인 |
+
+**추가 패키지**:
+- `google_fonts` 또는 로컬 폰트 에셋 (오프라인 지향이면 에셋 권장)
+- `flutter_svg` ^2.0 (메타포 SVG, 로고)
+- `shared_preferences` ^2.0 (V1/V2/V3 마지막 선택 저장 — optional)
+
+**DoD**:
+- 기존 페이지(AccountTreePage 등) 색상이 자동으로 새 토큰 반영 (회색→다크네이비 배경, nature 5색 연동)
+- `flutter analyze` 0 error
+- 다크 모드에서 가독성 테스트 (수동)
+
+---
+
+### Wave U2: Home (대시보드)
+
+**목표**: V1/V2/V3 세그먼트 토글 + 3개 변주 풀 구현.
+
+| 변주 | 핵심 위젯 | 데이터 소스 |
+|------|-----------|------------|
+| **HomeV1** Toss형 | NetWorthCard, Sparkline, ThreeUpStats, MonthFlowBar | ReportBloc.dashboard (B/S 합계 + 월 P/L) |
+| **HomeV2** 은유 | GrowthTree, LiquidGauge × 3 | 동일 + 게이지 fill 비율 계산 |
+| **HomeV3** 저울 | **ProportionalScale**, **FiveAccountBox**, PendingBox | 동일 + 예약 거래 (Transaction.status=DRAFT + scheduledDate) |
+
+**핵심 CustomPainter**:
+- `ProportionalScale`: 시소 빔(나무 그라디언트) + 삼각 받침대 + 양쪽 접시 + tilt 회전 (`Math.atan2` + Transform.rotate). pendingBox 스택 렌더링.
+- `FiveAccountBox`: 좌(자산+비용) | 우(부채+자본+수익) 2-tier 비례 분할 (flow 공통 스케일 → stock 잔여 분할), MIN_PX clamp, 그라디언트 fill, 등호 텍스트 가운데.
+
+**라우터 변경**: `/home` → `HomePage` (BlocProvider<HomeBloc>) 연결, placeholder 제거.
+
+**HomeBloc 신규**: ReportBloc 기존 결과를 합성. 별도 데이터 모델:
+```dart
+class HomeViewModel {
+  final Money netWorth;
+  final List<int> spark7d;          // 7일 추이
+  final Money assets, liabilities, equity, revenue, expense;
+  final List<PendingItem> pendingExpenses;
+  final List<PendingItem> pendingAssets;
+  final List<PendingItem> pendingRevenues;
+}
+```
+
+**DoD**:
+- 3개 변주 토글 시 200ms fade
+- HomeV3 저울 tilt: revenue/expense 비율로 ±18° clamp
+- 예약 거래 없을 때 PendingBox 숨김
+- 모바일/태블릿 반응형 (panW=120 → 화면폭 30% 적응)
+
+---
+
+### Wave U3: Journal (거래내역)
+
+**목표**: V1/V2/V3 토글 + 단식/복식 모드.
+
+| 변주 | 핵심 |
+|------|------|
+| **JournalV1** | 상단 단식·복식 세그먼트, 단식=가계부 1행+펼침 분개, 복식=차변/대변 2-col 카드 (포스팅 비례 높이) |
+| **JournalV2** | 분개장 그리드 (날짜|차변|대변 3col), 일별 손익 합계 |
+| **JournalV3** | FROM → TO 흐름 카드 (FlowNode + FlowArrow) |
+
+**핵심 위젯 — MiniPosting (V1 복식)**:
+- 배경에 큰 ↑/↓ 화살표 outline (CustomPainter, opacity 0.05)
+- 위: 이모지 + 계정명, 아래: 금액 (모노스페이스, 우측 정렬)
+- 셀 높이 = log10(amount/1000) × scale, MIN 52 / MAX 160, 차변합 = 대변합 → 짧은 쪽 자동 신장
+
+**기존 BLoC 활용**:
+- `JournalBloc.state.listTransactions` 그대로
+- `Transaction.postings` (W11에서 4줄 분개 지원 추가됨) 그대로 활용
+
+**DoD**:
+- 4줄 분개 (스타벅스: 비용 5800 = 별 3000 + 카드 2800) 정확 렌더
+- 일별 그룹 헤더 + 일 손익 (수익+, 비용−)
+- V1 단식 펼침 시 분개 표시 (TxnExpanded)
+- V3 흐름 카드 그래디언트 화살표 (CustomPainter)
+
+---
+
+### Wave U4: Entry (거래 입력)
+
+**목표**: BottomSheet 진입 + 3개 입력 모드.
+
+| 변주 | 핵심 |
+|------|------|
+| **EntryV1** 자연어 | textarea + "AI 자동분개 중" 칩 + AmountHero + FromTo 칩 + 저장 시 EntryAutoPlay 2초 |
+| **EntryV2** 수동 | NumPad (모바일 표준) + 계정 2개 선택 BottomSheet |
+| **EntryV3** OCR | 카메라 프리뷰 + 캡처 → 결과 패널 |
+
+**EntryAutoPlay**: 거래 저장 시 2초 트랜잭션 애니메이션 (playground.jsx Scene1 포팅)
+- AnimationController 2000ms
+- Phase: enter (0~22%) → fly (22~72%) → arrive (72~94%)
+- 결제 메타포 (지폐, 카드 SVG)가 화면을 가로지르며 도착
+
+**기존 활용**:
+- `TransactionForm.dart` (기존) → EntryV2의 폼 부분으로 흡수
+- `OcrBloc` (W7) → EntryV3 wire-up
+- `CreateTransaction` UseCase → 모든 V에서 공통 호출
+
+**자연어 파서** (V1):
+- 정식 NLP는 W7-OCR 이후. 현재는 정규식 stub: `/(\d+[,.]?\d*)\s*원?/` 추출
+- "스타벅스에서 ... 5,800원 카드로" → counterparty=스타벅스, amount=5800, credit=신용카드, debit=식비·음료(자동분류)
+
+**DoD**:
+- BottomSheet 모달 진입 (sheet 진입 모션 320ms emphasized)
+- V1 → V2 → V3 토글 시 데이터 보존 (EntryFormState)
+- 저장 → 2초 EntryAutoPlay → 닫기 → JournalPage 자동 갱신
+
+---
+
+### Wave U5: AccountTree (계정과목)
+
+**목표**: 조회/지도/설정 3모드 토글.
+
+| 모드 | 핵심 |
+|------|------|
+| **조회** Browse | 들여쓰기 트리, 메타포 아이콘, 사용량 카운트, advanced 노드 50% opacity |
+| **지도** Map | 5대 nature 클러스터 (CustomPainter), 메타포 아이콘 격자 배치 |
+| **설정** Config | 사용자 메타포 10개 이내 등록 (이모지 picker + 계정 매핑) |
+
+**메타포 매핑** (`screens/metaphors.jsx` 포팅):
+- 6개 프리미티브 SVG: 지폐·쇼핑백·집·카드·급여·은행
+- COA 코드 → 메타포 매핑 테이블 (DEFAULT_METAPHOR_MAP)
+- 사용자 커스텀 우선
+
+**기존 활용**:
+- `AccountBloc.state.listRoots` 그대로
+- `Account.path` (Materialized Path) 그대로
+
+**DoD**:
+- K-IFRS 257노드 시드 트리 정상 렌더 (W11 시드 활용)
+- 지도 모드: 5클러스터 색상 분리, 줌/팬 제스처
+- 설정 모드: 사용자 메타포 추가/삭제 → SharedPreferences 또는 Drift 저장
+
+---
+
+### Wave U6: Report Dashboard (분석)
+
+**목표**: W12~W14에서 구현된 재무비율/CF/CE/기간비교를 시각화.
+
+| 영역 | 핵심 |
+|------|------|
+| **재무비율** | 13~29종 비율 카드 그리드 (RatioGrid). 카테고리: 유동성/수익성/안정성/효율성 |
+| **B/S 차트** | 자산 vs 부채+자본 막대 (FiveAccountBox 재활용 가능) |
+| **P/L 차트** | 수익/비용/순이익 가로 막대 + 트렌드 |
+| **CF 폭포** | 영업/투자/재무/기말현금 폭포 차트 (CustomPainter) |
+| **CE 테이블** | 자본 5구성요소 롤포워드 (자본금/잉여금/자기주식/OCI/이익잉여금) |
+| **기간비교** | MOM/QOQ/YOY 토글, 변화율 화살표 |
+
+**기존 활용 (W12~W14 결과)**:
+- `ReportBloc.LoadFinancialRatios` (8 → 13 → 29종)
+- `ReportBloc.LoadComprehensiveIncome` (NI + OCI 5종)
+- `ReportBloc.LoadCashFlowStatement` (5분류 간접법)
+- `ReportBloc.LoadEquityChangeStatement`
+- `ReportBloc.ComparePeriods` (MOM/QOQ/YOY)
+
+**DoD**:
+- 모든 W12~W14 데이터가 시각화로 노출
+- 기간 비교 토글 ─ 동일 카드에서 데이터만 교체
+
+---
+
+## 의존성 그래프
+
+```
+[Wave U1: Design System] ─── 모든 Wave의 전제
+        │
+        ├──> [Wave U2: Home]      (CustomPainter 多 — 가장 무거움)
+        ├──> [Wave U3: Journal]   (MiniPosting CustomPainter)
+        ├──> [Wave U4: Entry]     (EntryAutoPlay 애니메이션)
+        ├──> [Wave U5: AccountTree] (ClusterMap CustomPainter)
+        └──> [Wave U6: Report]    (CFWaterfall CustomPainter)
+
+U2 ↔ U6: FiveAccountBox 공유 위젯 (Home V3와 Report B/S에서 동일 사용)
+U3 ↔ U4: TransactionForm 흡수 (V2 모드)
+```
+
+**병렬 가능성**: U1 완료 후 U2~U6은 모두 독립 진행 가능 (Presentation만 작성, BLoC/Repository 변경 없음).
+
+---
+
+## 추가 패키지
+
+| 패키지 | 용도 | Wave |
+|--------|------|------|
+| `flutter_svg` ^2.0 | 메타포 SVG, 로고 | U1 |
+| `google_fonts` ^6.0 또는 로컬 에셋 | Pretendard, JetBrains Mono | U1 |
+| `shared_preferences` ^2.0 | V1/V2/V3 마지막 선택 (선택적) | U2~U4 |
+
+**도입 안 함** (이번 플랜 범위 밖):
+- `fl_chart`: CustomPainter 직접 작성 (디자인 정밀 일치를 위해)
+- `lottie`: 모든 애니메이션은 AnimationController + CustomPainter
+
+---
+
+## 핵심 참조 파일 (구현 시 1:1 참조)
+
+| 디자인 파일 | Flutter 위치 |
+|------------|-------------|
+| `design-reference/colors_and_type.css` | `lib/app/theme/AppColors.dart`, `AppTextStyles.dart`, ... |
+| `design-reference/screens/home.jsx` line 270~881 (V3 + ProportionalScale + FiveAccountBox) | `lib/features/home/presentation/widgets/ProportionalScale.dart`, `FiveAccountBox.dart` |
+| `design-reference/screens/transactions.jsx` line 92~514 (V1 + MiniPosting) | `lib/features/journal/presentation/JournalV1.dart`, `widgets/MiniPosting.dart` |
+| `design-reference/screens/entry.jsx` (V1 자연어) | `lib/features/entry/presentation/EntryV1.dart` |
+| `design-reference/screens/entry_autoplay.jsx` | `lib/features/entry/presentation/widgets/EntryAutoPlay.dart` |
+| `design-reference/screens/accounts.jsx` line 40~100 (ModeToggle + TreeRow) | `lib/features/account/presentation/widgets/ModeToggle.dart`, `TreeRow.dart` |
+| `design-reference/screens/playground.jsx` (9개 씬) | `lib/features/entry/presentation/widgets/EntryAutoPlay.dart` (Scene1만) + 후속 |
+| `design-reference/screens/metaphors.jsx` | `lib/features/account/presentation/widgets/MetaphorIcon.dart` |
+
+---
+
+## 검증 계획
+
+### Wave별 DoD
+각 Wave 종료 시:
+1. **`flutter analyze`** 0 error / 0 warning
+2. **`flutter run`** (Windows / Web Chrome) 정상 부팅 + 토글 동작
+3. **수동 시각 검증**: design-reference의 `screens.html`을 옆에 띄워 픽셀 단위 비교
+4. **시드 데이터 검증**: W11 시드 (K-IFRS 257노드) 기준으로 화면 정상 렌더
+5. **기존 BLoC 회귀**: AccountBloc/JournalBloc/ReportBloc 등 기존 테스트 통과 (변경 없어야 함)
+
+### 통합 시나리오 (전 Wave 완료 후)
+- 시나리오 A: Entry V1 자연어 → 거래 저장 → JournalV1 복식 → HomeV3 저울 변화
+- 시나리오 B: AccountTree 조회 → 새 계정 추가 → JournalV2 분개장에서 신규 계정 사용
+- 시나리오 C: Report 대시보드에서 비율 13종 + CF 폭포 정상 표시
+
+### 회귀 테스트
+- 기존 W14까지의 단위 테스트 100% 유지 (Presentation만 변경하므로 영향 없음)
+- 기존 통합 테스트: ledger.test, settlement.test 등 그대로 통과해야 함
+
+---
+
+## 작업량 견적 (참고용)
+
+| Wave | 신규 파일 수 | 예상 LoC | 난이도 |
+|------|------------|---------|--------|
+| U1 | 약 20 | ~2,500 | 중 (토큰 + 공통 위젯) |
+| U2 | 약 15 | ~3,500 | **상** (ProportionalScale, FiveAccountBox CustomPainter 多) |
+| U3 | 약 12 | ~2,800 | 상 (MiniPosting 비례 높이 + 배경 화살표) |
+| U4 | 약 12 | ~2,500 | 중상 (EntryAutoPlay 애니메이션) |
+| U5 | 약 10 | ~2,000 | 중 (ClusterMap CustomPainter) |
+| U6 | 약 12 | ~2,500 | 중상 (CFWaterfall + RatioGrid) |
+| **합계** | **약 81** | **~15,800** | — |
+
+---
+
+## 실행 전략 (UI Wave)
+
+1. **U1부터 순차 시작** — 모든 Wave의 전제이므로 단독 실행
+2. U1 완료 시점 → main 머지 → 분석/시각 검증
+3. **U2~U6 병렬 가능** (서로 독립): TF 편성 시 3명 병렬로 2 Wave씩 분담 가능
+4. 각 Wave 완료 시 → main 머지 → 다음 Wave 또는 병렬 작업 합류
+5. 전체 완료 후 → QA Loop (3-Step 시각 검증 추가)
 7. **섹션 15(확장 예약)은 해당 테이블/인터페이스 구현 시 슬롯만 확보** — 구현 금지

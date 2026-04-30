@@ -82,7 +82,7 @@ class CalculateBadDebtAllowance {
       '대손충당금_설정율_한도',
       asOfDate,
     );
-    // 기본값: 일반채권 1%
+    // 기본값: 일반채권 1% (TODO: TABLE 타입이면 JSON 파싱하여 채권 유형별 설정율 적용)
     final double limitRate = 0.01;
     // TODO: LP가 TABLE 타입이면 JSON 파싱하여 채권 유형별 설정율 적용
 
