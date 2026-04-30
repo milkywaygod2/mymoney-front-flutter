@@ -89,8 +89,7 @@ class EntryState {
     this.parsedAmount,
     this.parsedDescription,
     this.parsedDate,
-    this.parsedDebitKeyword,
-    this.parsedCreditKeyword,
+    this.accountHint,
     this.debitAccountId,
     this.creditAccountId,
     this.errorMessage,
@@ -106,10 +105,8 @@ class EntryState {
   final String? parsedDescription;
   /// NLP로 추출된 날짜 힌트
   final DateTime? parsedDate;
-  /// NLP로 추출된 차변 계정 키워드 힌트 (예: '식비', '교통비')
-  final String? parsedDebitKeyword;
-  /// NLP로 추출된 대변 계정 키워드 힌트 (예: '신용카드', '현금')
-  final String? parsedCreditKeyword;
+  /// NLP로 추출된 차변 계정 추천 힌트 (예: '식비', '교통비')
+  final String? accountHint;
 
   // V2 — 숫자패드
   final String amountDisplay;
@@ -140,8 +137,7 @@ class EntryState {
     int? parsedAmount,
     String? parsedDescription,
     DateTime? parsedDate,
-    String? parsedDebitKeyword,
-    String? parsedCreditKeyword,
+    String? accountHint,
     AccountId? debitAccountId,
     AccountId? creditAccountId,
     String? errorMessage,
@@ -155,8 +151,7 @@ class EntryState {
       parsedAmount: parsedAmount ?? this.parsedAmount,
       parsedDescription: parsedDescription ?? this.parsedDescription,
       parsedDate: parsedDate ?? this.parsedDate,
-      parsedDebitKeyword: parsedDebitKeyword ?? this.parsedDebitKeyword,
-      parsedCreditKeyword: parsedCreditKeyword ?? this.parsedCreditKeyword,
+      accountHint: accountHint ?? this.accountHint,
       debitAccountId: debitAccountId ?? this.debitAccountId,
       creditAccountId: creditAccountId ?? this.creditAccountId,
       errorMessage: errorMessage,
@@ -189,6 +184,31 @@ class EntryBloc extends Bloc<EntryEvent, EntryState> {
     emit(state.copyWith(naturalText: e.text));
   }
 
+  static const Map<String, String> _keywordMap = {
+    '카드': '신용카드',
+    '신용': '신용카드',
+    '현금': '현금',
+    '식사': '식비',
+    '음식': '식비',
+    '밥': '식비',
+    '카페': '식비',
+    '커피': '식비',
+    '점심': '식비',
+    '저녁': '식비',
+    '아침': '식비',
+    '교통': '교통비',
+    '버스': '교통비',
+    '지하철': '교통비',
+    '택시': '교통비',
+    '마트': '생활용품비',
+    '쇼핑': '쇼핑비',
+    '편의점': '생활용품비',
+    '병원': '의료비',
+    '약': '의료비',
+    '통신': '통신비',
+    '구독': '통신비',
+  };
+
   /// 자연어 파서 — 금액·날짜·상점·계정 키워드 추출
   void _onParseText(EntryParseNaturalText _, Emitter<EntryState> emit) {
     emit(state.copyWith(status: EntryStatus.parsing));
@@ -212,31 +232,25 @@ class EntryBloc extends Bloc<EntryEvent, EntryState> {
       final y = now.subtract(const Duration(days: 1));
       parsedDate = DateTime(y.year, y.month, y.day);
     } else {
-      // "N일 전" 패턴
       final daysAgoMatch = RegExp(r'(\d+)\s*일\s*전').firstMatch(text);
       if (daysAgoMatch != null) {
         final days = int.tryParse(daysAgoMatch.group(1)!) ?? 0;
         final d = now.subtract(Duration(days: days));
         parsedDate = DateTime(d.year, d.month, d.day);
       } else {
-        // "M/D" 또는 "M월D일" 패턴
-        final mdSlashMatch = RegExp(r'(\d{1,2})/(\d{1,2})').firstMatch(text);
-        final mdKorMatch = RegExp(r'(\d{1,2})월\s*(\d{1,2})일').firstMatch(text);
-        final mdMatch = mdSlashMatch ?? mdKorMatch;
+        final mdMatch = RegExp(r'(\d{1,2})[/.](\d{1,2})').firstMatch(text)
+            ?? RegExp(r'(\d{1,2})월\s*(\d{1,2})일').firstMatch(text);
         if (mdMatch != null) {
-          final m = int.parse(mdMatch.group(1)!);
-          final d = int.parse(mdMatch.group(2)!);
-          parsedDate = DateTime(now.year, m, d);
+          parsedDate = DateTime(now.year, int.parse(mdMatch.group(1)!), int.parse(mdMatch.group(2)!));
         }
       }
     }
 
     // ── 상점/설명 추출 ─────────────────────────────────────
-    // 금액 표현과 날짜 표현을 제거한 나머지에서 앞쪽 명사구를 설명으로 사용
     var descText = text
         .replaceAll(RegExp(r'\d[\d,.]*\s*원?'), '')
         .replaceAll(RegExp(r'\d+\s*일\s*전'), '')
-        .replaceAll(RegExp(r'\d{1,2}/\d{1,2}'), '')
+        .replaceAll(RegExp(r'\d{1,2}[/.]\d{1,2}'), '')
         .replaceAll(RegExp(r'\d{1,2}월\s*\d{1,2}일'), '')
         .replaceAll(RegExp(r'오늘|어제'), '')
         .replaceAll(RegExp(r'에서|에게|한테|으로|를|을|이|가|은|는|샀어|결제|지불|냈어'), '')
@@ -244,29 +258,13 @@ class EntryBloc extends Bloc<EntryEvent, EntryState> {
     if (descText.isEmpty) descText = text;
     final description = descText.length > 20 ? descText.substring(0, 20) : descText;
 
-    // ── 계정 키워드 추출 ───────────────────────────────────
-    // 대변(출처) — 결제 수단
-    String? creditKeyword;
-    if (RegExp(r'카드|신용').hasMatch(text)) {
-      creditKeyword = '신용카드';
-    } else if (RegExp(r'현금').hasMatch(text)) {
-      creditKeyword = '현금';
-    } else if (RegExp(r'페이|Pay|계좌이체').hasMatch(text)) {
-      creditKeyword = '보통예금';
-    }
-
-    // 차변(목적) — 비용 과목
-    String? debitKeyword;
-    if (RegExp(r'식사|음식|밥|카페|커피|점심|저녁|아침').hasMatch(text)) {
-      debitKeyword = '식비';
-    } else if (RegExp(r'교통|버스|지하철|택시|KTX|기차').hasMatch(text)) {
-      debitKeyword = '교통비';
-    } else if (RegExp(r'편의점|마트|슈퍼|쇼핑|구매').hasMatch(text)) {
-      debitKeyword = '소모품비';
-    } else if (RegExp(r'병원|약|의료|건강').hasMatch(text)) {
-      debitKeyword = '의료비';
-    } else if (RegExp(r'통신|핸드폰|인터넷|구독').hasMatch(text)) {
-      debitKeyword = '통신비';
+    // ── 계정 키워드 추출 (키워드 맵 순차 매칭) ─────────────
+    String? accountHint;
+    for (final entry in _keywordMap.entries) {
+      if (text.contains(entry.key)) {
+        accountHint = entry.value;
+        break;
+      }
     }
 
     emit(state.copyWith(
@@ -274,8 +272,7 @@ class EntryBloc extends Bloc<EntryEvent, EntryState> {
       parsedAmount: amount,
       parsedDescription: description.isEmpty ? null : description,
       parsedDate: parsedDate,
-      parsedDebitKeyword: debitKeyword,
-      parsedCreditKeyword: creditKeyword,
+      accountHint: accountHint,
       amountDisplay: amount != null ? _formatAmount(amount) : '0',
     ));
   }
