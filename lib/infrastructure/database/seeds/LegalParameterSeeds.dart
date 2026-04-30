@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element_parameter
 /// LegalParameter 시드 데이터 — 세무조정 규칙엔진에서 사용하는 법률 변수.
 /// DB 초기화 시 seedLegalParameters()를 호출하여 batch insert.
 ///

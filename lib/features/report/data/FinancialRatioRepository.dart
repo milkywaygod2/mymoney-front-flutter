@@ -3,7 +3,6 @@ import 'package:drift/drift.dart';
 import '../../../core/interfaces/IFinancialRatioRepository.dart';
 import '../../../core/models/FinancialRatio.dart';
 import '../../../infrastructure/database/AppDatabase.dart';
-import '../../../infrastructure/database/tables/FinancialRatioSnapshotTable.dart';
 import 'FinancialRatioDao.dart';
 
 /// IFinancialRatioRepository 구현체 — Drift 기반 (v2.0)

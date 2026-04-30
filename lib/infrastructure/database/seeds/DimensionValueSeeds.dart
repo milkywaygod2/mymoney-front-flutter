@@ -382,7 +382,7 @@ const List<_Seed> _kGovernmentSeeds = [
 
 /// 전체 시드 데이터 목록 (DB batch insert용)
 ///
-/// 반환 형식: List<Map<String, dynamic>> — Drift의 batch insert와 호환.
+/// 반환 형식: `List<Map<String, dynamic>>` — Drift의 batch insert와 호환.
 /// 각 Map의 키: dimensionType, code, name, parentCode, entityType, sortOrder, isSystem
 List<Map<String, dynamic>> getAllDimensionValueSeeds() {
   final List<_Seed> listAllSeeds = [

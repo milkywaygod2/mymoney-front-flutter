@@ -67,5 +67,5 @@ class NegativeAmountError extends DomainError {
 
 /// 환율 데이터 미존재 — 환산 시 필요한 환율이 DB에 없을 때
 class ExchangeRateNotFoundError extends DomainError {
-  const ExchangeRateNotFoundError(String detail) : super(detail);
+  const ExchangeRateNotFoundError(super.detail);
 }
