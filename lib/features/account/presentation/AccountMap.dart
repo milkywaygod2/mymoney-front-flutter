@@ -16,7 +16,7 @@ class AccountMap extends StatelessWidget {
         if (state.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
-        if (state.listRoots.isEmpty) {
+        if (state.listAll.isEmpty) {
           return const Center(child: Text('계정과목이 없습니다'));
         }
 
@@ -36,7 +36,7 @@ class AccountMap extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Expanded(
-                child: ClusterMap(listAccounts: state.listRoots),
+                child: ClusterMap(listAccounts: state.listAll),
               ),
             ],
           ),
