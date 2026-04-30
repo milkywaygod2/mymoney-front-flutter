@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/interfaces/IAccountRepository.dart';
 import '../../features/account/presentation/AccountBloc.dart';
 import '../../features/account/presentation/AccountEvent.dart';
 import '../../features/account/presentation/AccountTreePage.dart';
@@ -11,7 +10,6 @@ import '../../features/home/presentation/HomePage.dart';
 import '../../features/journal/presentation/JournalPage.dart';
 import '../../features/report/presentation/DashboardPage.dart';
 import '../../features/report/presentation/ReportBloc.dart';
-import '../di/Injection.dart';
 
 /// 앱 라우터 — 4탭 셸 네비게이션
 class AppRouter {
@@ -40,11 +38,10 @@ class AppRouter {
           ),
           GoRoute(
             path: '/account',
-            builder: (context, state) => BlocProvider(
-              create: (ctx) =>
-                  AccountBloc(getIt<IAccountRepository>())..add(const AccountEvent.loadTree()),
-              child: const AccountTreePage(),
-            ),
+            builder: (context, state) {
+              context.read<AccountBloc>().add(const AccountEvent.loadTree());
+              return const AccountTreePage();
+            },
           ),
           GoRoute(
             path: '/more',
