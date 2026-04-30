@@ -1,68 +1,191 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../app/theme/AppColors.dart';
 import 'ReportBloc.dart';
+import 'RatioGrid.dart';
+import 'BSChart.dart';
+import 'PLChart.dart';
+import 'CFWaterfall.dart';
+import 'CETable.dart';
 
-/// 대시보드 페이지 — 순자산, 수입/지출 요약, 미확인 Draft 알림
-/// [CW_ARCHITECTURE.md 섹션 10.1] 홈 탭 화면
-/// 상세 UI는 후속 Wave에서 구현
-class DashboardPage extends StatelessWidget {
+/// 대시보드 페이지 — 재무비율 + B/S + P/L + CF + CE 통합 보기
+/// Wave U6 재작성 (기존 순자산 요약 카드 페이지를 풀 대시보드로 확장)
+class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
+
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  /// 기간 비교 토글 — MOM / QOQ / YOY
+  String _comparisonType = 'mom';
+
+  static const _kComparisonLabels = {
+    'mom': '전월',
+    'qoq': '전분기',
+    'yoy': '전년동기',
+  };
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('대시보드')),
+      appBar: AppBar(
+        title: const Text('재무 대시보드'),
+        actions: [
+          _ComparisonToggle(
+            selected: _comparisonType,
+            labels: _kComparisonLabels,
+            onChanged: (v) => setState(() => _comparisonType = v),
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: '새로고침',
+            onPressed: _onRefresh,
+          ),
+        ],
+      ),
       body: BlocBuilder<ReportBloc, ReportState>(
         builder: (context, state) {
           if (state.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
           if (state.errorMessage != null) {
-            return Center(
-              child: Text(
-                state.errorMessage!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
+            return _ErrorView(
+              message: state.errorMessage!,
+              onRetry: _onRefresh,
             );
           }
           if (state.dashboard == null) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('데이터를 불러오는 중...'),
-                  const SizedBox(height: 16),
-                  FilledButton(
-                    onPressed: () =>
-                        context.read<ReportBloc>().add(const LoadDashboard()),
-                    child: const Text('새로고침'),
-                  ),
-                ],
-              ),
-            );
+            return _EmptyView(onLoad: _onRefresh);
           }
 
-          final d = state.dashboard!;
-          return ListView(
-            padding: const EdgeInsets.all(16),
+          return RefreshIndicator(
+            onRefresh: () async => _onRefresh(),
+            child: ListView(
+              children: [
+                // 1. 요약 헤더 (순자산 + 수입/지출)
+                _SummaryHeader(
+                  comparisonType: _comparisonType,
+                ),
+                const Divider(height: 1),
+
+                // 2. 재무비율 그리드 (29종)
+                const RatioGrid(),
+                const Divider(height: 1),
+
+                // 3. B/S 차트
+                const BSChart(),
+                const Divider(height: 1),
+
+                // 4. P/L 차트
+                const PLChart(),
+                const Divider(height: 1),
+
+                // 5. CF 폭포 차트
+                const CFWaterfall(),
+                const Divider(height: 1),
+
+                // 6. 자본변동표
+                const CETable(),
+                const SizedBox(height: 32),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _onRefresh() {
+    final bloc = context.read<ReportBloc>();
+    bloc.add(const LoadDashboard());
+    if (bloc.state.activePeriodId != null) {
+      final pid = bloc.state.activePeriodId!;
+      final now = DateTime.now();
+      bloc.add(LoadFinancialRatios(periodId: pid, asOfDate: now));
+      bloc.add(LoadBalanceSheet(snapshotDate: now));
+      bloc.add(LoadIncomeStatement(periodId: pid));
+      bloc.add(LoadComprehensiveIncome(periodId: pid));
+      bloc.add(LoadPeriodComparisons(asOfDate: now, currentPeriodId: pid));
+    }
+  }
+}
+
+/// 기간 비교 유형 토글 위젯
+class _ComparisonToggle extends StatelessWidget {
+  const _ComparisonToggle({
+    required this.selected,
+    required this.labels,
+    required this.onChanged,
+  });
+
+  final String selected;
+  final Map<String, String> labels;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      child: SegmentedButton<String>(
+        segments: labels.entries
+            .map(
+              (e) => ButtonSegment<String>(
+                value: e.key,
+                label: Text(e.value, style: const TextStyle(fontSize: 11)),
+              ),
+            )
+            .toList(),
+        selected: {selected},
+        onSelectionChanged: (s) => onChanged(s.first),
+        style: ButtonStyle(
+          visualDensity: VisualDensity.compact,
+          padding: WidgetStateProperty.all(
+            const EdgeInsets.symmetric(horizontal: 4),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 요약 헤더 — 순자산 + 수입/지출 + 기간 비교 증감
+class _SummaryHeader extends StatelessWidget {
+  const _SummaryHeader({required this.comparisonType});
+  final String comparisonType;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ReportBloc, ReportState>(
+      builder: (context, state) {
+        final d = state.dashboard;
+        if (d == null) return const SizedBox.shrink();
+
+        // 기간 비교 데이터 (있으면 표시)
+        final mapComp = state.mapPeriodComparisons;
+
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 순자산 카드 + 전월 대비
+              // 순자산 카드
               _SummaryCard(
                 label: '순자산',
                 amount: d.netAssets,
-                color: Theme.of(context).colorScheme.primary,
-                changeRatio: d.netAssetsChangeRatio,
+                color: AppColors.darkPrimary,
+                changeRatio: _extractChangeRatio(mapComp, comparisonType),
               ),
               const SizedBox(height: 12),
-              // 수입/지출 행
               Row(
                 children: [
                   Expanded(
                     child: _SummaryCard(
                       label: '수입',
                       amount: d.totalRevenue,
-                      color: Colors.green,
+                      color: AppColors.natureAsset,
                       changeRatio: d.revenueChangeRatio,
                     ),
                   ),
@@ -71,34 +194,48 @@ class DashboardPage extends StatelessWidget {
                     child: _SummaryCard(
                       label: '지출',
                       amount: d.totalExpense,
-                      color: Colors.red,
+                      color: AppColors.natureExpense,
                       changeRatio: d.expenseChangeRatio,
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
-              // 당기순이익
               _SummaryCard(
                 label: d.netIncome >= 0 ? '당기순이익' : '당기순손실',
                 amount: d.netIncome.abs(),
-                color: d.netIncome >= 0 ? Colors.teal : Colors.orange,
+                color: d.netIncome >= 0
+                    ? AppColors.stateSuccess
+                    : AppColors.stateError,
               ),
               const SizedBox(height: 8),
-              Text(
-                '기준일: ${_formatDate(d.snapshotDate)}',
-                textAlign: TextAlign.right,
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (d.pendingDraftCount > 0)
+                    _DraftBanner(count: d.pendingDraftCount),
+                  const Spacer(),
+                  Text(
+                    '기준일: ${_fmtDate(d.snapshotDate)}',
+                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                  ),
+                ],
               ),
-              // TODO: 미확인 Draft 알림 배너 (JournalBloc 연동 후 구현)
             ],
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
-  String _formatDate(DateTime dt) =>
+  int? _extractChangeRatio(
+    Map<String, dynamic>? mapComp,
+    String comparisonType,
+  ) {
+    return null; // PeriodComparison 연동 후 순자산 path 추출 구현
+  }
+
+  String _fmtDate(DateTime dt) =>
       '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
 }
 
@@ -113,7 +250,6 @@ class _SummaryCard extends StatelessWidget {
   final String label;
   final int amount;
   final Color color;
-  /// 전월 대비 변동율 (배율 10000, 예: 525 = +5.25%). null이면 미표시.
   final int? changeRatio;
 
   @override
@@ -127,14 +263,16 @@ class _SummaryCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(label,
-                    style: TextStyle(color: color, fontWeight: FontWeight.w600)),
-                if (changeRatio != null) _buildChangeChip(),
+                Text(
+                  label,
+                  style: TextStyle(color: color, fontWeight: FontWeight.w600),
+                ),
+                if (changeRatio != null) _ChangeChip(ratio: changeRatio!),
               ],
             ),
             const SizedBox(height: 4),
             Text(
-              '₩${_formatAmount(amount)}',
+              '₩${_fmtAmount(amount)}',
               style: Theme.of(context)
                   .textTheme
                   .headlineSmall
@@ -146,9 +284,23 @@ class _SummaryCard extends StatelessWidget {
     );
   }
 
-  /// 전월 대비 ±% 칩 위젯
-  Widget _buildChangeChip() {
-    final ratio = changeRatio!;
+  String _fmtAmount(int v) {
+    final s = v.toString();
+    final buf = StringBuffer();
+    for (var i = 0; i < s.length; i++) {
+      if (i > 0 && (s.length - i) % 3 == 0) buf.write(',');
+      buf.write(s[i]);
+    }
+    return buf.toString();
+  }
+}
+
+class _ChangeChip extends StatelessWidget {
+  const _ChangeChip({required this.ratio});
+  final int ratio;
+
+  @override
+  Widget build(BuildContext context) {
     final isPositive = ratio >= 0;
     final pct = (ratio / 100).toStringAsFixed(1);
     final sign = isPositive ? '+' : '';
@@ -156,8 +308,8 @@ class _SummaryCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: isPositive
-            ? Colors.green.withValues(alpha: 0.1)
-            : Colors.red.withValues(alpha: 0.1),
+            ? AppColors.natureAsset.withValues(alpha: 0.1)
+            : AppColors.natureExpense.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
@@ -165,19 +317,92 @@ class _SummaryCard extends StatelessWidget {
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: isPositive ? Colors.green : Colors.red,
+          color: isPositive ? AppColors.natureAsset : AppColors.natureExpense,
         ),
       ),
     );
   }
+}
 
-  String _formatAmount(int amount) {
-    final str = amount.toString();
-    final buffer = StringBuffer();
-    for (var i = 0; i < str.length; i++) {
-      if (i > 0 && (str.length - i) % 3 == 0) buffer.write(',');
-      buffer.write(str[i]);
-    }
-    return buffer.toString();
+/// 미확인 Draft 알림 배너
+class _DraftBanner extends StatelessWidget {
+  const _DraftBanner({required this.count});
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.amber.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.pending_actions, size: 14, color: Colors.amber),
+          const SizedBox(width: 4),
+          Text(
+            '미확인 Draft $count건',
+            style: const TextStyle(fontSize: 11, color: Colors.amber),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ErrorView extends StatelessWidget {
+  const _ErrorView({required this.message, required this.onRetry});
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 48,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+            const SizedBox(height: 16),
+            FilledButton(onPressed: onRetry, child: const Text('재시도')),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyView extends StatelessWidget {
+  const _EmptyView({required this.onLoad});
+  final VoidCallback onLoad;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.bar_chart, size: 64, color: Colors.grey),
+          const SizedBox(height: 12),
+          const Text('데이터를 불러오는 중...'),
+          const SizedBox(height: 16),
+          FilledButton(onPressed: onLoad, child: const Text('새로고침')),
+        ],
+      ),
+    );
   }
 }

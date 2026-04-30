@@ -1,67 +1,78 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../app/theme/AppColors.dart';
-import '../../../core/domain/Account.dart';
 import '../../../core/constants/Enums.dart';
 import 'AccountBloc.dart';
 import 'AccountEvent.dart';
-import 'AccountState.dart';
+import 'AccountBrowse.dart';
+import 'AccountMap.dart';
+import 'AccountConfig.dart';
+import 'widgets/ModeToggle.dart';
 
-/// Nature별 색상 매핑 — AppColors 토큰 기준
-Color _natureColor(AccountNature nature) {
-  return switch (nature) {
-    AccountNature.asset => AppColors.natureAsset,
-    AccountNature.liability => AppColors.natureLiability,
-    AccountNature.equity => AppColors.equitySoft,
-    AccountNature.revenue => AppColors.revenueDeep,
-    AccountNature.expense => AppColors.natureExpense,
-  };
+/// 계정과목 트리 페이지 — 조회/지도/설정 3모드 토글
+/// Wave U5 재작성
+class AccountTreePage extends StatefulWidget {
+  const AccountTreePage({super.key});
+
+  @override
+  State<AccountTreePage> createState() => _AccountTreePageState();
 }
 
-/// 계정과목 트리 페이지 — 펼치기/접기, nature 색상 표시
-class AccountTreePage extends StatelessWidget {
-  const AccountTreePage({super.key});
+class _AccountTreePageState extends State<AccountTreePage> {
+  AccountViewMode _mode = AccountViewMode.browse;
+
+  @override
+  void initState() {
+    super.initState();
+    // 트리 초기 로딩
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AccountBloc>().add(const AccountEvent.loadTree());
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('계정과목 관리'),
+        title: const Text('계정과목'),
         actions: [
+          if (_mode == AccountViewMode.browse) ...[
+            IconButton(
+              icon: const Icon(Icons.search),
+              tooltip: '검색',
+              onPressed: () => _showSearchDialog(context),
+            ),
+          ],
           IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () => _showSearchDialog(context),
+            icon: const Icon(Icons.add),
+            tooltip: '계정 추가',
+            onPressed: () => _showAddAccountSheet(context),
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: ModeToggle(
+              selected: _mode,
+              onChanged: (mode) => setState(() => _mode = mode),
+            ),
+          ),
+        ),
       ),
-      body: BlocBuilder<AccountBloc, AccountState>(
-        builder: (context, state) {
-          if (state.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (state.errorMessage != null) {
-            return Center(child: Text('오류: ${state.errorMessage}'));
-          }
-          if (state.listRoots.isEmpty) {
-            return const Center(child: Text('계정과목이 없습니다'));
-          }
-          return ListView.builder(
-            itemCount: state.listRoots.length,
-            itemBuilder: (context, index) {
-              return _AccountTreeTile(
-                account: state.listRoots[index],
-                depth: 0,
-              );
-            },
-          );
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 200),
+        child: switch (_mode) {
+          AccountViewMode.browse => const AccountBrowse(key: ValueKey('browse')),
+          AccountViewMode.map => const AccountMap(key: ValueKey('map')),
+          AccountViewMode.config => const AccountConfig(key: ValueKey('config')),
         },
       ),
     );
   }
 
   void _showSearchDialog(BuildContext context) {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
@@ -70,6 +81,7 @@ class AccountTreePage extends StatelessWidget {
             autofocus: true,
             decoration: const InputDecoration(
               hintText: '계정명 입력...',
+              prefixIcon: Icon(Icons.search),
             ),
             onChanged: (query) {
               context.read<AccountBloc>().add(
@@ -79,7 +91,13 @@ class AccountTreePage extends StatelessWidget {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
+              onPressed: () {
+                // 검색 결과 초기화 후 닫기
+                context.read<AccountBloc>().add(
+                      const AccountEvent.searchAccounts(query: ''),
+                    );
+                Navigator.of(dialogContext).pop();
+              },
               child: const Text('닫기'),
             ),
           ],
@@ -87,104 +105,107 @@ class AccountTreePage extends StatelessWidget {
       },
     );
   }
+
+  void _showAddAccountSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => const _AddAccountSheet(),
+    );
+  }
 }
 
-/// 트리 노드 타일 — 들여쓰기 + nature 색상 점 + 펼치기/접기 아이콘
-class _AccountTreeTile extends StatelessWidget {
-  const _AccountTreeTile({
-    required this.account,
-    required this.depth,
-  });
+/// 계정과목 추가 BottomSheet
+class _AddAccountSheet extends StatefulWidget {
+  const _AddAccountSheet();
 
-  final Account account;
-  final int depth;
+  @override
+  State<_AddAccountSheet> createState() => _AddAccountSheetState();
+}
+
+class _AddAccountSheetState extends State<_AddAccountSheet> {
+  final _nameController = TextEditingController();
+  AccountNature _nature = AccountNature.asset;
+
+  static const _kNatureLabels = {
+    AccountNature.asset: '자산',
+    AccountNature.liability: '부채',
+    AccountNature.equity: '자본',
+    AccountNature.revenue: '수익',
+    AccountNature.expense: '비용',
+  };
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AccountBloc, AccountState>(
-      builder: (context, state) {
-        final bool isExpanded = state.setExpandedIds.contains(account.id);
-        // 하위 계정이 있는지 판단 — path 기반 (구현 시 children 목록 필요, 현재는 확장 아이콘만)
-        final bool hasChildren = account.equityTypePath.isNotEmpty;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            InkWell(
-              onTap: () {
-                // 펼치기/접기 토글
-                if (isExpanded) {
-                  context.read<AccountBloc>().add(
-                        AccountEvent.collapseNode(id: account.id),
-                      );
-                } else {
-                  context.read<AccountBloc>().add(
-                        AccountEvent.expandNode(id: account.id),
-                      );
-                }
-              },
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: 16.0 + (depth * 24.0),
-                  top: 12.0,
-                  bottom: 12.0,
-                  right: 16.0,
-                ),
-                child: Row(
-                  children: [
-                    // 펼치기/접기 아이콘
-                    if (hasChildren)
-                      Icon(
-                        isExpanded
-                            ? Icons.expand_more
-                            : Icons.chevron_right,
-                        size: 20,
-                        color: AppColors.darkFg3,
-                      )
-                    else
-                      const SizedBox(width: 20),
-                    const SizedBox(width: 8),
-                    // Nature 색상 점
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: _natureColor(account.nature),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    // 계정명
-                    Expanded(
-                      child: Text(
-                        account.name,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: depth == 0
-                              ? FontWeight.w600
-                              : FontWeight.normal,
-                        ),
-                      ),
-                    ),
-                    // 비활성 표시
-                    if (!account.isActive)
-                      const Chip(
-                        label: Text(
-                          '비활성',
-                          style: TextStyle(fontSize: 10),
-                        ),
-                        padding: EdgeInsets.zero,
-                        visualDensity: VisualDensity.compact,
-                      ),
-                  ],
-                ),
-              ),
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 16,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '계정과목 추가',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _nameController,
+            autofocus: true,
+            decoration: const InputDecoration(
+              labelText: '계정명',
+              border: OutlineInputBorder(),
             ),
-            // 구분선
-            const Divider(height: 1, indent: 16),
-          ],
-        );
-      },
+          ),
+          const SizedBox(height: 12),
+          const Text('계정 성격', style: TextStyle(fontSize: 13)),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            children: AccountNature.values.map((nature) {
+              return ChoiceChip(
+                label: Text(_kNatureLabels[nature]!),
+                selected: _nature == nature,
+                onSelected: (_) => setState(() => _nature = nature),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            '※ 분류 경로(Path) 등 상세 설정은 추후 지원 예정',
+            style: TextStyle(fontSize: 11, color: Colors.grey),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: _nameController.text.trim().isEmpty ? null : _onSave,
+              child: const Text('저장'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _onSave() {
+    // TODO: 실제 CreateAccount 이벤트 연동 (equityTypeId 등 필수값 확보 후)
+    Navigator.of(context).pop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('계정과목 추가 기능은 분류 경로 설정 후 활성화됩니다'),
+        duration: Duration(seconds: 2),
+      ),
     );
   }
 }
