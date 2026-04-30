@@ -237,7 +237,10 @@ Future<void> configureDependencies() async {
     ),
   );
   getIt.registerSingleton<AccountBloc>(
-    AccountBloc(getIt<IAccountRepository>()),
+    AccountBloc(
+      repository: getIt<IAccountRepository>(),
+      transactionRepository: getIt<ITransactionRepository>(),
+    ),
   );
   getIt.registerSingleton<PerspectiveBloc>(
     PerspectiveBloc(repository: getIt<IPerspectiveRepository>()),
