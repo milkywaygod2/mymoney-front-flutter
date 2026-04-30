@@ -9,8 +9,15 @@ import 'AccountState.dart';
 import 'widgets/TreeRow.dart';
 
 /// 조회 모드 — 들여쓰기 트리 + 메타포 + 사용량
-class AccountBrowse extends StatelessWidget {
+class AccountBrowse extends StatefulWidget {
   const AccountBrowse({super.key});
+
+  @override
+  State<AccountBrowse> createState() => _AccountBrowseState();
+}
+
+class _AccountBrowseState extends State<AccountBrowse> {
+  String _searchQuery = '';
 
   @override
   Widget build(BuildContext context) {
@@ -43,15 +50,42 @@ class AccountBrowse extends StatelessWidget {
           );
         }
 
-        final searchResults = state.listSearchResults;
-        if (searchResults.isNotEmpty) {
-          return _SearchResultList(results: searchResults);
-        }
-
-        return _AccountTree(
-          roots: state.listRoots,
-          allAccounts: state.listAll,
-          mapBalances: state.mapBalances,
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: '계정명 검색',
+                  prefixIcon: const Icon(Icons.search, size: 18),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, size: 18),
+                          onPressed: () => setState(() => _searchQuery = ''),
+                        )
+                      : null,
+                  isDense: true,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                ),
+                onChanged: (v) => setState(() => _searchQuery = v.trim().toLowerCase()),
+              ),
+            ),
+            Expanded(
+              child: _searchQuery.isNotEmpty
+                  ? _LocalSearchList(
+                      results: state.listAll
+                          .where((a) => a.name.toLowerCase().contains(_searchQuery))
+                          .toList(),
+                      query: _searchQuery,
+                    )
+                  : _AccountTree(
+                      roots: state.listRoots,
+                      allAccounts: state.listAll,
+                      mapBalances: state.mapBalances,
+                    ),
+            ),
+          ],
         );
       },
     );
@@ -86,12 +120,21 @@ class _AccountTree extends StatelessWidget {
   }
 }
 
-class _SearchResultList extends StatelessWidget {
-  const _SearchResultList({required this.results});
+class _LocalSearchList extends StatelessWidget {
+  const _LocalSearchList({required this.results, required this.query});
   final List<Account> results;
+  final String query;
 
   @override
   Widget build(BuildContext context) {
+    if (results.isEmpty) {
+      return Center(
+        child: Text(
+          "'$query' 검색 결과 없음",
+          style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
+        ),
+      );
+    }
     return ListView.separated(
       itemCount: results.length,
       separatorBuilder: (_, __) => const Divider(height: 1),
