@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../entry/presentation/EntryPage.dart';
+import '../../report/presentation/ReportBloc.dart';
 import 'HomeBloc.dart';
 import 'HomeV1.dart';
 import 'HomeV2.dart';
@@ -29,6 +30,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
     _fadeAnim = CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut);
     _fadeController.forward();
+    context.read<ReportBloc>().add(const LoadDashboard());
     context.read<HomeBloc>().add(const LoadHome());
   }
 

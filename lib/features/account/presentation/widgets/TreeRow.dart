@@ -4,25 +4,38 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../app/theme/AppColors.dart';
 import '../../../../core/domain/Account.dart';
 import '../../../../core/constants/Enums.dart';
+import '../../../../core/models/TypedId.dart';
 import '../AccountBloc.dart';
 import '../AccountEvent.dart';
 import '../AccountState.dart';
 import 'MetaphorIcon.dart';
 
-/// 계정과목 트리 행 — 들여쓰기 + 메타포 아이콘 + 사용량 표시
+/// 계정과목 트리 행 — 들여쓰기 + 메타포 아이콘 + 잔액 표시 (재귀 렌더링)
 class TreeRow extends StatelessWidget {
   const TreeRow({
     super.key,
     required this.account,
     required this.depth,
-    required this.children,
+    required this.allAccounts,
+    required this.mapBalances,
     this.balance,
   });
 
   final Account account;
   final int depth;
-  final List<Account> children;
+  final List<Account> allAccounts;
+  final Map<AccountId, int> mapBalances;
   final int? balance;
+
+  List<Account> get _children {
+    final parentPath = account.equityTypePath;
+    return allAccounts.where((a) {
+      final path = a.equityTypePath;
+      if (!path.startsWith('$parentPath.')) return false;
+      final suffix = path.substring(parentPath.length + 1);
+      return !suffix.contains('.');
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +44,7 @@ class TreeRow extends StatelessWidget {
           prev.setExpandedIds != curr.setExpandedIds,
       builder: (context, state) {
         final isExpanded = state.setExpandedIds.contains(account.id);
+        final children = _children;
         final hasChildren = children.isNotEmpty;
 
         return Column(
@@ -108,13 +122,15 @@ class TreeRow extends StatelessWidget {
                 ),
               ),
             ),
-            // 자식 행 (펼쳐진 경우)
+            // 자식 행 (펼쳐진 경우) — 재귀 렌더링
             if (isExpanded && hasChildren)
               ...children.map(
                 (child) => TreeRow(
                   account: child,
                   depth: depth + 1,
-                  children: const [], // 2단계 이하 자식은 AccountBrowse에서 주입
+                  allAccounts: allAccounts,
+                  mapBalances: mapBalances,
+                  balance: mapBalances[child.id],
                 ),
               ),
             if (depth == 0) const Divider(height: 1),

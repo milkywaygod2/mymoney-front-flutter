@@ -31,28 +31,25 @@ class AccountBrowse extends StatelessWidget {
           return _SearchResultList(results: searchResults);
         }
 
-        return _AccountTree(roots: state.listRoots, mapBalances: state.mapBalances);
+        return _AccountTree(
+          roots: state.listRoots,
+          allAccounts: state.listAll,
+          mapBalances: state.mapBalances,
+        );
       },
     );
   }
 }
 
 class _AccountTree extends StatelessWidget {
-  const _AccountTree({required this.roots, required this.mapBalances});
+  const _AccountTree({
+    required this.roots,
+    required this.allAccounts,
+    required this.mapBalances,
+  });
   final List<Account> roots;
+  final List<Account> allAccounts;
   final Map<AccountId, int> mapBalances;
-
-  /// equityTypePath 기반 1단계 자식 추출
-  List<Account> _childrenOf(Account parent, List<Account> allRoots) {
-    final parentPath = parent.equityTypePath;
-    return allRoots.where((a) {
-      final path = a.equityTypePath;
-      if (!path.startsWith('$parentPath.')) return false;
-      // 직접 자식만 (depth +1)
-      final suffix = path.substring(parentPath.length + 1);
-      return !suffix.contains('.');
-    }).toList();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +60,8 @@ class _AccountTree extends StatelessWidget {
         return TreeRow(
           account: root,
           depth: 0,
-          children: _childrenOf(root, roots),
+          allAccounts: allAccounts,
+          mapBalances: mapBalances,
           balance: mapBalances[root.id],
         );
       },
