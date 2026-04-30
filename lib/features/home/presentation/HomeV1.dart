@@ -24,7 +24,7 @@ class HomeV1 extends StatelessWidget {
           _GreetingRow(),
           const SizedBox(height: 16),
           // 순자산 카드
-          NetWorthCard(netWorth: vm.netWorth, spark7d: vm.spark7d),
+          NetWorthCard(netWorth: vm.netWorth, spark7d: vm.spark7d, periodLabel: vm.periodLabel),
           const SizedBox(height: 12),
           // 3분할
           ThreeUpStats(

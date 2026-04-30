@@ -22,6 +22,7 @@ class HomeViewModel {
     required this.equity,
     required this.revenue,
     required this.expense,
+    required this.periodLabel,
     this.listPendingExpenses = const [],
     this.listPendingAssets = const [],
     this.listPendingRevenues = const [],
@@ -34,6 +35,7 @@ class HomeViewModel {
   final int equity;
   final int revenue;
   final int expense;
+  final String periodLabel;
   final List<PendingItem> listPendingExpenses;
   final List<PendingItem> listPendingAssets;
   final List<PendingItem> listPendingRevenues;
@@ -46,6 +48,7 @@ class HomeViewModel {
     equity: 0,
     revenue: 0,
     expense: 0,
+    periodLabel: '',
   );
 }
 
@@ -162,6 +165,9 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     final int liabilities = bs?.totalLiabilities ?? 0;
     final int equity = bs?.totalEquity ?? 0;
 
+    final now = DateTime.now();
+    final periodLabel = '${now.year}년 ${now.month}월';
+
     return HomeViewModel(
       netWorth: dashboard.netAssets,
       spark7d: spark7d,
@@ -170,6 +176,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       equity: equity,
       revenue: dashboard.totalRevenue,
       expense: dashboard.totalExpense,
+      periodLabel: periodLabel,
     );
   }
 }

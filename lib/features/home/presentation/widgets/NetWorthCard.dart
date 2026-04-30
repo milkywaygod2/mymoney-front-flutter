@@ -9,10 +9,12 @@ class NetWorthCard extends StatelessWidget {
     super.key,
     required this.netWorth,
     required this.spark7d,
+    required this.periodLabel,
   });
 
   final int netWorth;
   final List<int> spark7d;
+  final String periodLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -76,6 +78,16 @@ class NetWorthCard extends StatelessWidget {
             height: 44,
             strokeWidth: 2.0,
           ),
+          if (periodLabel.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              periodLabel,
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.grey.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
         ],
       ),
     );
