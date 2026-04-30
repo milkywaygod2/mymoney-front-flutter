@@ -69,13 +69,7 @@ class _FlowCard extends StatelessWidget {
     final debits = tx.listLines.where((l) => l.entryType == EntryType.debit).toList();
     final credits = tx.listLines.where((l) => l.entryType == EntryType.credit).toList();
 
-    // FROM = credit 계정, TO = debit 계정
-    final fromLine = credits.isNotEmpty ? credits.first : null;
-    final toLine = debits.isNotEmpty ? debits.first : null;
-
-    final fromInfo = fromLine != null ? accountMap[fromLine.accountId.value] : null;
-    final toInfo = toLine != null ? accountMap[toLine.accountId.value] : null;
-
+    // FROM = credit 계정들, TO = debit 계정들 (다중 지원)
     final totalAmt = debits.fold<int>(0, (s, l) => s + l.baseAmount);
 
     return Container(
@@ -113,29 +107,42 @@ class _FlowCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          // FROM → TO 흐름
+          // FROM → TO 흐름 (다중 노드)
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
-                child: fromLine != null
-                    ? FlowNode(
-                        accountName: fromInfo?.name ?? '계정 ${fromLine.accountId.value}',
-                        kind: fromInfo?.kind ?? 'asset',
+                child: Column(
+                  children: credits.map((l) {
+                    final info = accountMap[l.accountId.value];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: FlowNode(
+                        accountName: info?.name ?? '?',
+                        kind: info?.kind ?? 'asset',
                         icon: '🌳',
                         side: 'from',
-                      )
-                    : const SizedBox(),
+                      ),
+                    );
+                  }).toList(),
+                ),
               ),
               const FlowArrow(),
               Expanded(
-                child: toLine != null
-                    ? FlowNode(
-                        accountName: toInfo?.name ?? '계정 ${toLine.accountId.value}',
-                        kind: toInfo?.kind ?? 'expense',
+                child: Column(
+                  children: debits.map((l) {
+                    final info = accountMap[l.accountId.value];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: FlowNode(
+                        accountName: info?.name ?? '?',
+                        kind: info?.kind ?? 'expense',
                         icon: '🍎',
                         side: 'to',
-                      )
-                    : const SizedBox(),
+                      ),
+                    );
+                  }).toList(),
+                ),
               ),
             ],
           ),
