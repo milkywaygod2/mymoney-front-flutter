@@ -62,8 +62,7 @@ class HomeV3 extends StatelessWidget {
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
                         '순증가 · 자본에 쌓이는 양',
@@ -74,15 +73,7 @@ class HomeV3 extends StatelessWidget {
                           letterSpacing: 0.05 * 11,
                         ),
                       ),
-                      Text(
-                        '${vm.revenue >= vm.expense ? '+' : '−'}₩${_fmtCompact((vm.revenue - vm.expense).abs())}',
-                        style: const TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.natureAsset,
-                        ),
-                      ),
+                      _NetIncomeChip(revenue: vm.revenue, expense: vm.expense),
                     ],
                   ),
                 ),
@@ -134,9 +125,51 @@ class HomeV3 extends StatelessWidget {
     );
   }
 
+}
+
+class _NetIncomeChip extends StatelessWidget {
+  const _NetIncomeChip({required this.revenue, required this.expense});
+  final int revenue;
+  final int expense;
+
+  @override
+  Widget build(BuildContext context) {
+    final net = revenue - expense;
+    final isProfit = net >= 0;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: (isProfit ? AppColors.stateSuccess : AppColors.stateError).withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: (isProfit ? AppColors.stateSuccess : AppColors.stateError).withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isProfit ? Icons.trending_up : Icons.trending_down,
+            size: 14,
+            color: isProfit ? AppColors.stateSuccess : AppColors.stateError,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            '${isProfit ? "+" : ""}₩${_fmtCompact(net.abs())} ${isProfit ? "흑자" : "적자"}',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: isProfit ? AppColors.stateSuccess : AppColors.stateError,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   String _fmtCompact(int v) {
     if (v >= 100000000) return '${(v / 100000000).toStringAsFixed(1)}억';
     if (v >= 10000) return '${(v / 10000).toStringAsFixed(0)}만';
-    return v.toString();
+    return '₩$v';
   }
 }
