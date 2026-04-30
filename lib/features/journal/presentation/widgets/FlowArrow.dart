@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// V3 그래디언트 화살표
+import '../../../../../app/theme/AppColors.dart';
+
+/// V3 그래디언트 화살표 — 베지어 곡선 + 차변→대변 그라디언트
 class FlowArrow extends StatelessWidget {
   const FlowArrow({super.key});
 
@@ -8,51 +10,52 @@ class FlowArrow extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: 40,
-      height: 24,
+      height: 32,
       child: CustomPaint(painter: _FlowArrowPainter()),
     );
   }
 }
 
 class _FlowArrowPainter extends CustomPainter {
+  static const _colorFrom = AppColors.natureAsset;
+  static const _colorTo = AppColors.equitySoft;
+
   @override
   void paint(Canvas canvas, Size size) {
-    // 점선 화살대
-    final dashPaint = Paint()
+    final cy = size.height / 2;
+    final startX = 4.0;
+    final endX = size.width - 8.0;
+
+    // 베지어 곡선 경로 (완만한 S자 흐름)
+    final curvePath = Path()
+      ..moveTo(startX, cy)
+      ..cubicTo(startX + (endX - startX) * 0.35, cy - 6, startX + (endX - startX) * 0.65, cy + 6, endX, cy);
+
+    // 그라디언트 stroke
+    final rect = Rect.fromLTWH(startX, 0, endX - startX, size.height);
+    final curvePaint = Paint()
       ..strokeWidth = 2.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..shader = const LinearGradient(
-        colors: [Color(0x66BAE6FD), Color(0xF27DD3FC)],
-      ).createShader(Rect.fromLTWH(0, 0, size.width * 0.7, size.height));
+        colors: [_colorFrom, _colorTo],
+      ).createShader(rect);
 
-    const dashLen = 3.0;
-    const gapLen = 3.0;
-    final total = size.width * 0.65;
-    var x = 2.0;
-    while (x < total) {
-      final end = (x + dashLen).clamp(0.0, total);
-      canvas.drawLine(
-        Offset(x, size.height / 2),
-        Offset(end, size.height / 2),
-        dashPaint,
-      );
-      x += dashLen + gapLen;
-    }
+    canvas.drawPath(curvePath, curvePaint);
 
     // 화살머리
     final arrowPaint = Paint()
-      ..color = const Color(0xFF7DD3FC)
+      ..color = _colorTo
       ..strokeWidth = 2.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
-    final path = Path()
-      ..moveTo(size.width * 0.75, size.height * 0.25)
-      ..lineTo(size.width * 0.95, size.height / 2)
-      ..lineTo(size.width * 0.75, size.height * 0.75);
-    canvas.drawPath(path, arrowPaint);
+    final arrowPath = Path()
+      ..moveTo(endX - 6, cy - 5)
+      ..lineTo(endX, cy)
+      ..lineTo(endX - 6, cy + 5);
+    canvas.drawPath(arrowPath, arrowPaint);
   }
 
   @override

@@ -46,6 +46,14 @@ class _TreeHero extends StatelessWidget {
   const _TreeHero({required this.netWorth});
   final int netWorth;
 
+  // 순자산 1억 = growthRatio 0.5, 10억 = 1.0 기준 (log 스케일)
+  static double _growthRatio(int netWorth) {
+    if (netWorth <= 0) return 0.1;
+    const ref = 1000000000.0; // 10억 기준
+    final r = (netWorth / ref).clamp(0.0, 1.0);
+    return (0.15 + r * 0.85).clamp(0.15, 1.0);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -62,7 +70,7 @@ class _TreeHero extends StatelessWidget {
       ),
       child: Row(
         children: [
-          GrowthTree(growthRatio: 0.85, size: 80),
+          GrowthTree(growthRatio: _growthRatio(netWorth), size: 80),
           const SizedBox(width: 20),
           Expanded(
             child: Column(
