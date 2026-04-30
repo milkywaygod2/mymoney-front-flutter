@@ -107,11 +107,13 @@ class TransactionRepository implements ITransactionRepository {
     int? limit,
     int? offset,
   }) async {
-    // TODO: Perspective 필터 적용 (Wave 6)
-    if (from != null && to != null) {
-      return findByDateRange(from, to);
-    }
-    return [];
+    final listResults = await _dao.findByPerspective(
+      perspective,
+      from: from,
+      to: to,
+      limit: limit,
+    );
+    return listResults.map(_toDomain).toList();
   }
 
   @override

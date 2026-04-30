@@ -301,7 +301,7 @@ void _connectBlocStreams() {
   perspectiveBloc.stream.listen((state) {
     if (state.effectivePerspective != null) {
       // 1. Perspective 변경 → 거래 리필터링
-      journalBloc.add(const LoadTransactions());
+      journalBloc.add(LoadTransactions(perspective: state.effectivePerspective));
       // 2. Perspective 변경 → 보고서 갱신
       reportBloc.add(LoadDashboard(perspective: state.effectivePerspective));
       // 3. Perspective 변경 → 미판정 항목 갱신

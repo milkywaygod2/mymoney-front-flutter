@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
-import '../../../infrastructure/database/AppDatabase.dart';
+import '../../../core/domain/Perspective.dart';
+import '../../../infrastructure/database/AppDatabase.dart' hide Perspective;
 import '../../../infrastructure/database/tables/TransactionTable.dart';
 import '../../../infrastructure/database/tables/JournalEntryLineTable.dart';
 import '../../../infrastructure/database/tables/TagTable.dart';
@@ -167,6 +168,72 @@ class TransactionDao extends DatabaseAccessor<AppDatabase>
     }
 
     return mapBalances;
+  }
+
+  /// Perspective 필터 적용 거래 조회 (태그 + 차원 필터 + 날짜 범위)
+  Future<List<TransactionWithLines>> findByPerspective(
+    Perspective perspective, {
+    DateTime? from,
+    DateTime? to,
+    int? limit,
+  }) async {
+    // 태그 필터: listTagFilters가 있으면 해당 태그를 가진 txId만 허용
+    Set<int>? setTagTxIds;
+    if (perspective.listTagFilters.isNotEmpty) {
+      final listTagIds = perspective.listTagFilters.map((t) => t.value).toList();
+      final listTagRows = await (select(transactionTags)
+            ..where((tt) => tt.tagId.isIn(listTagIds)))
+          .get();
+      setTagTxIds = listTagRows.map((r) => r.transactionId).toSet();
+      if (setTagTxIds.isEmpty) return [];
+    }
+
+    // 차원 필터: mapDimensionFilters 'OWNER_ID' → ownerIdOverride IN
+    //           'ACTIVITY_TYPE' → activityTypeOverride IN
+    Set<int>? setDimTxIds;
+    final mapDim = perspective.mapDimensionFilters;
+    if (mapDim.isNotEmpty) {
+      final listOwnerIds = (mapDim['OWNER_ID'] ?? []).map((d) => d.value).toList();
+      final listActivityIds = (mapDim['ACTIVITY_TYPE'] ?? []).map((d) => d.value).toList();
+      if (listOwnerIds.isNotEmpty || listActivityIds.isNotEmpty) {
+        final jelQuery = select(journalEntryLines);
+        if (listOwnerIds.isNotEmpty && listActivityIds.isNotEmpty) {
+          jelQuery.where((jel) =>
+              jel.ownerIdOverride.isIn(listOwnerIds) |
+              jel.activityTypeOverride.isIn(listActivityIds));
+        } else if (listOwnerIds.isNotEmpty) {
+          jelQuery.where((jel) => jel.ownerIdOverride.isIn(listOwnerIds));
+        } else {
+          jelQuery.where((jel) => jel.activityTypeOverride.isIn(listActivityIds));
+        }
+        final listJelRows = await jelQuery.get();
+        setDimTxIds = listJelRows.map((j) => j.transactionId).toSet();
+        if (setDimTxIds.isEmpty) return [];
+      }
+    }
+
+    // 교집합: 태그 필터 ∩ 차원 필터
+    final setAllowedIds = _intersectSets(setTagTxIds, setDimTxIds);
+
+    final query = select(transactions)
+      ..orderBy([(t) => OrderingTerm.desc(t.date)]);
+
+    if (from != null) query.where((t) => t.date.isBiggerOrEqualValue(from));
+    if (to != null) query.where((t) => t.date.isSmallerOrEqualValue(to));
+    if (setAllowedIds != null) {
+      query.where((t) => t.id.isIn(setAllowedIds));
+    }
+    if (limit != null) query.limit(limit);
+
+    final listRows = await query.get();
+    return Future.wait(listRows.map(_buildTransactionWithLines));
+  }
+
+  Set<int>? _intersectSets(Set<int>? a, Set<int>? b) {
+    if (a == null && b == null) return null;
+    if (a == null) return b;
+    if (b == null) return a;
+    return a.intersection(b);
   }
 
   /// 외부 참조번호(카드승인번호 등)로 거래 조회 (v2.0)
