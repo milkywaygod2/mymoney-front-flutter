@@ -20,10 +20,10 @@ class EntryV2 extends StatelessWidget {
         return BlocBuilder<EntryBloc, EntryState>(
           builder: (context, state) {
             final creditName = accountState.listAll
-                .where((a) => a.id.value == state.creditAccountId)
+                .where((a) => a.id.value == state.creditAccountId?.value)
                 .firstOrNull?.name ?? '대변 계정 선택';
             final debitName = accountState.listAll
-                .where((a) => a.id.value == state.debitAccountId)
+                .where((a) => a.id.value == state.debitAccountId?.value)
                 .firstOrNull?.name ?? '차변 계정 선택';
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),

@@ -341,6 +341,14 @@ void _connectBlocStreams() {
       reportBloc.add(const LoadDashboard());
     }
   });
+
+  // 6. EntryBloc → JournalBloc (거래 저장 완료 → 거래 목록 갱신)
+  final entryBloc = getIt<EntryBloc>();
+  entryBloc.stream.listen((state) {
+    if (state.status == EntryStatus.done) {
+      journalBloc.add(LoadTransactions(perspective: perspectiveBloc.state.effectivePerspective));
+    }
+  });
 }
 
 /// DB 파일 경로 — getApplicationDocumentsDirectory() 기반
