@@ -76,7 +76,7 @@ class ComparePeriods {
   }
 
   /// 4종 비교를 한번에 (대시보드용)
-  /// 반환: comparisonType → List<PeriodComparison>
+  /// 반환: comparisonType → `List<PeriodComparison>`
   Future<Map<String, List<PeriodComparison>>> compareAllTypes({
     required DateTime asOfDate,
     required int currentPeriodId,

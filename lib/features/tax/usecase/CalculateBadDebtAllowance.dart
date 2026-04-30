@@ -1,4 +1,3 @@
-import '../../../core/constants/Enums.dart';
 import '../../../core/interfaces/ILegalParameterRepository.dart';
 import '../../../core/models/TypedId.dart';
 import '../../journal/data/TransactionDao.dart';
@@ -79,7 +78,7 @@ class CalculateBadDebtAllowance {
     required DateTime asOfDate,
   }) async {
     // 1. LegalParameter에서 설정율 한도 조회
-    final lpParam = await legalParameterRepository.findEffective(
+    await legalParameterRepository.findEffective(
       '대손충당금_설정율_한도',
       asOfDate,
     );
