@@ -1,16 +1,26 @@
 # 조직도 (CW_STATE_ORG)
 
 ## 현재 Phase
-Phase 7 (실행 완료 — W7R~W14 전부 완료. W15/W7-OCR 외부 의존 대기)
+Phase 7 (실행 중 — Wave U1 Design System 진행)
 
 ## 조직도
+
+### 백엔드 팀 (mymoney-impl — 외부 의존 대기)
 | 직급 | 이름 | 모델 | 상태 | 담당 영역 | 보고 대상 |
 |------|------|------|------|-----------|-----------|
 | 사용자 | (사용자) | - | 활성 | 최상급자 — 최종 승인 | - |
 | 주임급 | team-lead | Opus | 활성 | 총괄 — 의장 겸임, 리뷰/머지 | 사용자 |
-| 사원급 | Arjun-3 | Opus | 활성 | Counterparty+Tax+Classification+스키마(CT) | team-lead |
-| 사원급 | Grace-3 | Opus | 활성 | Report+비율+OCI+기간비교+스키마(FP) | team-lead |
-| 사원급 | Omar-3 | Opus | 활성 | CF+CE+결산훅+스냅샷+스키마(Acct) | team-lead |
+| 사원급 | Arjun-3 | Opus | 대기 | Counterparty+Tax+Classification (W15/OCR 블록) | team-lead |
+| 사원급 | Grace-3 | Opus | 대기 | Report+비율+OCI+기간비교 (W15/OCR 블록) | team-lead |
+| 사원급 | Omar-3 | Opus | 대기 | CF+CE+결산훅+스냅샷 (W15/OCR 블록) | team-lead |
+
+### UI 팀 (ui-impl — Wave U1~U6 진행 중)
+| 직급 | 이름 | 모델 | 상태 | 담당 영역 | 보고 대상 | 워크트리 |
+|------|------|------|------|-----------|-----------|----------|
+| 대리급(대행) | 메인 컨텍스트 | Sonnet | 활성 | UI 총괄 관리자 대행 — 감사/머지/배정 | 사용자 | 없음 |
+| 사원급 | Raj | Sonnet | 활성 | Wave U1 Design System | 메인 | wk-u1-raj |
+| 사원급 | Ken | Sonnet | 활성 | Wave U2 Home + Wave U3 Journal | 메인 | wk-u23-ken |
+| 사원급 | Carlos | Sonnet | 활성 | Wave U4 Entry + Wave U5 AccountTree + Wave U6 Report | 메인 | wk-u456-carlos |
 
 ## 퇴역 이력
 | 이름 | 모델 | 퇴역 사유 | 날짜 |
