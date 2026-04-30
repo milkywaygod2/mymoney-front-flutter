@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/constants/Enums.dart';
+import '../../perspective/presentation/LensSwitcher.dart';
+import '../../perspective/presentation/PerspectiveBloc.dart';
 import 'AccountBloc.dart';
 import 'AccountEvent.dart';
 import 'AccountBrowse.dart';
@@ -55,6 +57,11 @@ class _AccountTreePageState extends State<AccountTreePage> {
             ),
           ],
           IconButton(
+            icon: const Icon(Icons.tune),
+            tooltip: '관점 전환',
+            onPressed: () => _showLensSwitcher(context),
+          ),
+          IconButton(
             icon: const Icon(Icons.add),
             tooltip: '계정 추가',
             onPressed: () => _showAddAccountSheet(context),
@@ -83,6 +90,18 @@ class _AccountTreePageState extends State<AccountTreePage> {
           AccountViewMode.map => const AccountMap(key: ValueKey('map')),
           AccountViewMode.config => const AccountConfig(key: ValueKey('config')),
         },
+      ),
+    );
+  }
+
+  void _showLensSwitcher(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => BlocProvider.value(
+        value: context.read<PerspectiveBloc>(),
+        child: const LensSwitcher(),
       ),
     );
   }
