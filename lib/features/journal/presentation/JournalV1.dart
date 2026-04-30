@@ -25,6 +25,7 @@ String _emojiForKind(String kind) {
     'revenue'   => '💧',
     'liability' => '🫙',
     'equity'    => '🪣',
+    ''          => '💰',
     _           => '❓',
   };
 }
@@ -548,7 +549,16 @@ class _SingleEntryRow extends StatelessWidget {
                     color: Theme.of(context).colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Center(child: Text('↔', style: TextStyle(fontSize: 18))),
+                  child: Center(child: Text(
+                    _emojiForKind(
+                      accountMap[tx.listLines
+                        .where((l) => l.entryType == EntryType.debit)
+                        .firstOrNull
+                        ?.accountId.value]
+                        ?.kind ?? '',
+                    ),
+                    style: const TextStyle(fontSize: 18),
+                  )),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
