@@ -18,7 +18,7 @@ class HomeV2 extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _TreeHero(netWorth: vm.netWorth),
+          _TreeHero(netWorth: vm.netWorth, spark7d: vm.spark7d),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
             child: Column(
@@ -44,8 +44,9 @@ class HomeV2 extends StatelessWidget {
 }
 
 class _TreeHero extends StatelessWidget {
-  const _TreeHero({required this.netWorth});
+  const _TreeHero({required this.netWorth, required this.spark7d});
   final int netWorth;
+  final List<int> spark7d;
 
   // 순자산 1억 = growthRatio 0.5, 10억 = 1.0 기준 (log 스케일)
   static double _growthRatio(int netWorth) {
@@ -97,28 +98,7 @@ class _TreeHero extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.natureAsset.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.trending_up, size: 13, color: AppColors.natureAsset),
-                      SizedBox(width: 5),
-                      Text(
-                        '+5.1% 자라는 중',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.natureAsset,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                _SparkBadge(spark7d: spark7d),
               ],
             ),
           ),
@@ -135,6 +115,57 @@ class _TreeHero extends StatelessWidget {
       buf.write(str[i]);
     }
     return buf.toString();
+  }
+}
+
+/// 최근 7일 순수익 추세 뱃지 — spark7d 마지막 vs 직전 비교
+class _SparkBadge extends StatelessWidget {
+  const _SparkBadge({required this.spark7d});
+  final List<int> spark7d;
+
+  @override
+  Widget build(BuildContext context) {
+    if (spark7d.length < 2) return const SizedBox.shrink();
+    final last = spark7d.last;
+    final prev = spark7d[spark7d.length - 2];
+    final isPositive = last >= prev;
+    final diff = last - prev;
+    final color = isPositive ? AppColors.natureAsset : AppColors.natureExpense;
+    final icon = isPositive ? Icons.trending_up : Icons.trending_down;
+    final sign = isPositive ? '+' : '';
+    final label = diff == 0
+        ? '변동 없음'
+        : '$sign${_fmtCompact(diff)} 어제 대비';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _fmtCompact(int v) {
+    final abs = v.abs();
+    if (abs >= 100000000) return '${(abs / 100000000).toStringAsFixed(1)}억';
+    if (abs >= 10000) return '${(abs / 10000).toStringAsFixed(0)}만';
+    return abs.toString();
   }
 }
 
