@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../account/presentation/AccountBloc.dart';
 import '../../account/presentation/AccountEvent.dart';
@@ -42,6 +43,15 @@ class _JournalPageState extends State<JournalPage> with TickerProviderStateMixin
         context.read<PerspectiveBloc>().state.effectivePerspective;
     context.read<JournalBloc>().add(LoadTransactions(perspective: perspective));
     context.read<AccountBloc>().add(const AccountEvent.loadTree());
+    _loadViewMode();
+  }
+
+  Future<void> _loadViewMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getInt('journal_view_mode') ?? 0;
+    if (mounted && saved != _selectedIndex) {
+      setState(() => _selectedIndex = saved);
+    }
   }
 
   @override
@@ -55,6 +65,7 @@ class _JournalPageState extends State<JournalPage> with TickerProviderStateMixin
     _fadeController.reverse().then((_) {
       setState(() => _selectedIndex = index);
       _fadeController.forward();
+      SharedPreferences.getInstance().then((prefs) => prefs.setInt('journal_view_mode', index));
     });
   }
 

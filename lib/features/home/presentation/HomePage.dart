@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../entry/presentation/EntryPage.dart';
 import '../../report/presentation/ReportBloc.dart';
@@ -32,6 +33,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _fadeController.forward();
     context.read<ReportBloc>().add(const LoadDashboard());
     context.read<HomeBloc>().add(const LoadHome());
+    _loadViewMode();
+  }
+
+  Future<void> _loadViewMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getInt('home_view_mode') ?? 0;
+    if (mounted && saved != _selectedIndex) {
+      setState(() => _selectedIndex = saved);
+    }
   }
 
   @override
@@ -45,6 +55,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _fadeController.reverse().then((_) {
       setState(() => _selectedIndex = index);
       _fadeController.forward();
+      SharedPreferences.getInstance().then((prefs) => prefs.setInt('home_view_mode', index));
     });
   }
 
