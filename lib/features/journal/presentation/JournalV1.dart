@@ -6,6 +6,7 @@ import '../../../core/domain/Transaction.dart';
 import '../../account/presentation/AccountBloc.dart';
 import '../../account/presentation/AccountState.dart';
 import 'JournalBloc.dart';
+import 'JournalEvent.dart';
 import 'JournalState.dart';
 import 'widgets/DayGroupHeader.dart';
 import 'widgets/LedgerPosting.dart';
@@ -438,7 +439,35 @@ class _DoubleEntryCard extends StatelessWidget {
       credits.map((l) => l.baseAmount).toList(),
     );
 
-    return Container(
+    return Dismissible(
+      key: ValueKey(tx.id.value),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        color: Colors.red.shade700,
+        child: const Icon(Icons.delete_outline, color: Colors.white),
+      ),
+      confirmDismiss: (_) async {
+        return await showDialog<bool>(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text('거래 삭제'),
+            content: const Text('이 거래를 삭제할까요?'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('취소')),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('삭제', style: TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+        ) ?? false;
+      },
+      onDismissed: (_) {
+        context.read<JournalBloc>().add(DeleteTransactionEvent(id: tx.id));
+      },
+      child: Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.fromLTRB(11, 11, 11, 12),
       decoration: BoxDecoration(
@@ -517,6 +546,7 @@ class _DoubleEntryCard extends StatelessWidget {
           ),
         ],
       ),
+      ),
     );
   }
 }
@@ -535,7 +565,35 @@ class _SingleEntryRow extends StatelessWidget {
         .where((l) => l.entryType == EntryType.debit)
         .fold<int>(0, (s, l) => s + l.baseAmount);
 
-    return Column(
+    return Dismissible(
+      key: ValueKey(tx.id.value),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        color: Colors.red.shade700,
+        child: const Icon(Icons.delete_outline, color: Colors.white),
+      ),
+      confirmDismiss: (_) async {
+        return await showDialog<bool>(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text('거래 삭제'),
+            content: const Text('이 거래를 삭제할까요?'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('취소')),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('삭제', style: TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+        ) ?? false;
+      },
+      onDismissed: (_) {
+        context.read<JournalBloc>().add(DeleteTransactionEvent(id: tx.id));
+      },
+      child: Column(
       children: [
         InkWell(
           onTap: onTap,
@@ -587,6 +645,7 @@ class _SingleEntryRow extends StatelessWidget {
         if (isOpen) _ExpandedPosting(tx: tx, accountMap: accountMap),
         if (!isLast || isOpen) const Divider(height: 1),
       ],
+      ),
     );
   }
 
