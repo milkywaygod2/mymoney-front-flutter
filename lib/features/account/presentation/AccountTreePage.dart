@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/constants/Enums.dart';
 import 'AccountBloc.dart';
@@ -28,6 +29,16 @@ class _AccountTreePageState extends State<AccountTreePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AccountBloc>().add(const AccountEvent.loadTree());
     });
+    _loadViewMode();
+  }
+
+  Future<void> _loadViewMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getInt('account_view_mode') ?? 0;
+    final mode = AccountViewMode.values[saved.clamp(0, AccountViewMode.values.length - 1)];
+    if (mounted && mode != _mode) {
+      setState(() => _mode = mode);
+    }
   }
 
   @override
@@ -55,7 +66,12 @@ class _AccountTreePageState extends State<AccountTreePage> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: ModeToggle(
               selected: _mode,
-              onChanged: (mode) => setState(() => _mode = mode),
+              onChanged: (mode) {
+                setState(() => _mode = mode);
+                SharedPreferences.getInstance().then(
+                  (prefs) => prefs.setInt('account_view_mode', mode.index),
+                );
+              },
             ),
           ),
         ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'EntryBloc.dart';
 import 'EntryV1.dart';
@@ -14,7 +15,15 @@ class EntryPage extends StatefulWidget {
   const EntryPage({super.key});
 
   /// BottomSheet로 표시 — 320ms emphasized 모션
-  static Future<void> show(BuildContext context) {
+  static Future<void> show(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedIndex = prefs.getInt('entry_view_mode') ?? 0;
+    final savedMode = EntryMode.values[savedIndex.clamp(0, EntryMode.values.length - 1)];
+    final bloc = GetIt.instance<EntryBloc>();
+    if (bloc.state.mode != savedMode) {
+      bloc.add(EntryModeChanged(savedMode));
+    }
+    if (!context.mounted) return;
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -24,7 +33,7 @@ class EntryPage extends StatefulWidget {
         duration: const Duration(milliseconds: 320),
       ),
       builder: (_) => BlocProvider.value(
-        value: GetIt.instance<EntryBloc>(),
+        value: bloc,
         child: const EntryPage(),
       ),
     );
@@ -125,6 +134,9 @@ class _EntryHeader extends StatelessWidget {
                 selected: state.mode,
                 onChanged: (mode) {
                   context.read<EntryBloc>().add(EntryModeChanged(mode));
+                  SharedPreferences.getInstance().then(
+                    (prefs) => prefs.setInt('entry_view_mode', mode.index),
+                  );
                 },
               ),
             ],
