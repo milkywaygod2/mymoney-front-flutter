@@ -15,7 +15,8 @@ T _$identity<T>(T value) => value;
 mixin _$PeriodComparison {
 
  int get currentValue; int get previousValue;/// 증감액 (current - previous)
- int get changeAmount;/// 증감률 (배율 10000)
+ int get changeAmount;/// 계정 경로 레이블 (equityTypePath)
+ String get label;/// 증감률 (배율 10000)
  int get changeRatio;/// 비교 유형
  String get comparisonType;
 /// Create a copy of PeriodComparison
@@ -28,16 +29,16 @@ $PeriodComparisonCopyWith<PeriodComparison> get copyWith => _$PeriodComparisonCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PeriodComparison&&(identical(other.currentValue, currentValue) || other.currentValue == currentValue)&&(identical(other.previousValue, previousValue) || other.previousValue == previousValue)&&(identical(other.changeAmount, changeAmount) || other.changeAmount == changeAmount)&&(identical(other.changeRatio, changeRatio) || other.changeRatio == changeRatio)&&(identical(other.comparisonType, comparisonType) || other.comparisonType == comparisonType));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PeriodComparison&&(identical(other.currentValue, currentValue) || other.currentValue == currentValue)&&(identical(other.previousValue, previousValue) || other.previousValue == previousValue)&&(identical(other.changeAmount, changeAmount) || other.changeAmount == changeAmount)&&(identical(other.label, label) || other.label == label)&&(identical(other.changeRatio, changeRatio) || other.changeRatio == changeRatio)&&(identical(other.comparisonType, comparisonType) || other.comparisonType == comparisonType));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,currentValue,previousValue,changeAmount,changeRatio,comparisonType);
+int get hashCode => Object.hash(runtimeType,currentValue,previousValue,changeAmount,label,changeRatio,comparisonType);
 
 @override
 String toString() {
-  return 'PeriodComparison(currentValue: $currentValue, previousValue: $previousValue, changeAmount: $changeAmount, changeRatio: $changeRatio, comparisonType: $comparisonType)';
+  return 'PeriodComparison(currentValue: $currentValue, previousValue: $previousValue, changeAmount: $changeAmount, label: $label, changeRatio: $changeRatio, comparisonType: $comparisonType)';
 }
 
 
@@ -48,7 +49,7 @@ abstract mixin class $PeriodComparisonCopyWith<$Res>  {
   factory $PeriodComparisonCopyWith(PeriodComparison value, $Res Function(PeriodComparison) _then) = _$PeriodComparisonCopyWithImpl;
 @useResult
 $Res call({
- int currentValue, int previousValue, int changeAmount, int changeRatio, String comparisonType
+ int currentValue, int previousValue, int changeAmount, String label, int changeRatio, String comparisonType
 });
 
 
@@ -65,12 +66,13 @@ class _$PeriodComparisonCopyWithImpl<$Res>
 
 /// Create a copy of PeriodComparison
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? currentValue = null,Object? previousValue = null,Object? changeAmount = null,Object? changeRatio = null,Object? comparisonType = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? currentValue = null,Object? previousValue = null,Object? changeAmount = null,Object? label = null,Object? changeRatio = null,Object? comparisonType = null,}) {
   return _then(_self.copyWith(
 currentValue: null == currentValue ? _self.currentValue : currentValue // ignore: cast_nullable_to_non_nullable
 as int,previousValue: null == previousValue ? _self.previousValue : previousValue // ignore: cast_nullable_to_non_nullable
 as int,changeAmount: null == changeAmount ? _self.changeAmount : changeAmount // ignore: cast_nullable_to_non_nullable
-as int,changeRatio: null == changeRatio ? _self.changeRatio : changeRatio // ignore: cast_nullable_to_non_nullable
+as int,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
+as String,changeRatio: null == changeRatio ? _self.changeRatio : changeRatio // ignore: cast_nullable_to_non_nullable
 as int,comparisonType: null == comparisonType ? _self.comparisonType : comparisonType // ignore: cast_nullable_to_non_nullable
 as String,
   ));
@@ -157,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int currentValue,  int previousValue,  int changeAmount,  int changeRatio,  String comparisonType)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int currentValue,  int previousValue,  int changeAmount,  String label,  int changeRatio,  String comparisonType)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PeriodComparison() when $default != null:
-return $default(_that.currentValue,_that.previousValue,_that.changeAmount,_that.changeRatio,_that.comparisonType);case _:
+return $default(_that.currentValue,_that.previousValue,_that.changeAmount,_that.label,_that.changeRatio,_that.comparisonType);case _:
   return orElse();
 
 }
@@ -178,10 +180,10 @@ return $default(_that.currentValue,_that.previousValue,_that.changeAmount,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int currentValue,  int previousValue,  int changeAmount,  int changeRatio,  String comparisonType)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int currentValue,  int previousValue,  int changeAmount,  String label,  int changeRatio,  String comparisonType)  $default,) {final _that = this;
 switch (_that) {
 case _PeriodComparison():
-return $default(_that.currentValue,_that.previousValue,_that.changeAmount,_that.changeRatio,_that.comparisonType);case _:
+return $default(_that.currentValue,_that.previousValue,_that.changeAmount,_that.label,_that.changeRatio,_that.comparisonType);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +200,10 @@ return $default(_that.currentValue,_that.previousValue,_that.changeAmount,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int currentValue,  int previousValue,  int changeAmount,  int changeRatio,  String comparisonType)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int currentValue,  int previousValue,  int changeAmount,  String label,  int changeRatio,  String comparisonType)?  $default,) {final _that = this;
 switch (_that) {
 case _PeriodComparison() when $default != null:
-return $default(_that.currentValue,_that.previousValue,_that.changeAmount,_that.changeRatio,_that.comparisonType);case _:
+return $default(_that.currentValue,_that.previousValue,_that.changeAmount,_that.label,_that.changeRatio,_that.comparisonType);case _:
   return null;
 
 }
@@ -213,13 +215,15 @@ return $default(_that.currentValue,_that.previousValue,_that.changeAmount,_that.
 
 
 class _PeriodComparison implements PeriodComparison {
-  const _PeriodComparison({required this.currentValue, required this.previousValue, required this.changeAmount, required this.changeRatio, required this.comparisonType});
+  const _PeriodComparison({required this.currentValue, required this.previousValue, required this.changeAmount, required this.label, required this.changeRatio, required this.comparisonType});
   
 
 @override final  int currentValue;
 @override final  int previousValue;
 /// 증감액 (current - previous)
 @override final  int changeAmount;
+/// 계정 경로 레이블 (equityTypePath)
+@override final  String label;
 /// 증감률 (배율 10000)
 @override final  int changeRatio;
 /// 비교 유형
@@ -235,16 +239,16 @@ _$PeriodComparisonCopyWith<_PeriodComparison> get copyWith => __$PeriodCompariso
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PeriodComparison&&(identical(other.currentValue, currentValue) || other.currentValue == currentValue)&&(identical(other.previousValue, previousValue) || other.previousValue == previousValue)&&(identical(other.changeAmount, changeAmount) || other.changeAmount == changeAmount)&&(identical(other.changeRatio, changeRatio) || other.changeRatio == changeRatio)&&(identical(other.comparisonType, comparisonType) || other.comparisonType == comparisonType));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PeriodComparison&&(identical(other.currentValue, currentValue) || other.currentValue == currentValue)&&(identical(other.previousValue, previousValue) || other.previousValue == previousValue)&&(identical(other.changeAmount, changeAmount) || other.changeAmount == changeAmount)&&(identical(other.label, label) || other.label == label)&&(identical(other.changeRatio, changeRatio) || other.changeRatio == changeRatio)&&(identical(other.comparisonType, comparisonType) || other.comparisonType == comparisonType));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,currentValue,previousValue,changeAmount,changeRatio,comparisonType);
+int get hashCode => Object.hash(runtimeType,currentValue,previousValue,changeAmount,label,changeRatio,comparisonType);
 
 @override
 String toString() {
-  return 'PeriodComparison(currentValue: $currentValue, previousValue: $previousValue, changeAmount: $changeAmount, changeRatio: $changeRatio, comparisonType: $comparisonType)';
+  return 'PeriodComparison(currentValue: $currentValue, previousValue: $previousValue, changeAmount: $changeAmount, label: $label, changeRatio: $changeRatio, comparisonType: $comparisonType)';
 }
 
 
@@ -255,7 +259,7 @@ abstract mixin class _$PeriodComparisonCopyWith<$Res> implements $PeriodComparis
   factory _$PeriodComparisonCopyWith(_PeriodComparison value, $Res Function(_PeriodComparison) _then) = __$PeriodComparisonCopyWithImpl;
 @override @useResult
 $Res call({
- int currentValue, int previousValue, int changeAmount, int changeRatio, String comparisonType
+ int currentValue, int previousValue, int changeAmount, String label, int changeRatio, String comparisonType
 });
 
 
@@ -272,12 +276,13 @@ class __$PeriodComparisonCopyWithImpl<$Res>
 
 /// Create a copy of PeriodComparison
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? currentValue = null,Object? previousValue = null,Object? changeAmount = null,Object? changeRatio = null,Object? comparisonType = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? currentValue = null,Object? previousValue = null,Object? changeAmount = null,Object? label = null,Object? changeRatio = null,Object? comparisonType = null,}) {
   return _then(_PeriodComparison(
 currentValue: null == currentValue ? _self.currentValue : currentValue // ignore: cast_nullable_to_non_nullable
 as int,previousValue: null == previousValue ? _self.previousValue : previousValue // ignore: cast_nullable_to_non_nullable
 as int,changeAmount: null == changeAmount ? _self.changeAmount : changeAmount // ignore: cast_nullable_to_non_nullable
-as int,changeRatio: null == changeRatio ? _self.changeRatio : changeRatio // ignore: cast_nullable_to_non_nullable
+as int,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
+as String,changeRatio: null == changeRatio ? _self.changeRatio : changeRatio // ignore: cast_nullable_to_non_nullable
 as int,comparisonType: null == comparisonType ? _self.comparisonType : comparisonType // ignore: cast_nullable_to_non_nullable
 as String,
   ));
