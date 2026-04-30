@@ -186,6 +186,43 @@ class _FlowCard extends StatelessWidget {
   final Transaction tx;
   final Map<int, ({String name, String kind})> accountMap;
 
+  void _showDetail(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(tx.description, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text('날짜: ${tx.date.year}.${tx.date.month}.${tx.date.day}'),
+            const SizedBox(height: 4),
+            Text('금액: ₩${_fmt(tx.listLines.where((l) => l.entryType == EntryType.debit).fold(0, (s, l) => s + l.baseAmount))}'),
+            const SizedBox(height: 4),
+            Text(
+              '상태: ${tx.status.name}',
+              style: TextStyle(color: tx.status == TransactionStatus.posted ? Colors.green : Colors.orange),
+            ),
+            const SizedBox(height: 16),
+            ...tx.listLines.map((l) => Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                children: [
+                  Text(l.entryType == EntryType.debit ? '차변' : '대변', style: const TextStyle(fontSize: 12)),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(l.accountId.value.toString())),
+                  Text('₩${_fmt(l.baseAmount)}'),
+                ],
+              ),
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final debits = tx.listLines.where((l) => l.entryType == EntryType.debit).toList();
@@ -193,7 +230,9 @@ class _FlowCard extends StatelessWidget {
 
     final totalAmt = debits.fold<int>(0, (s, l) => s + l.baseAmount);
 
-    return Container(
+    return GestureDetector(
+      onTap: () => _showDetail(context),
+      child: Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       decoration: BoxDecoration(
@@ -268,6 +307,7 @@ class _FlowCard extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 
