@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../entry/presentation/EntryPage.dart';
+import '../../perspective/presentation/LensSwitcher.dart';
+import '../../perspective/presentation/PerspectiveBloc.dart';
 import '../../report/presentation/ReportBloc.dart';
 import 'HomeBloc.dart';
 import 'HomeV1.dart';
@@ -70,6 +72,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         centerTitle: true,
         actions: [
           IconButton(
+            icon: const Icon(Icons.tune),
+            tooltip: '관점 전환',
+            onPressed: () => _showLensSwitcher(context),
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => context.read<HomeBloc>().add(const RefreshHome()),
           ),
@@ -98,6 +105,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             child: _buildVariant(state.viewModel),
           );
         },
+      ),
+    );
+  }
+
+  void _showLensSwitcher(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => BlocProvider.value(
+        value: context.read<PerspectiveBloc>(),
+        child: const LensSwitcher(),
       ),
     );
   }
