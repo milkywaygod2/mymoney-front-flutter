@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../app/theme/AppColors.dart';
+
 /// 수익/비용 가로 바 (HomeV1 이번달 흐름)
 class MonthFlowBar extends StatelessWidget {
   const MonthFlowBar({
@@ -14,7 +16,6 @@ class MonthFlowBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final net = revenue - expense;
-    // TODO: U1 머지 후 AppColors로 교체
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -31,11 +32,11 @@ class MonthFlowBar extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     '수익 · 물 한 컵',
                     style: TextStyle(
                       fontSize: 11,
-                      color: Color(0xFF7DD3FC),
+                      color: AppColors.equitySoft,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.05 * 11,
                     ),
@@ -54,11 +55,11 @@ class MonthFlowBar extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Text(
+                  Text(
                     '비용 · 떨어진 사과',
                     style: TextStyle(
                       fontSize: 11,
-                      color: Color(0xFFEF4444),
+                      color: AppColors.natureExpense,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.05 * 11,
                     ),
@@ -88,7 +89,7 @@ class MonthFlowBar extends StatelessWidget {
                     child: Container(
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Color(0xFFBAE6FD), Color(0xFF7DD3FC)],
+                          colors: [AppColors.revenueSoft, AppColors.equitySoft],
                         ),
                       ),
                     ),
@@ -97,9 +98,9 @@ class MonthFlowBar extends StatelessWidget {
                   Flexible(
                     flex: expense > 0 ? expense : 1,
                     child: Container(
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Color(0xFFF87171), Color(0xFFB91C1C)],
+                          colors: [AppColors.natureExpense, AppColors.expenseDeep],
                         ),
                       ),
                     ),
@@ -125,7 +126,7 @@ class MonthFlowBar extends StatelessWidget {
                   fontFamily: 'monospace',
                   fontWeight: FontWeight.w700,
                   fontSize: 14,
-                  color: Color(0xFF10B981),
+                  color: AppColors.natureAsset,
                 ),
               ),
             ],

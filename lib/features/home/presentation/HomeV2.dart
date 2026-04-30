@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/AppColors.dart';
+import '../../../../shared/widgets/GrowthTree.dart';
+import '../../../../shared/widgets/LiquidGauge.dart';
 import 'HomeBloc.dart';
 
 /// HomeV2 — 나무·물 은유 (GrowthTree + LiquidGauge × 3)
@@ -47,17 +50,19 @@ class _TreeHero extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
-      decoration: const BoxDecoration(
-        // TODO: U1 머지 후 AppColors로 교체
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0x240C2E57), Color(0x00000000)],
+          colors: [
+            AppColors.natureAsset.withValues(alpha: 0.08),
+            Colors.transparent,
+          ],
         ),
       ),
       child: Row(
         children: [
-          _GrowthTreeWidget(fill: 0.85),
+          GrowthTree(growthRatio: 0.85, size: 80),
           const SizedBox(width: 20),
           Expanded(
             child: Column(
@@ -86,21 +91,20 @@ class _TreeHero extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                   decoration: BoxDecoration(
-                    // TODO: U1 머지 후 AppColors.natureAsset으로 교체
-                    color: const Color(0x2E10B981),
+                    color: AppColors.natureAsset.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.trending_up, size: 13, color: Color(0xFF10B981)),
+                      Icon(Icons.trending_up, size: 13, color: AppColors.natureAsset),
                       SizedBox(width: 5),
                       Text(
                         '+5.1% 자라는 중',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF10B981),
+                          color: AppColors.natureAsset,
                         ),
                       ),
                     ],
@@ -125,43 +129,6 @@ class _TreeHero extends StatelessWidget {
   }
 }
 
-/// 나무 성장 아이콘 (CustomPainter 간소화)
-class _GrowthTreeWidget extends StatelessWidget {
-  const _GrowthTreeWidget({required this.fill});
-  final double fill;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 80,
-      height: 80,
-      child: CustomPaint(painter: _TreePainter(fill: fill)),
-    );
-  }
-}
-
-class _TreePainter extends CustomPainter {
-  _TreePainter({required this.fill});
-  final double fill;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final cx = size.width / 2;
-    // 줄기
-    final trunkPaint = Paint()..color = const Color(0xFF8B5A2B);
-    canvas.drawRect(Rect.fromLTWH(cx - 5, size.height * 0.6, 10, size.height * 0.4), trunkPaint);
-    // 나무 캐노피
-    final leafPaint = Paint()
-      ..color = Color.lerp(const Color(0xFF047857), const Color(0xFF10B981), fill)!;
-    canvas.drawCircle(Offset(cx, size.height * 0.42), size.width * 0.38, leafPaint);
-    canvas.drawCircle(Offset(cx - 14, size.height * 0.54), size.width * 0.26, leafPaint);
-    canvas.drawCircle(Offset(cx + 14, size.height * 0.54), size.width * 0.26, leafPaint);
-  }
-
-  @override
-  bool shouldRepaint(_TreePainter old) => old.fill != fill;
-}
-
 class _LiquidAxisPanel extends StatelessWidget {
   const _LiquidAxisPanel({
     required this.revenue,
@@ -176,9 +143,9 @@ class _LiquidAxisPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final maxVal = [revenue, equity, liabilities].reduce((a, b) => a > b ? a : b);
     final items = [
-      _LiquidItem(label: '수익 · 물 한 컵', value: revenue, fill: maxVal > 0 ? revenue / maxVal * 0.6 : 0.1, color: const Color(0xFF7DD3FC)),
-      _LiquidItem(label: '자본 · 물 한 통', value: equity, fill: maxVal > 0 ? equity / maxVal * 0.9 : 0.5, color: const Color(0xFF1D4E8C)),
-      _LiquidItem(label: '부채 · 포도주', value: liabilities, fill: maxVal > 0 ? liabilities / maxVal * 0.5 : 0.2, color: const Color(0xFF6B2E9E)),
+      _LiquidItem(label: '수익 · 물 한 컵', value: revenue, fill: maxVal > 0 ? (revenue / maxVal * 0.6).clamp(0.05, 1.0) : 0.1, color: AppColors.equitySoft),
+      _LiquidItem(label: '자본 · 물 한 통', value: equity, fill: maxVal > 0 ? (equity / maxVal * 0.9).clamp(0.05, 1.0) : 0.5, color: AppColors.natureEquity),
+      _LiquidItem(label: '부채 · 포도주', value: liabilities, fill: maxVal > 0 ? (liabilities / maxVal * 0.5).clamp(0.05, 1.0) : 0.2, color: AppColors.natureLiability),
     ];
 
     return Container(
@@ -216,7 +183,7 @@ class _LiquidColumn extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        _LiquidGauge(fill: item.fill, color: item.color, height: 110, width: 50),
+        LiquidGauge(fillRatio: item.fill, size: 58, liquidColor: item.color),
         const SizedBox(height: 10),
         Text(
           item.label,
@@ -239,88 +206,30 @@ class _LiquidColumn extends StatelessWidget {
   }
 }
 
-class _LiquidGauge extends StatelessWidget {
-  const _LiquidGauge({required this.fill, required this.color, required this.height, required this.width});
-  final double fill;
-  final Color color;
-  final double height;
-  final double width;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: height,
-      width: width,
-      child: CustomPaint(painter: _LiquidPainter(fill: fill.clamp(0.0, 1.0), color: color)),
-    );
-  }
-}
-
-class _LiquidPainter extends CustomPainter {
-  _LiquidPainter({required this.fill, required this.color});
-  final double fill;
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // 유리 컵 외곽
-    final borderPaint = Paint()
-      ..color = color.withValues(alpha: 0.5)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, size.width, size.height), const Radius.circular(8)),
-      borderPaint,
-    );
-
-    // 액체
-    final liquidH = size.height * fill;
-    final liquidRect = Rect.fromLTWH(2, size.height - liquidH, size.width - 4, liquidH);
-    final liquidPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [color.withValues(alpha: 0.5), color.withValues(alpha: 0.85)],
-      ).createShader(liquidRect);
-    canvas.drawRRect(
-      RRect.fromRectAndCorners(
-        liquidRect,
-        bottomLeft: const Radius.circular(6),
-        bottomRight: const Radius.circular(6),
-      ),
-      liquidPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_LiquidPainter old) => old.fill != fill || old.color != old.color;
-}
-
 class _EquationHint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
       decoration: BoxDecoration(
-        // TODO: U1 머지 후 AppColors로 교체
-        color: const Color(0x140284C7),
+        color: AppColors.revenueDeep.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0x400284C7)),
+        border: Border.all(color: AppColors.revenueDeep.withValues(alpha: 0.25)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline, size: 16, color: Color(0xFF1D4E8C)),
+          Icon(Icons.info_outline, size: 16, color: AppColors.natureEquity),
           const SizedBox(width: 10),
           Expanded(
             child: RichText(
-              text: const TextSpan(
-                style: TextStyle(fontSize: 12, color: Color(0xFF374151)),
-                children: [
-                  TextSpan(text: '수익 한 컵', style: TextStyle(color: Color(0xFF7DD3FC), fontWeight: FontWeight.w700)),
+              text: TextSpan(
+                style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface),
+                children: const [
+                  TextSpan(text: '수익 한 컵', style: TextStyle(color: AppColors.equitySoft, fontWeight: FontWeight.w700)),
                   TextSpan(text: '이 '),
-                  TextSpan(text: '자본 통', style: TextStyle(color: Color(0xFF1D4E8C), fontWeight: FontWeight.w700)),
+                  TextSpan(text: '자본 통', style: TextStyle(color: AppColors.natureEquity, fontWeight: FontWeight.w700)),
                   TextSpan(text: '에 들어가고, '),
-                  TextSpan(text: '부채 한 병', style: TextStyle(color: Color(0xFF6B2E9E), fontWeight: FontWeight.w700)),
+                  TextSpan(text: '부채 한 병', style: TextStyle(color: AppColors.natureLiability, fontWeight: FontWeight.w700)),
                   TextSpan(text: '은 옆에 따로 서 있어요.'),
                 ],
               ),

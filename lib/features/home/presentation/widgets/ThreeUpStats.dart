@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../app/theme/AppColors.dart';
+
 /// 자산/부채/자본 3분할 미니 스탯 (HomeV1용)
 class ThreeUpStats extends StatelessWidget {
   const ThreeUpStats({
@@ -15,11 +17,10 @@ class ThreeUpStats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: U1 머지 후 AppColors로 교체
     final items = [
-      _StatItem(label: '자산', value: assets, color: const Color(0xFF10B981), bg: const Color(0x1410B981)),
-      _StatItem(label: '부채', value: liabilities, color: const Color(0xFF6B2E9E), bg: const Color(0x244A1A7F)),
-      _StatItem(label: '자본', value: equity, color: const Color(0xFF1D4E8C), bg: const Color(0x470C2E57)),
+      _StatItem(label: '자산', value: assets, color: AppColors.natureAsset, bg: AppColors.natureAsset.withValues(alpha: 0.08)),
+      _StatItem(label: '부채', value: liabilities, color: AppColors.natureLiability, bg: AppColors.natureLiability.withValues(alpha: 0.14)),
+      _StatItem(label: '자본', value: equity, color: AppColors.natureEquity, bg: AppColors.natureEquity.withValues(alpha: 0.28)),
     ];
 
     return Row(

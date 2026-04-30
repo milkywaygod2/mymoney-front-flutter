@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 
+import '../../../../../app/theme/AppColors.dart';
 import '../HomeBloc.dart';
 
 /// 시소 저울 CustomPainter (HomeV3용)
@@ -92,8 +93,8 @@ class _ScalePainter extends CustomPainter {
     _drawBeam(canvas, w, beamTopY, pivotY, tilt, panLcx, panRcx);
     _drawPan(canvas, panLcx, beamTopY, leftYShift, _panW, _panH);
     _drawPan(canvas, panRcx, beamTopY, rightYShift, _panW, _panH);
-    _drawPanContents(canvas, panLcx, beamTopY, leftYShift, expense, '비용', const Color(0xFFEF4444), const Color(0xFFB91C1C));
-    _drawPanContents(canvas, panRcx, beamTopY, rightYShift, revenue, '수익', const Color(0xFFBAE6FD), const Color(0xFF38BDF8));
+    _drawPanContents(canvas, panLcx, beamTopY, leftYShift, expense, '비용', AppColors.natureExpense, AppColors.expenseDeep);
+    _drawPanContents(canvas, panRcx, beamTopY, rightYShift, revenue, '수익', AppColors.revenueSoft, AppColors.equitySoft);
   }
 
   void _drawShadow(Canvas canvas, double w, double baseY) {

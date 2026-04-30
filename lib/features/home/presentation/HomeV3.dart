@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/AppColors.dart';
 import 'HomeBloc.dart';
 import 'widgets/FiveAccountBox.dart';
 import 'widgets/PendingBox.dart';
@@ -79,8 +80,7 @@ class HomeV3 extends StatelessWidget {
                           fontFamily: 'monospace',
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
-                          // TODO: U1 머지 후 AppColors.natureAsset으로 교체
-                          color: Color(0xFF10B981),
+                          color: AppColors.natureAsset,
                         ),
                       ),
                     ],
@@ -91,19 +91,19 @@ class HomeV3 extends StatelessWidget {
                 PendingBox(
                   title: '비용 예정',
                   items: vm.listPendingExpenses,
-                  accentColor: const Color(0xFFEF4444),
+                  accentColor: AppColors.natureExpense,
                 ),
                 if (vm.listPendingExpenses.isNotEmpty) const SizedBox(height: 8),
                 PendingBox(
                   title: '수익 예정',
                   items: vm.listPendingRevenues,
-                  accentColor: const Color(0xFF7DD3FC),
+                  accentColor: AppColors.equitySoft,
                 ),
                 if (vm.listPendingRevenues.isNotEmpty) const SizedBox(height: 8),
                 PendingBox(
                   title: '자산 예정',
                   items: vm.listPendingAssets,
-                  accentColor: const Color(0xFF10B981),
+                  accentColor: AppColors.natureAsset,
                 ),
                 const SizedBox(height: 16),
                 // 복식부기 항등식

@@ -28,7 +28,6 @@ class PendingBox extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: accentColor.withValues(alpha: 0.3),
-          strokeAlign: BorderSide.strokeAlignInside,
           style: BorderStyle.solid,
         ),
       ),

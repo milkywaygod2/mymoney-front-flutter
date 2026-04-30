@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../app/theme/AppColors.dart';
 import '../../../core/constants/Enums.dart';
 import '../../../core/domain/Transaction.dart';
 import 'JournalBloc.dart';
@@ -40,12 +41,12 @@ class JournalV2 extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       // TODO: U1 머지 후 AppColors로 교체
-                      color: const Color(0x1F10B981),
+                      color: AppColors.natureAsset.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: const Text(
                       '부기 ON',
-                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 0.08 * 10, color: Color(0xFF10B981)),
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 0.08 * 10, color: AppColors.natureAsset),
                     ),
                   ),
                 ],
@@ -58,9 +59,9 @@ class JournalV2 extends StatelessWidget {
                 children: [
                   const SizedBox(width: 70, child: Text('날짜', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 0.08 * 10))),
                   const SizedBox(width: 8),
-                  const Expanded(child: Text('차변 (Debit)', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF10B981)))),
+                  const Expanded(child: Text('차변 (Debit)', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.natureAsset))),
                   const SizedBox(width: 8),
-                  const Expanded(child: Text('대변 (Credit)', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF7DD3FC)))),
+                  const Expanded(child: Text('대변 (Credit)', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.equitySoft))),
                 ],
               ),
             ),
@@ -236,12 +237,12 @@ class _DayTotalsRow extends StatelessWidget {
           ),
           Text(
             '${dayRev >= 0 ? '+' : '−'}₩${_fmt(dayRev.abs())}',
-            style: const TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.w700, fontSize: 13, color: Color(0xFF7DD3FC)),
+            style: const TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.equitySoft),
           ),
           const SizedBox(width: 8),
           Text(
             '−₩${_fmt(dayExp)}',
-            style: const TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.w700, fontSize: 13, color: Color(0xFFEF4444)),
+            style: const TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.natureExpense),
           ),
         ],
       ),

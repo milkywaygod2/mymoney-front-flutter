@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../app/theme/AppColors.dart';
+
 /// 차/대 뱃지
 class DCBadge extends StatelessWidget {
   const DCBadge({super.key, required this.side});
@@ -9,9 +11,8 @@ class DCBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: U1 머지 후 AppColors로 교체
     final isDebit = side == '차';
-    final color = isDebit ? const Color(0xFF10B981) : const Color(0xFF7DD3FC);
+    final color = isDebit ? AppColors.natureAsset : AppColors.equitySoft;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(

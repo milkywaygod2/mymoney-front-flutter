@@ -1,6 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 
+import '../../../../../app/theme/AppColors.dart';
+
 /// 5대 계정 2-tier 비례 박스 (HomeV3용)
 /// 복식부기 항등식: 자산 + 비용 = 부채 + 자본 + 수익
 class FiveAccountBox extends StatelessWidget {
@@ -27,29 +29,28 @@ class FiveAccountBox extends StatelessWidget {
   Widget build(BuildContext context) {
     final flowMax = max(max(revenue, expense), 1);
 
-    // TODO: U1 머지 후 AppColors로 교체
     final leftSegs = [
-      _Seg(kind: 'stock', icon: '🌳', label: '자산', value: assets, gradient: const LinearGradient(
+      _Seg(kind: 'stock', icon: '🌳', label: '자산', value: assets, gradient: LinearGradient(
         begin: Alignment.topCenter, end: Alignment.bottomCenter,
-        colors: [Color(0xBF10B981), Color(0x5910B981)],
+        colors: [AppColors.natureAsset.withValues(alpha: 0.75), AppColors.natureAsset.withValues(alpha: 0.35)],
       )),
-      _Seg(kind: 'flow', icon: '🍎', label: '비용', value: expense, gradient: const LinearGradient(
+      _Seg(kind: 'flow', icon: '🍎', label: '비용', value: expense, gradient: LinearGradient(
         begin: Alignment.topCenter, end: Alignment.bottomCenter,
-        colors: [Color(0xBFEF4444), Color(0x59EF4444)],
+        colors: [AppColors.natureExpense.withValues(alpha: 0.75), AppColors.natureExpense.withValues(alpha: 0.35)],
       )),
     ];
     final rightSegs = [
-      _Seg(kind: 'stock', icon: '🫙', label: '부채', value: liabilities, gradient: const LinearGradient(
+      _Seg(kind: 'stock', icon: '🫙', label: '부채', value: liabilities, gradient: LinearGradient(
         begin: Alignment.topCenter, end: Alignment.bottomCenter,
-        colors: [Color(0xBFA070D6), Color(0x596B2E9E)],
+        colors: [AppColors.liabilitySoft.withValues(alpha: 0.75), AppColors.natureLiability.withValues(alpha: 0.35)],
       )),
-      _Seg(kind: 'stock', icon: '🪣', label: '자본', value: equity, gradient: const LinearGradient(
+      _Seg(kind: 'stock', icon: '🪣', label: '자본', value: equity, gradient: LinearGradient(
         begin: Alignment.topCenter, end: Alignment.bottomCenter,
-        colors: [Color(0xD91D4E8C), Color(0x8C0C2E57)],
+        colors: [AppColors.equityDeep.withValues(alpha: 0.85), AppColors.natureEquity.withValues(alpha: 0.55)],
       )),
-      _Seg(kind: 'flow', icon: '💧', label: '수익', value: revenue, gradient: const LinearGradient(
+      _Seg(kind: 'flow', icon: '💧', label: '수익', value: revenue, gradient: LinearGradient(
         begin: Alignment.topCenter, end: Alignment.bottomCenter,
-        colors: [Color(0xD9E0F2FE), Color(0x73BAE6FD)],
+        colors: [AppColors.revenueSoft.withValues(alpha: 0.85), AppColors.revenueSoft.withValues(alpha: 0.45)],
       )),
     ];
 

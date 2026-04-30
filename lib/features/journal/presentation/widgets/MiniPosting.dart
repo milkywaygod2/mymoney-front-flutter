@@ -1,13 +1,14 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 
-// TODO: U1 머지 후 AppColors로 교체
+import '../../../../../app/theme/AppColors.dart';
+
 Color _kindColor(String kind) => switch (kind) {
-      'asset' => const Color(0xFF10B981),
-      'liability' => const Color(0xFF6B2E9E),
-      'equity' => const Color(0xFF1D4E8C),
-      'revenue' => const Color(0xFFBAE6FD),
-      'expense' => const Color(0xFFEF4444),
+      'asset' => AppColors.natureAsset,
+      'liability' => AppColors.natureLiability,
+      'equity' => AppColors.natureEquity,
+      'revenue' => AppColors.natureRevenue,
+      'expense' => AppColors.natureExpense,
       _ => const Color(0xFF9CA3AF),
     };
 

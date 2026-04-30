@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/AppColors.dart';
 import 'HomeBloc.dart';
 import 'widgets/MonthFlowBar.dart';
 import 'widgets/NetWorthCard.dart';
@@ -41,15 +42,13 @@ class HomeV1 extends StatelessWidget {
           PendingBox(
             title: '비용 예정',
             items: vm.listPendingExpenses,
-            // TODO: U1 머지 후 AppColors.natureExpense로 교체
-            accentColor: const Color(0xFFEF4444),
+            accentColor: AppColors.natureExpense,
           ),
           if (vm.listPendingExpenses.isNotEmpty) const SizedBox(height: 10),
           PendingBox(
             title: '수익 예정',
             items: vm.listPendingRevenues,
-            // TODO: U1 머지 후 AppColors.natureRevenue로 교체
-            accentColor: const Color(0xFF7DD3FC),
+            accentColor: AppColors.equitySoft,
           ),
         ],
       ),
@@ -90,11 +89,10 @@ class _GreetingRow extends StatelessWidget {
           height: 40,
           decoration: const BoxDecoration(
             shape: BoxShape.circle,
-            // TODO: U1 머지 후 AppColors로 교체
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xFF047857), Color(0xFF10B981)],
+              colors: [AppColors.assetDeep, AppColors.natureAsset],
             ),
           ),
           child: const Center(
