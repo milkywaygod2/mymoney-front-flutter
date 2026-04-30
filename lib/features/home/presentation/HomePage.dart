@@ -1,23 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'JournalBloc.dart';
-import 'JournalEvent.dart';
-import 'JournalState.dart';
-import 'JournalV1.dart';
-import 'JournalV2.dart';
-import 'JournalV3.dart';
-import 'TransactionForm.dart';
+import 'HomeBloc.dart';
+import 'HomeV1.dart';
+import 'HomeV2.dart';
+import 'HomeV3.dart';
 
-/// JournalPage — V1/V2/V3 토글 컨테이너 (재작성)
-class JournalPage extends StatefulWidget {
-  const JournalPage({super.key});
+/// HomePage — V1/V2/V3 세그먼트 토글 컨테이너
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
   @override
-  State<JournalPage> createState() => _JournalPageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _JournalPageState extends State<JournalPage> with TickerProviderStateMixin {
+class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   int _selectedIndex = 0;
   late final AnimationController _fadeController;
   late final Animation<double> _fadeAnim;
@@ -31,7 +28,7 @@ class _JournalPageState extends State<JournalPage> with TickerProviderStateMixin
     );
     _fadeAnim = CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut);
     _fadeController.forward();
-    context.read<JournalBloc>().add(const LoadTransactions());
+    context.read<HomeBloc>().add(const LoadHome());
   }
 
   @override
@@ -59,12 +56,12 @@ class _JournalPageState extends State<JournalPage> with TickerProviderStateMixin
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => TransactionForm.show(context),
+            icon: const Icon(Icons.refresh),
+            onPressed: () => context.read<HomeBloc>().add(const RefreshHome()),
           ),
         ],
       ),
-      body: BlocBuilder<JournalBloc, JournalState>(
+      body: BlocBuilder<HomeBloc, HomeState>(
         builder: (context, state) {
           if (state.isLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -79,19 +76,19 @@ class _JournalPageState extends State<JournalPage> with TickerProviderStateMixin
           }
           return FadeTransition(
             opacity: _fadeAnim,
-            child: _buildVariant(),
+            child: _buildVariant(state.viewModel),
           );
         },
       ),
     );
   }
 
-  Widget _buildVariant() {
+  Widget _buildVariant(HomeViewModel vm) {
     return switch (_selectedIndex) {
-      0 => const JournalV1(),
-      1 => const JournalV2(),
-      2 => const JournalV3(),
-      _ => const JournalV1(),
+      0 => HomeV1(vm: vm),
+      1 => HomeV2(vm: vm),
+      2 => HomeV3(vm: vm),
+      _ => HomeV1(vm: vm),
     };
   }
 }
@@ -104,7 +101,7 @@ class _VariantToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const labels = ['일반', '분개장', '흐름'];
+    const labels = ['숫자', '나무', '저울'];
     return Container(
       height: 36,
       padding: const EdgeInsets.all(3),
