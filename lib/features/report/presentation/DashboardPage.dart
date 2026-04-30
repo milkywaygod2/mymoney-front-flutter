@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../app/theme/AppColors.dart';
 import '../../../core/models/PeriodComparison.dart';
+import '../../../features/perspective/presentation/PerspectiveBloc.dart';
+import '../../../features/perspective/presentation/PerspectiveState.dart';
 import 'ReportBloc.dart';
 import 'RatioGrid.dart';
 import 'BSChart.dart';
@@ -56,7 +58,11 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ],
       ),
-      body: BlocListener<ReportBloc, ReportState>(
+      body: BlocListener<PerspectiveBloc, PerspectiveState>(
+        listenWhen: (prev, curr) =>
+            prev.effectivePerspective?.id != curr.effectivePerspective?.id,
+        listener: (context, _) => _onRefresh(),
+        child: BlocListener<ReportBloc, ReportState>(
         listenWhen: (prev, curr) =>
             prev.activePeriodId == null && curr.activePeriodId != null,
         listener: (context, state) => _onRefresh(),
@@ -121,6 +127,7 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           );
         },
+        ),
         ),
       ),
     );
