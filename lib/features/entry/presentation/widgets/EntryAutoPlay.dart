@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../app/theme/AppColors.dart';
+
 /// 거래 저장 후 2초 애니메이션 위젯
 /// 3페이즈: enter(0~22%), fly(22~72%), arrive(72~94%)
 class EntryAutoPlay extends StatefulWidget {
@@ -88,7 +90,7 @@ class _EntryAutoPlayState extends State<EntryAutoPlay>
                   child: const Icon(
                     Icons.check_circle_outline,
                     size: 64,
-                    color: Color(0xFF4CAF50), // TODO: U1 AppColors로 교체
+                    color: AppColors.stateSuccess,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -121,14 +123,14 @@ class _EntryAutoPlayState extends State<EntryAutoPlay>
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF4CAF50).withValues(alpha: 0.12),
+                        color: AppColors.stateSuccess.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Text(
                         '저장됨',
                         style: TextStyle(
                           fontSize: 13,
-                          color: Color(0xFF4CAF50),
+                          color: AppColors.stateSuccess,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
