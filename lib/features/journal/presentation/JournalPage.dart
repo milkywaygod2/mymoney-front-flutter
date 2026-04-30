@@ -3,7 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/constants/Enums.dart';
 import '../../../core/domain/Transaction.dart';
+import '../../perspective/presentation/LensSwitcher.dart';
 import '../../perspective/presentation/PerspectiveBloc.dart';
+import '../../perspective/presentation/PerspectiveEvent.dart';
+import '../../perspective/presentation/PerspectiveState.dart';
 import 'FlowCard.dart';
 import 'JournalBloc.dart';
 import 'JournalEvent.dart';
@@ -23,9 +26,22 @@ class _JournalPageState extends State<JournalPage> {
   @override
   void initState() {
     super.initState();
+    context.read<PerspectiveBloc>().add(const LoadPresets());
     final perspective =
         context.read<PerspectiveBloc>().state.effectivePerspective;
     context.read<JournalBloc>().add(LoadTransactions(perspective: perspective));
+  }
+
+  void _showLensSwitcher(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => BlocProvider.value(
+        value: context.read<PerspectiveBloc>(),
+        child: const LensSwitcher(),
+      ),
+    );
   }
 
   @override
@@ -33,6 +49,26 @@ class _JournalPageState extends State<JournalPage> {
     final isWide = MediaQuery.sizeOf(context).width >= 600;
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('거래'),
+        actions: [
+          BlocBuilder<PerspectiveBloc, PerspectiveState>(
+            buildWhen: (prev, curr) =>
+                prev.effectivePerspective != curr.effectivePerspective,
+            builder: (context, state) {
+              final name = state.effectivePerspective?.name ?? '전체';
+              return ActionChip(
+                avatar: const Icon(Icons.lens, size: 14),
+                label: Text(name, style: const TextStyle(fontSize: 11)),
+                onPressed: () => _showLensSwitcher(context),
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+              );
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: BlocBuilder<JournalBloc, JournalState>(
         builder: (context, state) {
           if (state.isLoading) {
