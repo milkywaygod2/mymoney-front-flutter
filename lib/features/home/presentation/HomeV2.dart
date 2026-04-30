@@ -72,7 +72,12 @@ class _TreeHero extends StatelessWidget {
       ),
       child: Row(
         children: [
-          GrowthTree(growthRatio: _growthRatio(netWorth), size: 80),
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: _growthRatio(netWorth)),
+            duration: const Duration(milliseconds: 1200),
+            curve: Curves.easeInOut,
+            builder: (_, value, __) => GrowthTree(growthRatio: value, size: 80),
+          ),
           const SizedBox(width: 20),
           Expanded(
             child: Column(
@@ -225,7 +230,12 @@ class _LiquidColumn extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        LiquidGauge(fillRatio: item.fill, size: 58, liquidColor: item.color),
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: item.fill),
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeOut,
+          builder: (_, value, __) => LiquidGauge(fillRatio: value, size: 58, liquidColor: item.color),
+        ),
         const SizedBox(height: 10),
         Text(
           item.label,
