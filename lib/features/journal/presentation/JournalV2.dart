@@ -40,7 +40,6 @@ class JournalV2 extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      // TODO: U1 머지 후 AppColors로 교체
                       color: AppColors.natureAsset.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(6),
                     ),
