@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 mixin _$AccountState {
 
 /// 최상위 계정 목록 (5대 분류: 자산/부채/자본/수익/비용)
- List<Account> get listRoots;/// 모든 활성 계정 flat 목록 — 계정명 조회용
+ List<Account> get listRoots;/// 전체 활성 계정 flat 목록 — 계정명 조회용
  List<Account> get listAll;/// 펼쳐진 노드 ID 집합 — 렌더링 시 해당 노드만 자식 표시
  Set<AccountId> get setExpandedIds;/// 검색 결과 — 검색어에 매칭되는 계정 목록
  List<Account> get listSearchResults;/// 로딩 상태
@@ -229,9 +229,9 @@ class _AccountState implements AccountState {
   return EqualUnmodifiableListView(_listRoots);
 }
 
-/// 모든 활성 계정 flat 목록 — 계정명 조회용
+/// 전체 활성 계정 flat 목록 — 계정명 조회용
  final  List<Account> _listAll;
-/// 모든 활성 계정 flat 목록 — 계정명 조회용
+/// 전체 활성 계정 flat 목록 — 계정명 조회용
 @override@JsonKey() List<Account> get listAll {
   if (_listAll is EqualUnmodifiableListView) return _listAll;
   // ignore: implicit_dynamic_type

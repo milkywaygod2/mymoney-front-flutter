@@ -1076,6 +1076,17 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _valuationMethodMeta = const VerificationMeta(
+    'valuationMethod',
+  );
+  @override
+  late final GeneratedColumn<String> valuationMethod = GeneratedColumn<String>(
+    'valuation_method',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1098,6 +1109,7 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
     isFxRevalTarget,
     vendorRequirement,
     isRevenueDeduction,
+    valuationMethod,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1291,6 +1303,15 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
         ),
       );
     }
+    if (data.containsKey('valuation_method')) {
+      context.handle(
+        _valuationMethodMeta,
+        valuationMethod.isAcceptableOrUnknown(
+          data['valuation_method']!,
+          _valuationMethodMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1393,6 +1414,10 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
             DriftSqlType.bool,
             data['${effectivePrefix}is_revenue_deduction'],
           )!,
+      valuationMethod: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}valuation_method'],
+      ),
     );
   }
 
@@ -1441,6 +1466,9 @@ class Account extends DataClass implements Insertable<Account> {
 
   /// 매출차감 계정 플래그 — 순액 표시 수수료 (INV-A6: nature == EXPENSE만 가능)
   final bool isRevenueDeduction;
+
+  /// 재고 평가 방법 (P3 — 재고 계정만): fifo | weightedAverage | movingAverage | specificIdentification | standardCost
+  final String? valuationMethod;
   const Account({
     required this.id,
     required this.name,
@@ -1462,6 +1490,7 @@ class Account extends DataClass implements Insertable<Account> {
     required this.isFxRevalTarget,
     this.vendorRequirement,
     required this.isRevenueDeduction,
+    this.valuationMethod,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1500,6 +1529,9 @@ class Account extends DataClass implements Insertable<Account> {
       map['vendor_requirement'] = Variable<String>(vendorRequirement);
     }
     map['is_revenue_deduction'] = Variable<bool>(isRevenueDeduction);
+    if (!nullToAbsent || valuationMethod != null) {
+      map['valuation_method'] = Variable<String>(valuationMethod);
+    }
     return map;
   }
 
@@ -1546,6 +1578,10 @@ class Account extends DataClass implements Insertable<Account> {
               ? const Value.absent()
               : Value(vendorRequirement),
       isRevenueDeduction: Value(isRevenueDeduction),
+      valuationMethod:
+          valuationMethod == null && nullToAbsent
+              ? const Value.absent()
+              : Value(valuationMethod),
     );
   }
 
@@ -1583,6 +1619,7 @@ class Account extends DataClass implements Insertable<Account> {
         json['vendorRequirement'],
       ),
       isRevenueDeduction: serializer.fromJson<bool>(json['isRevenueDeduction']),
+      valuationMethod: serializer.fromJson<String?>(json['valuationMethod']),
     );
   }
   @override
@@ -1609,6 +1646,7 @@ class Account extends DataClass implements Insertable<Account> {
       'isFxRevalTarget': serializer.toJson<bool>(isFxRevalTarget),
       'vendorRequirement': serializer.toJson<String?>(vendorRequirement),
       'isRevenueDeduction': serializer.toJson<bool>(isRevenueDeduction),
+      'valuationMethod': serializer.toJson<String?>(valuationMethod),
     };
   }
 
@@ -1633,6 +1671,7 @@ class Account extends DataClass implements Insertable<Account> {
     bool? isFxRevalTarget,
     Value<String?> vendorRequirement = const Value.absent(),
     bool? isRevenueDeduction,
+    Value<String?> valuationMethod = const Value.absent(),
   }) => Account(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -1670,6 +1709,8 @@ class Account extends DataClass implements Insertable<Account> {
             ? vendorRequirement.value
             : this.vendorRequirement,
     isRevenueDeduction: isRevenueDeduction ?? this.isRevenueDeduction,
+    valuationMethod:
+        valuationMethod.present ? valuationMethod.value : this.valuationMethod,
   );
   Account copyWithCompanion(AccountsCompanion data) {
     return Account(
@@ -1732,6 +1773,10 @@ class Account extends DataClass implements Insertable<Account> {
           data.isRevenueDeduction.present
               ? data.isRevenueDeduction.value
               : this.isRevenueDeduction,
+      valuationMethod:
+          data.valuationMethod.present
+              ? data.valuationMethod.value
+              : this.valuationMethod,
     );
   }
 
@@ -1757,13 +1802,14 @@ class Account extends DataClass implements Insertable<Account> {
           ..write('cashFlowCategory: $cashFlowCategory, ')
           ..write('isFxRevalTarget: $isFxRevalTarget, ')
           ..write('vendorRequirement: $vendorRequirement, ')
-          ..write('isRevenueDeduction: $isRevenueDeduction')
+          ..write('isRevenueDeduction: $isRevenueDeduction, ')
+          ..write('valuationMethod: $valuationMethod')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     name,
     nature,
@@ -1784,7 +1830,8 @@ class Account extends DataClass implements Insertable<Account> {
     isFxRevalTarget,
     vendorRequirement,
     isRevenueDeduction,
-  );
+    valuationMethod,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1808,7 +1855,8 @@ class Account extends DataClass implements Insertable<Account> {
           other.cashFlowCategory == this.cashFlowCategory &&
           other.isFxRevalTarget == this.isFxRevalTarget &&
           other.vendorRequirement == this.vendorRequirement &&
-          other.isRevenueDeduction == this.isRevenueDeduction);
+          other.isRevenueDeduction == this.isRevenueDeduction &&
+          other.valuationMethod == this.valuationMethod);
 }
 
 class AccountsCompanion extends UpdateCompanion<Account> {
@@ -1832,6 +1880,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
   final Value<bool> isFxRevalTarget;
   final Value<String?> vendorRequirement;
   final Value<bool> isRevenueDeduction;
+  final Value<String?> valuationMethod;
   const AccountsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -1853,6 +1902,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     this.isFxRevalTarget = const Value.absent(),
     this.vendorRequirement = const Value.absent(),
     this.isRevenueDeduction = const Value.absent(),
+    this.valuationMethod = const Value.absent(),
   });
   AccountsCompanion.insert({
     this.id = const Value.absent(),
@@ -1875,6 +1925,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     this.isFxRevalTarget = const Value.absent(),
     this.vendorRequirement = const Value.absent(),
     this.isRevenueDeduction = const Value.absent(),
+    this.valuationMethod = const Value.absent(),
   }) : name = Value(name),
        nature = Value(nature),
        equityTypeId = Value(equityTypeId),
@@ -1905,6 +1956,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     Expression<bool>? isFxRevalTarget,
     Expression<String>? vendorRequirement,
     Expression<bool>? isRevenueDeduction,
+    Expression<String>? valuationMethod,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1931,6 +1983,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       if (vendorRequirement != null) 'vendor_requirement': vendorRequirement,
       if (isRevenueDeduction != null)
         'is_revenue_deduction': isRevenueDeduction,
+      if (valuationMethod != null) 'valuation_method': valuationMethod,
     });
   }
 
@@ -1955,6 +2008,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     Value<bool>? isFxRevalTarget,
     Value<String?>? vendorRequirement,
     Value<bool>? isRevenueDeduction,
+    Value<String?>? valuationMethod,
   }) {
     return AccountsCompanion(
       id: id ?? this.id,
@@ -1978,6 +2032,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       isFxRevalTarget: isFxRevalTarget ?? this.isFxRevalTarget,
       vendorRequirement: vendorRequirement ?? this.vendorRequirement,
       isRevenueDeduction: isRevenueDeduction ?? this.isRevenueDeduction,
+      valuationMethod: valuationMethod ?? this.valuationMethod,
     );
   }
 
@@ -2048,6 +2103,9 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     if (isRevenueDeduction.present) {
       map['is_revenue_deduction'] = Variable<bool>(isRevenueDeduction.value);
     }
+    if (valuationMethod.present) {
+      map['valuation_method'] = Variable<String>(valuationMethod.value);
+    }
     return map;
   }
 
@@ -2073,7 +2131,8 @@ class AccountsCompanion extends UpdateCompanion<Account> {
           ..write('cashFlowCategory: $cashFlowCategory, ')
           ..write('isFxRevalTarget: $isFxRevalTarget, ')
           ..write('vendorRequirement: $vendorRequirement, ')
-          ..write('isRevenueDeduction: $isRevenueDeduction')
+          ..write('isRevenueDeduction: $isRevenueDeduction, ')
+          ..write('valuationMethod: $valuationMethod')
           ..write(')'))
         .toString();
   }
@@ -12202,6 +12261,7 @@ typedef $$AccountsTableCreateCompanionBuilder =
       Value<bool> isFxRevalTarget,
       Value<String?> vendorRequirement,
       Value<bool> isRevenueDeduction,
+      Value<String?> valuationMethod,
     });
 typedef $$AccountsTableUpdateCompanionBuilder =
     AccountsCompanion Function({
@@ -12225,6 +12285,7 @@ typedef $$AccountsTableUpdateCompanionBuilder =
       Value<bool> isFxRevalTarget,
       Value<String?> vendorRequirement,
       Value<bool> isRevenueDeduction,
+      Value<String?> valuationMethod,
     });
 
 final class $$AccountsTableReferences
@@ -12500,6 +12561,11 @@ class $$AccountsTableFilterComposer
 
   ColumnFilters<bool> get isRevenueDeduction => $composableBuilder(
     column: $table.isRevenueDeduction,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get valuationMethod => $composableBuilder(
+    column: $table.valuationMethod,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -12796,6 +12862,11 @@ class $$AccountsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get valuationMethod => $composableBuilder(
+    column: $table.valuationMethod,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$DimensionValuesTableOrderingComposer get equityTypeId {
     final $$DimensionValuesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -13003,6 +13074,11 @@ class $$AccountsTableAnnotationComposer
 
   GeneratedColumn<bool> get isRevenueDeduction => $composableBuilder(
     column: $table.isRevenueDeduction,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get valuationMethod => $composableBuilder(
+    column: $table.valuationMethod,
     builder: (column) => column,
   );
 
@@ -13280,6 +13356,7 @@ class $$AccountsTableTableManager
                 Value<bool> isFxRevalTarget = const Value.absent(),
                 Value<String?> vendorRequirement = const Value.absent(),
                 Value<bool> isRevenueDeduction = const Value.absent(),
+                Value<String?> valuationMethod = const Value.absent(),
               }) => AccountsCompanion(
                 id: id,
                 name: name,
@@ -13301,6 +13378,7 @@ class $$AccountsTableTableManager
                 isFxRevalTarget: isFxRevalTarget,
                 vendorRequirement: vendorRequirement,
                 isRevenueDeduction: isRevenueDeduction,
+                valuationMethod: valuationMethod,
               ),
           createCompanionCallback:
               ({
@@ -13324,6 +13402,7 @@ class $$AccountsTableTableManager
                 Value<bool> isFxRevalTarget = const Value.absent(),
                 Value<String?> vendorRequirement = const Value.absent(),
                 Value<bool> isRevenueDeduction = const Value.absent(),
+                Value<String?> valuationMethod = const Value.absent(),
               }) => AccountsCompanion.insert(
                 id: id,
                 name: name,
@@ -13345,6 +13424,7 @@ class $$AccountsTableTableManager
                 isFxRevalTarget: isFxRevalTarget,
                 vendorRequirement: vendorRequirement,
                 isRevenueDeduction: isRevenueDeduction,
+                valuationMethod: valuationMethod,
               ),
           withReferenceMapper:
               (p0) =>

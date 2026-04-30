@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../account/presentation/AccountBloc.dart';
+import '../../account/presentation/AccountEvent.dart';
 import '../../entry/presentation/EntryPage.dart';
 import 'JournalBloc.dart';
 import 'JournalEvent.dart';
@@ -32,6 +34,7 @@ class _JournalPageState extends State<JournalPage> with TickerProviderStateMixin
     _fadeAnim = CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut);
     _fadeController.forward();
     context.read<JournalBloc>().add(const LoadTransactions());
+    context.read<AccountBloc>().add(const AccountEvent.loadTree());
   }
 
   @override

@@ -3,10 +3,19 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/constants/Enums.dart';
 import '../../../core/domain/Transaction.dart';
+import '../../account/presentation/AccountBloc.dart';
+import '../../account/presentation/AccountState.dart';
 import 'JournalBloc.dart';
 import 'JournalState.dart';
 import 'widgets/FlowArrow.dart';
 import 'widgets/FlowNode.dart';
+
+Map<int, ({String name, String kind})> _buildAccountMap(AccountState s) {
+  return {
+    for (final a in s.listAll)
+      a.id.value: (name: a.name, kind: a.nature.name),
+  };
+}
 
 /// V3 — FROM→TO 흐름 카드
 class JournalV3 extends StatelessWidget {
@@ -14,31 +23,36 @@ class JournalV3 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<JournalBloc, JournalState>(
-      builder: (context, state) {
-        return Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${DateTime.now().month}월 ${DateTime.now().day}일',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.1 * 11, color: Theme.of(context).colorScheme.onSurfaceVariant),
+    return BlocBuilder<AccountBloc, AccountState>(
+      builder: (context, accountState) {
+        final accountMap = _buildAccountMap(accountState);
+        return BlocBuilder<JournalBloc, JournalState>(
+          builder: (context, state) {
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${DateTime.now().month}월 ${DateTime.now().day}일',
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.1 * 11, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      ),
+                      const Text('돈은 어디로 흘렀나', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+                    ],
                   ),
-                  const Text('돈은 어디로 흘렀나', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
-                ],
-              ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-                itemCount: state.listTransactions.length,
-                itemBuilder: (context, i) => _FlowCard(tx: state.listTransactions[i]),
-              ),
-            ),
-          ],
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                    itemCount: state.listTransactions.length,
+                    itemBuilder: (context, i) => _FlowCard(tx: state.listTransactions[i], accountMap: accountMap),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -46,8 +60,9 @@ class JournalV3 extends StatelessWidget {
 }
 
 class _FlowCard extends StatelessWidget {
-  const _FlowCard({required this.tx});
+  const _FlowCard({required this.tx, required this.accountMap});
   final Transaction tx;
+  final Map<int, ({String name, String kind})> accountMap;
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +72,9 @@ class _FlowCard extends StatelessWidget {
     // FROM = credit 계정, TO = debit 계정
     final fromLine = credits.isNotEmpty ? credits.first : null;
     final toLine = debits.isNotEmpty ? debits.first : null;
+
+    final fromInfo = fromLine != null ? accountMap[fromLine.accountId.value] : null;
+    final toInfo = toLine != null ? accountMap[toLine.accountId.value] : null;
 
     final totalAmt = debits.fold<int>(0, (s, l) => s + l.baseAmount);
 
@@ -101,8 +119,8 @@ class _FlowCard extends StatelessWidget {
               Expanded(
                 child: fromLine != null
                     ? FlowNode(
-                        accountName: '계정 ${fromLine.accountId.value}',
-                        kind: 'asset',
+                        accountName: fromInfo?.name ?? '계정 ${fromLine.accountId.value}',
+                        kind: fromInfo?.kind ?? 'asset',
                         icon: '🌳',
                         side: 'from',
                       )
@@ -112,8 +130,8 @@ class _FlowCard extends StatelessWidget {
               Expanded(
                 child: toLine != null
                     ? FlowNode(
-                        accountName: '계정 ${toLine.accountId.value}',
-                        kind: 'expense',
+                        accountName: toInfo?.name ?? '계정 ${toLine.accountId.value}',
+                        kind: toInfo?.kind ?? 'expense',
                         icon: '🍎',
                         side: 'to',
                       )

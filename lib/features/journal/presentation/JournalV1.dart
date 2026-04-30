@@ -11,6 +11,13 @@ import 'widgets/DayGroupHeader.dart';
 import 'widgets/LedgerPosting.dart';
 import 'widgets/MiniPosting.dart';
 
+Map<int, ({String name, String kind})> _buildAccountMap(AccountState s) {
+  return {
+    for (final a in s.listAll)
+      a.id.value: (name: a.name, kind: a.nature.name),
+  };
+}
+
 /// V1 — 단식/복식 토글, 펼침형
 class JournalV1 extends StatefulWidget {
   const JournalV1({super.key});
@@ -28,9 +35,7 @@ class _JournalV1State extends State<JournalV1> {
   Widget build(BuildContext context) {
     return BlocBuilder<AccountBloc, AccountState>(
       builder: (context, accountState) {
-        final nameMap = {
-          for (final a in accountState.listAll) a.id.value: a.name,
-        };
+        final accountMap = _buildAccountMap(accountState);
         return BlocBuilder<JournalBloc, JournalState>(
           builder: (context, state) {
             final grouped = _groupByDate(state.listTransactions, _filter, _isDoublEntry);
@@ -92,7 +97,7 @@ class _JournalV1State extends State<JournalV1> {
                         child: _isDoublEntry
                             ? Column(
                                 children: g.items
-                                    .map((tx) => _DoubleEntryCard(tx: tx, nameMap: nameMap))
+                                    .map((tx) => _DoubleEntryCard(tx: tx, accountMap: accountMap))
                                     .toList(),
                               )
                             : Container(
@@ -111,7 +116,7 @@ class _JournalV1State extends State<JournalV1> {
                                       isLast: i == g.items.length - 1,
                                       isOpen: isOpen,
                                       onTap: () => setState(() => _openId = isOpen ? null : tx.id.value),
-                                      nameMap: nameMap,
+                                      accountMap: accountMap,
                                     );
                                   }),
                                 ),
@@ -123,8 +128,8 @@ class _JournalV1State extends State<JournalV1> {
               ),
             ),
           ],
-          );
-        },
+            );
+          },
         );
       },
     );
@@ -323,9 +328,9 @@ class _SumCol extends StatelessWidget {
 }
 
 class _DoubleEntryCard extends StatelessWidget {
-  const _DoubleEntryCard({required this.tx, required this.nameMap});
+  const _DoubleEntryCard({required this.tx, required this.accountMap});
   final Transaction tx;
-  final Map<int, String> nameMap;
+  final Map<int, ({String name, String kind})> accountMap;
 
   @override
   Widget build(BuildContext context) {
@@ -372,13 +377,14 @@ class _DoubleEntryCard extends StatelessWidget {
               Expanded(
                 child: Column(
                   children: List.generate(debits.length, (i) {
+                    final info = accountMap[debits[i].accountId.value];
                     return Padding(
                       padding: EdgeInsets.only(bottom: i < debits.length - 1 ? 6 : 0),
                       child: SizedBox(
                         height: layout.debitHs[i],
                         child: MiniPosting(
-                          accountName: nameMap[debits[i].accountId.value] ?? '#${debits[i].accountId.value}',
-                          kind: 'expense',
+                          accountName: info?.name ?? '#${debits[i].accountId.value}',
+                          kind: info?.kind ?? 'expense',
                           icon: '🍎',
                           amount: debits[i].baseAmount,
                           isDebit: true,
@@ -392,13 +398,14 @@ class _DoubleEntryCard extends StatelessWidget {
               Expanded(
                 child: Column(
                   children: List.generate(credits.length, (i) {
+                    final info = accountMap[credits[i].accountId.value];
                     return Padding(
                       padding: EdgeInsets.only(bottom: i < credits.length - 1 ? 6 : 0),
                       child: SizedBox(
                         height: layout.creditHs[i],
                         child: MiniPosting(
-                          accountName: nameMap[credits[i].accountId.value] ?? '#${credits[i].accountId.value}',
-                          kind: 'asset',
+                          accountName: info?.name ?? '#${credits[i].accountId.value}',
+                          kind: info?.kind ?? 'asset',
                           icon: '🌳',
                           amount: credits[i].baseAmount,
                           isDebit: false,
@@ -417,12 +424,12 @@ class _DoubleEntryCard extends StatelessWidget {
 }
 
 class _SingleEntryRow extends StatelessWidget {
-  const _SingleEntryRow({required this.tx, required this.isLast, required this.isOpen, required this.onTap, required this.nameMap});
+  const _SingleEntryRow({required this.tx, required this.isLast, required this.isOpen, required this.onTap, required this.accountMap});
   final Transaction tx;
   final bool isLast;
   final bool isOpen;
   final VoidCallback onTap;
-  final Map<int, String> nameMap;
+  final Map<int, ({String name, String kind})> accountMap;
 
   @override
   Widget build(BuildContext context) {
@@ -470,7 +477,7 @@ class _SingleEntryRow extends StatelessWidget {
             ),
           ),
         ),
-        if (isOpen) _ExpandedPosting(tx: tx, nameMap: nameMap),
+        if (isOpen) _ExpandedPosting(tx: tx, accountMap: accountMap),
         if (!isLast || isOpen) const Divider(height: 1),
       ],
     );
@@ -488,9 +495,9 @@ class _SingleEntryRow extends StatelessWidget {
 }
 
 class _ExpandedPosting extends StatelessWidget {
-  const _ExpandedPosting({required this.tx, required this.nameMap});
+  const _ExpandedPosting({required this.tx, required this.accountMap});
   final Transaction tx;
-  final Map<int, String> nameMap;
+  final Map<int, ({String name, String kind})> accountMap;
 
   @override
   Widget build(BuildContext context) {
@@ -512,25 +519,31 @@ class _ExpandedPosting extends StatelessWidget {
             children: [
               Expanded(
                 child: Column(
-                  children: debits.map((l) => LedgerPosting(
-                    side: '차',
-                    accountName: nameMap[l.accountId.value] ?? '#${l.accountId.value}',
-                    kind: 'expense',
-                    icon: '🍎',
-                    amount: l.baseAmount,
-                  )).toList(),
+                  children: debits.map((l) {
+                    final info = accountMap[l.accountId.value];
+                    return LedgerPosting(
+                      side: '차',
+                      accountName: info?.name ?? '#${l.accountId.value}',
+                      kind: info?.kind ?? 'expense',
+                      icon: '🍎',
+                      amount: l.baseAmount,
+                    );
+                  }).toList(),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
-                  children: credits.map((l) => LedgerPosting(
-                    side: '대',
-                    accountName: nameMap[l.accountId.value] ?? '#${l.accountId.value}',
-                    kind: 'asset',
-                    icon: '🌳',
-                    amount: l.baseAmount,
-                  )).toList(),
+                  children: credits.map((l) {
+                    final info = accountMap[l.accountId.value];
+                    return LedgerPosting(
+                      side: '대',
+                      accountName: info?.name ?? '#${l.accountId.value}',
+                      kind: info?.kind ?? 'asset',
+                      icon: '🌳',
+                      amount: l.baseAmount,
+                    );
+                  }).toList(),
                 ),
               ),
             ],

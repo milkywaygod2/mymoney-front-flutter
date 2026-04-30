@@ -4,10 +4,19 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../app/theme/AppColors.dart';
 import '../../../core/constants/Enums.dart';
 import '../../../core/domain/Transaction.dart';
+import '../../account/presentation/AccountBloc.dart';
+import '../../account/presentation/AccountState.dart';
 import 'JournalBloc.dart';
 import 'JournalState.dart';
 import 'widgets/DayGroupHeader.dart';
 import 'widgets/PostingCell.dart';
+
+Map<int, ({String name, String kind})> _buildAccountMap(AccountState s) {
+  return {
+    for (final a in s.listAll)
+      a.id.value: (name: a.name, kind: a.nature.name),
+  };
+}
 
 /// V2 — 분개장 그리드 (날짜|차변|대변 3col)
 class JournalV2 extends StatelessWidget {
@@ -15,9 +24,12 @@ class JournalV2 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<JournalBloc, JournalState>(
-      builder: (context, state) {
-        final grouped = _groupByDate(state.listTransactions);
+    return BlocBuilder<AccountBloc, AccountState>(
+      builder: (context, accountState) {
+        final accountMap = _buildAccountMap(accountState);
+        return BlocBuilder<JournalBloc, JournalState>(
+          builder: (context, state) {
+            final grouped = _groupByDate(state.listTransactions);
 
         return Column(
           children: [
@@ -86,7 +98,7 @@ class JournalV2 extends StatelessWidget {
                             children: [
                               ...List.generate(g.items.length, (i) {
                                 final tx = g.items[i];
-                                return _JournalRow(tx: tx, isLast: i == g.items.length - 1);
+                                return _JournalRow(tx: tx, isLast: i == g.items.length - 1, accountMap: accountMap);
                               }),
                               _DayTotalsRow(txns: g.items),
                             ],
@@ -99,6 +111,8 @@ class JournalV2 extends StatelessWidget {
               ),
             ),
           ],
+        );
+          },
         );
       },
     );
@@ -130,9 +144,10 @@ List<_DayGroup> _groupByDate(List<Transaction> txns) {
 }
 
 class _JournalRow extends StatelessWidget {
-  const _JournalRow({required this.tx, required this.isLast});
+  const _JournalRow({required this.tx, required this.isLast, required this.accountMap});
   final Transaction tx;
   final bool isLast;
+  final Map<int, ({String name, String kind})> accountMap;
 
   @override
   Widget build(BuildContext context) {
@@ -140,6 +155,9 @@ class _JournalRow extends StatelessWidget {
     final credits = tx.listLines.where((l) => l.entryType == EntryType.credit).toList();
     final debit = debits.isNotEmpty ? debits.first : null;
     final credit = credits.isNotEmpty ? credits.first : null;
+
+    final debitInfo = debit != null ? accountMap[debit.accountId.value] : null;
+    final creditInfo = credit != null ? accountMap[credit.accountId.value] : null;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -181,8 +199,8 @@ class _JournalRow extends StatelessWidget {
               Expanded(
                 child: debit != null
                     ? PostingCell(
-                        accountName: '계정 ${debit.accountId.value}',
-                        kind: 'expense',
+                        accountName: debitInfo?.name ?? '계정 ${debit.accountId.value}',
+                        kind: debitInfo?.kind ?? 'expense',
                         icon: '🍎',
                         amount: debit.baseAmount,
                         side: '차',
@@ -193,8 +211,8 @@ class _JournalRow extends StatelessWidget {
               Expanded(
                 child: credit != null
                     ? PostingCell(
-                        accountName: '계정 ${credit.accountId.value}',
-                        kind: 'asset',
+                        accountName: creditInfo?.name ?? '계정 ${credit.accountId.value}',
+                        kind: creditInfo?.kind ?? 'asset',
                         icon: '🌳',
                         amount: credit.baseAmount,
                         side: '대',
