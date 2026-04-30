@@ -1,24 +1,125 @@
 import 'package:flutter/material.dart';
 
-/// 앱 전체 테마 — 다크 모드 + 초록색 기반
+import 'AppColors.dart';
+import 'AppTextStyles.dart';
+
+/// 앱 전체 테마 — AppColors 토큰 기반 Material 3 ThemeData
 class AppTheme {
   AppTheme._();
 
-  static ThemeData get dark => ThemeData(
+  static ThemeData dark() => ThemeData(
         brightness: Brightness.dark,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.green,
-          brightness: Brightness.dark,
-        ),
         useMaterial3: true,
+        colorScheme: const ColorScheme(
+          brightness: Brightness.dark,
+          primary: AppColors.darkPrimary,
+          onPrimary: AppColors.darkOnPrimary,
+          primaryContainer: AppColors.darkPrimaryContainer,
+          onPrimaryContainer: AppColors.darkOnPrimaryContainer,
+          secondary: AppColors.natureLiability,
+          onSecondary: AppColors.darkFg1,
+          secondaryContainer: AppColors.darkSurface2,
+          onSecondaryContainer: AppColors.darkFg1,
+          tertiary: AppColors.natureRevenue,
+          onTertiary: AppColors.darkBg,
+          tertiaryContainer: AppColors.darkSurface3,
+          onTertiaryContainer: AppColors.darkFg1,
+          error: AppColors.stateError,
+          onError: AppColors.darkFg1,
+          errorContainer: Color(0xFF7F1D1D),
+          onErrorContainer: AppColors.expenseSoft,
+          surface: AppColors.darkSurface,
+          onSurface: AppColors.darkFg1,
+          surfaceContainerHighest: AppColors.darkSurface3,
+          onSurfaceVariant: AppColors.darkFg2,
+          outline: AppColors.darkOutline,
+          outlineVariant: AppColors.darkOutlineVariant,
+          shadow: Colors.black,
+          scrim: Colors.black,
+          inverseSurface: AppColors.lightSurface,
+          onInverseSurface: AppColors.lightFg1,
+          inversePrimary: AppColors.lightPrimary,
+        ),
+        scaffoldBackgroundColor: AppColors.darkBg,
+        cardColor: AppColors.darkSurface,
+        dividerColor: AppColors.darkDivider,
+        textTheme: const TextTheme(
+          displayLarge: AppTextStyles.displayLarge,
+          displayMedium: AppTextStyles.displayMedium,
+          displaySmall: AppTextStyles.displaySmall,
+          headlineLarge: AppTextStyles.headlineLarge,
+          headlineMedium: AppTextStyles.headlineMedium,
+          headlineSmall: AppTextStyles.headlineSmall,
+          titleLarge: AppTextStyles.titleLarge,
+          titleMedium: AppTextStyles.titleMedium,
+          titleSmall: AppTextStyles.titleSmall,
+          bodyLarge: AppTextStyles.bodyLarge,
+          bodyMedium: AppTextStyles.bodyMedium,
+          bodySmall: AppTextStyles.bodySmall,
+          labelLarge: AppTextStyles.labelLarge,
+          labelMedium: AppTextStyles.labelMedium,
+          labelSmall: AppTextStyles.labelSmall,
+        ).apply(
+          bodyColor: AppColors.darkFg1,
+          displayColor: AppColors.darkFg1,
+        ),
       );
 
-  static ThemeData get light => ThemeData(
+  static ThemeData light() => ThemeData(
         brightness: Brightness.light,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.green,
-          brightness: Brightness.light,
-        ),
         useMaterial3: true,
+        colorScheme: const ColorScheme(
+          brightness: Brightness.light,
+          primary: AppColors.lightPrimary,
+          onPrimary: AppColors.lightOnPrimary,
+          primaryContainer: AppColors.lightPrimaryContainer,
+          onPrimaryContainer: AppColors.lightOnPrimaryContainer,
+          secondary: AppColors.liabilitySoft,
+          onSecondary: AppColors.lightFg1,
+          secondaryContainer: AppColors.lightSurface2,
+          onSecondaryContainer: AppColors.lightFg1,
+          tertiary: AppColors.revenueDeep,
+          onTertiary: AppColors.lightBg,
+          tertiaryContainer: AppColors.lightSurface3,
+          onTertiaryContainer: AppColors.lightFg1,
+          error: AppColors.stateError,
+          onError: AppColors.lightSurface,
+          errorContainer: AppColors.expenseSoft,
+          onErrorContainer: AppColors.expenseDeep,
+          surface: AppColors.lightSurface,
+          onSurface: AppColors.lightFg1,
+          surfaceContainerHighest: AppColors.lightSurface3,
+          onSurfaceVariant: AppColors.lightFg2,
+          outline: AppColors.lightOutline,
+          outlineVariant: AppColors.lightOutlineVariant,
+          shadow: Colors.black,
+          scrim: Colors.black,
+          inverseSurface: AppColors.darkSurface,
+          onInverseSurface: AppColors.darkFg1,
+          inversePrimary: AppColors.darkPrimary,
+        ),
+        scaffoldBackgroundColor: AppColors.lightBg,
+        cardColor: AppColors.lightSurface,
+        dividerColor: AppColors.lightDivider,
+        textTheme: const TextTheme(
+          displayLarge: AppTextStyles.displayLarge,
+          displayMedium: AppTextStyles.displayMedium,
+          displaySmall: AppTextStyles.displaySmall,
+          headlineLarge: AppTextStyles.headlineLarge,
+          headlineMedium: AppTextStyles.headlineMedium,
+          headlineSmall: AppTextStyles.headlineSmall,
+          titleLarge: AppTextStyles.titleLarge,
+          titleMedium: AppTextStyles.titleMedium,
+          titleSmall: AppTextStyles.titleSmall,
+          bodyLarge: AppTextStyles.bodyLarge,
+          bodyMedium: AppTextStyles.bodyMedium,
+          bodySmall: AppTextStyles.bodySmall,
+          labelLarge: AppTextStyles.labelLarge,
+          labelMedium: AppTextStyles.labelMedium,
+          labelSmall: AppTextStyles.labelSmall,
+        ).apply(
+          bodyColor: AppColors.lightFg1,
+          displayColor: AppColors.lightFg1,
+        ),
       );
 }
