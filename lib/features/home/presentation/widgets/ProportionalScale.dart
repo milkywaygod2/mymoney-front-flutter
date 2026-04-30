@@ -24,18 +24,23 @@ class ProportionalScale extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tilt = _computeTilt(revenue, expense);
+    final targetTilt = _computeTilt(revenue, expense);
 
-    return SizedBox(
-      width: 340,
-      height: 220,
-      child: CustomPaint(
-        painter: _ScalePainter(
-          tilt: tilt,
-          revenue: revenue,
-          expense: expense,
-          listPendingExpenses: listPendingExpenses,
-          listPendingRevenues: listPendingRevenues,
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: targetTilt),
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeOutBack,
+      builder: (_, animatedTilt, __) => SizedBox(
+        width: 340,
+        height: 220,
+        child: CustomPaint(
+          painter: _ScalePainter(
+            tilt: animatedTilt,
+            revenue: revenue,
+            expense: expense,
+            listPendingExpenses: listPendingExpenses,
+            listPendingRevenues: listPendingRevenues,
+          ),
         ),
       ),
     );
