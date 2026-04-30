@@ -136,6 +136,12 @@ class _AddAccountSheetState extends State<_AddAccountSheet> {
   };
 
   @override
+  void initState() {
+    super.initState();
+    _nameController.addListener(() => setState(() {}));
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     super.dispose();

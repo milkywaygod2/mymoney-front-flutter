@@ -4,7 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../account/presentation/AccountBloc.dart';
 import '../../account/presentation/AccountEvent.dart';
 import '../../entry/presentation/EntryPage.dart';
+import '../../perspective/presentation/LensSwitcher.dart';
 import '../../perspective/presentation/PerspectiveBloc.dart';
+import '../../perspective/presentation/PerspectiveEvent.dart';
+import '../../perspective/presentation/PerspectiveState.dart';
 import 'JournalBloc.dart';
 import 'JournalEvent.dart';
 import 'JournalState.dart';
@@ -34,6 +37,7 @@ class _JournalPageState extends State<JournalPage> with TickerProviderStateMixin
     );
     _fadeAnim = CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut);
     _fadeController.forward();
+    context.read<PerspectiveBloc>().add(const LoadPresets());
     final perspective =
         context.read<PerspectiveBloc>().state.effectivePerspective;
     context.read<JournalBloc>().add(LoadTransactions(perspective: perspective));
@@ -54,6 +58,18 @@ class _JournalPageState extends State<JournalPage> with TickerProviderStateMixin
     });
   }
 
+  void _showLensSwitcher(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => BlocProvider.value(
+        value: context.read<PerspectiveBloc>(),
+        child: const LensSwitcher(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,6 +79,23 @@ class _JournalPageState extends State<JournalPage> with TickerProviderStateMixin
           onChanged: _onTabChanged,
         ),
         centerTitle: true,
+        actions: [
+          BlocBuilder<PerspectiveBloc, PerspectiveState>(
+            buildWhen: (prev, curr) =>
+                prev.effectivePerspective != curr.effectivePerspective,
+            builder: (context, state) {
+              final name = state.effectivePerspective?.name ?? '전체';
+              return ActionChip(
+                avatar: const Icon(Icons.lens, size: 14),
+                label: Text(name, style: const TextStyle(fontSize: 11)),
+                onPressed: () => _showLensSwitcher(context),
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+              );
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: BlocBuilder<JournalBloc, JournalState>(
         builder: (context, state) {

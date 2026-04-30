@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/constants/Enums.dart';
-import 'AccountBloc.dart';
-import 'AccountState.dart';
 import 'widgets/MetaphorPicker.dart';
 
-/// 설정 모드 — 사용자 메타포 등록 UI
+/// 설정 모드 — K-IFRS 계정 메타포 안내 UI
 class AccountConfig extends StatefulWidget {
   const AccountConfig({super.key});
 
@@ -19,34 +16,30 @@ class _AccountConfigState extends State<AccountConfig> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AccountBloc, AccountState>(
-      builder: (context, state) {
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                '계정과목 메타포 설정',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'K-IFRS 계정 분류를 직관적인 이미지로 이해하세요',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-              const SizedBox(height: 16),
-              MetaphorPicker(
-                selectedNature: _selectedNature,
-                onSelected: (nature) =>
-                    setState(() => _selectedNature = nature),
-              ),
-              const SizedBox(height: 24),
-              if (_selectedNature != null) _SelectedNatureDetail(nature: _selectedNature!),
-            ],
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '계정과목 메타포 설정',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-        );
-      },
+          const SizedBox(height: 4),
+          const Text(
+            'K-IFRS 계정 분류를 직관적인 이미지로 이해하세요',
+            style: TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          const SizedBox(height: 16),
+          MetaphorPicker(
+            selectedNature: _selectedNature,
+            onSelected: (nature) =>
+                setState(() => _selectedNature = nature),
+          ),
+          const SizedBox(height: 24),
+          if (_selectedNature != null) _SelectedNatureDetail(nature: _selectedNature!),
+        ],
+      ),
     );
   }
 }

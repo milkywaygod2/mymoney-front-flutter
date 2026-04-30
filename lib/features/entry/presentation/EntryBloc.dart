@@ -179,7 +179,21 @@ class EntryBloc extends Bloc<EntryEvent, EntryState> {
     emit(state.copyWith(naturalText: e.text));
   }
 
-  /// 자연어 파서 stub — 금액 정규식 + 키워드 기반 계정 분류
+  static const _kExpenseKeywords = {
+    '카드': '신용카드', '현금': '현금', '식비': '식비·외식',
+    '스타벅스': '식비·음료', '커피': '식비·음료', '편의점': '식비·잡화',
+    '마트': '식비·생활', '교통': '교통비', '지하철': '교통비',
+    '택시': '교통비', '주유': '교통비·주유', '월세': '임차료',
+    '보험': '보험료', '통신': '통신비', '핸드폰': '통신비',
+    '병원': '의료비', '약국': '의료비',
+  };
+
+  static const _kRevenueKeywords = {
+    '급여': '급여', '월급': '급여', '이자': '이자수익',
+    '배당': '배당금수익', '임대': '임대료수익',
+  };
+
+  /// 자연어 파서 — 금액 정규식 + 키워드 기반 계정 분류
   void _onParseText(EntryParseNaturalText _, Emitter<EntryState> emit) {
     emit(state.copyWith(status: EntryStatus.parsing));
 
@@ -193,8 +207,24 @@ class EntryBloc extends Bloc<EntryEvent, EntryState> {
       amount = int.tryParse(raw);
     }
 
-    // 키워드 기반 설명 추출
-    final description = text.length > 20 ? text.substring(0, 20) : text;
+    // 키워드 스캔 — 지출 우선, 없으면 수입
+    String? matchedAccount;
+    for (final entry in _kExpenseKeywords.entries) {
+      if (text.contains(entry.key)) {
+        matchedAccount = entry.value;
+        break;
+      }
+    }
+    if (matchedAccount == null) {
+      for (final entry in _kRevenueKeywords.entries) {
+        if (text.contains(entry.key)) {
+          matchedAccount = entry.value;
+          break;
+        }
+      }
+    }
+
+    final description = matchedAccount ?? (text.length > 20 ? text.substring(0, 20) : text);
 
     emit(state.copyWith(
       status: EntryStatus.idle,

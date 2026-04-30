@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../app/MyMoneyApp.dart';
 import '../../../app/theme/AppColors.dart';
 
-/// 앱 설정 페이지 — 통화·테마·데이터·버전 관리 (로컬 상태, SharedPreferences 연동 예정)
+/// 앱 설정 페이지 — 통화·테마·데이터·버전 관리
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
@@ -14,6 +15,21 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   String _currency = 'KRW';
   bool _isDarkMode = appThemeNotifier.value == ThemeMode.dark;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _currency = prefs.getString('currency') ?? 'KRW';
+      _isDarkMode = prefs.getBool('isDarkMode') ?? (appThemeNotifier.value == ThemeMode.dark);
+    });
+    appThemeNotifier.value = _isDarkMode ? ThemeMode.dark : ThemeMode.light;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +69,11 @@ class _SettingsPageState extends State<SettingsPage> {
                     children: [
                       _CurrencyTile(
                         selected: _currency,
-                        onChanged: (v) => setState(() => _currency = v),
+                        onChanged: (v) async {
+                          setState(() => _currency = v);
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setString('currency', v);
+                        },
                       ),
                       const Divider(height: 1),
                       _SwitchTile(
@@ -61,10 +81,12 @@ class _SettingsPageState extends State<SettingsPage> {
                         label: '다크 모드',
                         subtitle: _isDarkMode ? '어두운 테마 사용 중' : '밝은 테마 사용 중',
                         value: _isDarkMode,
-                        onChanged: (v) {
+                        onChanged: (v) async {
                           setState(() => _isDarkMode = v);
                           appThemeNotifier.value =
                               v ? ThemeMode.dark : ThemeMode.light;
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setBool('isDarkMode', v);
                         },
                       ),
                     ],

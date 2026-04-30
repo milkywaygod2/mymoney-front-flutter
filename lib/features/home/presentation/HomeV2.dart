@@ -56,21 +56,8 @@ class _TreeHero extends StatelessWidget {
     return (0.15 + r * 0.85).clamp(0.15, 1.0);
   }
 
-  // 주간 변동률: spark7d 첫날 대비 마지막 날 변동액 기준
-  double? _weeklyChange() {
-    if (spark7d.isEmpty || spark7d.every((v) => v == 0)) return null;
-    final first = spark7d.first;
-    final last = spark7d.last;
-    final base = first.abs() < 1 ? 1 : first.abs();
-    return (last - first) / base * 100;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final change = _weeklyChange();
-    final isPositive = (change ?? 0) >= 0;
-    final chipColor = isPositive ? AppColors.stateSuccess : AppColors.stateError;
-
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
       decoration: BoxDecoration(
@@ -110,35 +97,8 @@ class _TreeHero extends StatelessWidget {
                     letterSpacing: -0.02 * 28,
                   ),
                 ),
-                if (change != null) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: chipColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          isPositive ? Icons.trending_up : Icons.trending_down,
-                          size: 13,
-                          color: chipColor,
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          '${isPositive ? "+" : ""}${change.toStringAsFixed(1)}% ${isPositive ? "자라는 중" : "줄어드는 중"}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: chipColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                const SizedBox(height: 8),
+                _SparkBadge(spark7d: spark7d),
               ],
             ),
           ),
@@ -155,6 +115,57 @@ class _TreeHero extends StatelessWidget {
       buf.write(str[i]);
     }
     return buf.toString();
+  }
+}
+
+/// 최근 7일 순수익 추세 뱃지 — spark7d 마지막 vs 직전 비교
+class _SparkBadge extends StatelessWidget {
+  const _SparkBadge({required this.spark7d});
+  final List<int> spark7d;
+
+  @override
+  Widget build(BuildContext context) {
+    if (spark7d.length < 2) return const SizedBox.shrink();
+    final last = spark7d.last;
+    final prev = spark7d[spark7d.length - 2];
+    final isPositive = last >= prev;
+    final diff = last - prev;
+    final color = isPositive ? AppColors.natureAsset : AppColors.natureExpense;
+    final icon = isPositive ? Icons.trending_up : Icons.trending_down;
+    final sign = isPositive ? '+' : '';
+    final label = diff == 0
+        ? '변동 없음'
+        : '$sign${_fmtCompact(diff)} 어제 대비';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _fmtCompact(int v) {
+    final abs = v.abs();
+    if (abs >= 100000000) return '${(abs / 100000000).toStringAsFixed(1)}억';
+    if (abs >= 10000) return '${(abs / 10000).toStringAsFixed(0)}만';
+    return abs.toString();
   }
 }
 

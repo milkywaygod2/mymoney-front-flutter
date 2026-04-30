@@ -70,10 +70,11 @@ class _ShellScaffold extends StatelessWidget {
     NavigationDestination(icon: Icon(Icons.home), label: '홈'),
     NavigationDestination(icon: Icon(Icons.receipt_long), label: '거래'),
     NavigationDestination(icon: Icon(Icons.analytics), label: '분석'),
+    NavigationDestination(icon: Icon(Icons.account_tree), label: '계정'),
     NavigationDestination(icon: Icon(Icons.settings), label: '설정'),
   ];
 
-  static const _listPaths = ['/home', '/journal', '/report', '/more'];
+  static const _listPaths = ['/home', '/journal', '/report', '/account', '/more'];
 
   int _getCurrentIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
@@ -98,7 +99,7 @@ class _ShellScaffold extends StatelessWidget {
               destinations: _listDestinations
                   .map((d) => NavigationRailDestination(
                         icon: d.icon,
-                        label: Text(d.label),
+                        label: Text(d.label, style: const TextStyle(fontSize: 11)),
                       ))
                   .toList(),
             ),

@@ -153,11 +153,7 @@ class _JournalRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final debits = tx.listLines.where((l) => l.entryType == EntryType.debit).toList();
     final credits = tx.listLines.where((l) => l.entryType == EntryType.credit).toList();
-    final debit = debits.isNotEmpty ? debits.first : null;
-    final credit = credits.isNotEmpty ? credits.first : null;
-
-    final debitInfo = debit != null ? accountMap[debit.accountId.value] : null;
-    final creditInfo = credit != null ? accountMap[credit.accountId.value] : null;
+    final rowCount = debits.length > credits.length ? debits.length : credits.length;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -181,46 +177,57 @@ class _JournalRow extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          // 날짜|차변|대변 3col
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 70,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    '${tx.date.month.toString().padLeft(2, '0')}/${tx.date.day.toString().padLeft(2, '0')}',
-                    style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurfaceVariant, fontFamily: 'monospace'),
+          // 날짜|차변|대변 3col — 다중 분개 지원
+          ...List.generate(rowCount, (i) {
+            final debit = i < debits.length ? debits[i] : null;
+            final credit = i < credits.length ? credits[i] : null;
+            final debitInfo = debit != null ? accountMap[debit.accountId.value] : null;
+            final creditInfo = credit != null ? accountMap[credit.accountId.value] : null;
+            return Padding(
+              padding: EdgeInsets.only(top: i > 0 ? 6 : 0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 70,
+                    child: i == 0
+                        ? Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              '${tx.date.month.toString().padLeft(2, '0')}/${tx.date.day.toString().padLeft(2, '0')}',
+                              style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurfaceVariant, fontFamily: 'monospace'),
+                            ),
+                          )
+                        : const SizedBox(),
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: debit != null
+                        ? PostingCell(
+                            accountName: debitInfo?.name ?? '계정 ${debit.accountId.value}',
+                            kind: debitInfo?.kind ?? 'expense',
+                            icon: '🍎',
+                            amount: debit.baseAmount,
+                            side: '차',
+                          )
+                        : const SizedBox(),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: credit != null
+                        ? PostingCell(
+                            accountName: creditInfo?.name ?? '계정 ${credit.accountId.value}',
+                            kind: creditInfo?.kind ?? 'asset',
+                            icon: '🌳',
+                            amount: credit.baseAmount,
+                            side: '대',
+                          )
+                        : const SizedBox(),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: debit != null
-                    ? PostingCell(
-                        accountName: debitInfo?.name ?? '계정 ${debit.accountId.value}',
-                        kind: debitInfo?.kind ?? 'expense',
-                        icon: '🍎',
-                        amount: debit.baseAmount,
-                        side: '차',
-                      )
-                    : const SizedBox(),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: credit != null
-                    ? PostingCell(
-                        accountName: creditInfo?.name ?? '계정 ${credit.accountId.value}',
-                        kind: creditInfo?.kind ?? 'asset',
-                        icon: '🌳',
-                        amount: credit.baseAmount,
-                        side: '대',
-                      )
-                    : const SizedBox(),
-              ),
-            ],
-          ),
+            );
+          }),
         ],
       ),
     );
