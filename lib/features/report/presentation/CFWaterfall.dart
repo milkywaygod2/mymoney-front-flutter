@@ -6,48 +6,35 @@ import '../../../core/models/CashFlowLineItem.dart';
 import '../../../core/constants/Enums.dart';
 import 'ReportBloc.dart';
 
-/// 현금흐름 폭포(Waterfall) 차트 — CustomPainter 기반
+/// 현금흐름 폭포(Waterfall) 차트 — ReportBloc cashFlowStatement 실데이터 바인딩
+/// cashFlowStatement가 null이면 로딩 중 플레이스홀더 표시
 class CFWaterfall extends StatelessWidget {
   const CFWaterfall({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ReportBloc, ReportState>(
+      buildWhen: (prev, curr) =>
+          prev.cashFlowStatement != curr.cashFlowStatement ||
+          prev.isLoading != curr.isLoading,
       builder: (context, state) {
-        if (state.dashboard == null) return const SizedBox.shrink();
+        final cf = state.cashFlowStatement;
 
-        // dashboard 요약에서 간이 CF 구성 (cashFlowStatement 없을 때 fallback)
-        final d = state.dashboard!;
-        final listItems = <_WaterfallBar>[
-          _WaterfallBar(
-            label: '기초현금',
-            value: 0,
-            isBaseline: true,
-          ),
-          _WaterfallBar(
-            label: '영업활동',
-            value: d.netIncome,
-            isBaseline: false,
-          ),
-          _WaterfallBar(
-            label: '투자활동',
-            value: 0,
-            isBaseline: false,
-          ),
-          _WaterfallBar(
-            label: '재무활동',
-            value: 0,
-            isBaseline: false,
-          ),
-          _WaterfallBar(
-            label: '기말현금',
-            value: d.netIncome,
-            isBaseline: true,
-          ),
-        ];
+        if (cf != null) {
+          return CFWaterfallFull(listItems: cf.listItems);
+        }
 
+        // 로딩 중
+        if (state.isLoading) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        // 데이터 없음 — 빈 상태
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -58,16 +45,14 @@ class CFWaterfall extends StatelessWidget {
                     .titleMedium
                     ?.copyWith(fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 200,
-                child: _WaterfallPainterWidget(bars: listItems),
+              const SizedBox(height: 16),
+              const Center(
+                child: Text(
+                  'CF 보고서 데이터가 없습니다',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                '※ CF 보고서 연동 후 세부 항목 표시',
-                style: TextStyle(fontSize: 10, color: Colors.grey),
-              ),
             ],
           ),
         );
