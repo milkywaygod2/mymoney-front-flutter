@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../features/journal/data/TransactionDao.dart';
@@ -107,10 +109,25 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         super(const HomeState()) {
     on<LoadHome>(_onLoad);
     on<RefreshHome>(_onRefresh);
+
+    var prevDashboard = _reportBloc.state.dashboard;
+    _reportSub = _reportBloc.stream.listen((reportState) {
+      if (prevDashboard == null && reportState.dashboard != null) {
+        add(const LoadHome());
+      }
+      prevDashboard = reportState.dashboard;
+    });
   }
 
   final ReportBloc _reportBloc;
   final TransactionDao _transactionDao;
+  late final StreamSubscription<ReportState> _reportSub;
+
+  @override
+  Future<void> close() {
+    _reportSub.cancel();
+    return super.close();
+  }
 
   Future<void> _onLoad(LoadHome event, Emitter<HomeState> emit) async {
     emit(state.copyWith(isLoading: true));
