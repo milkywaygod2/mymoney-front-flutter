@@ -18,7 +18,7 @@ class HomeV2 extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _TreeHero(netWorth: vm.netWorth),
+          _TreeHero(netWorth: vm.netWorth, spark7d: vm.spark7d),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
             child: Column(
@@ -44,8 +44,9 @@ class HomeV2 extends StatelessWidget {
 }
 
 class _TreeHero extends StatelessWidget {
-  const _TreeHero({required this.netWorth});
+  const _TreeHero({required this.netWorth, required this.spark7d});
   final int netWorth;
+  final List<int> spark7d;
 
   // 순자산 1억 = growthRatio 0.5, 10억 = 1.0 기준 (log 스케일)
   static double _growthRatio(int netWorth) {
@@ -55,8 +56,21 @@ class _TreeHero extends StatelessWidget {
     return (0.15 + r * 0.85).clamp(0.15, 1.0);
   }
 
+  // 주간 변동률: spark7d 첫날 대비 마지막 날 변동액 기준
+  double? _weeklyChange() {
+    if (spark7d.isEmpty || spark7d.every((v) => v == 0)) return null;
+    final first = spark7d.first;
+    final last = spark7d.last;
+    final base = first.abs() < 1 ? 1 : first.abs();
+    return (last - first) / base * 100;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final change = _weeklyChange();
+    final isPositive = (change ?? 0) >= 0;
+    final chipColor = isPositive ? AppColors.stateSuccess : AppColors.stateError;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
       decoration: BoxDecoration(
@@ -96,29 +110,35 @@ class _TreeHero extends StatelessWidget {
                     letterSpacing: -0.02 * 28,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.natureAsset.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.trending_up, size: 13, color: AppColors.natureAsset),
-                      SizedBox(width: 5),
-                      Text(
-                        '+5.1% 자라는 중',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.natureAsset,
+                if (change != null) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: chipColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isPositive ? Icons.trending_up : Icons.trending_down,
+                          size: 13,
+                          color: chipColor,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 5),
+                        Text(
+                          '${isPositive ? "+" : ""}${change.toStringAsFixed(1)}% ${isPositive ? "자라는 중" : "줄어드는 중"}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: chipColor,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
