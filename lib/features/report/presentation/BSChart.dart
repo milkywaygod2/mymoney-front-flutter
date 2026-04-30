@@ -6,7 +6,7 @@ import 'ReportBloc.dart';
 import '../usecase/GenerateBalanceSheet.dart';
 import '../data/ReportQueryService.dart';
 
-/// B/S 차트 — 자산/부채/자본 누적 가로 막대 차트
+/// B/S 차트 — FiveAccountBox 스타일: 좌(자산) vs 우(부채+자본) 두 기둥 비교
 class BSChart extends StatelessWidget {
   const BSChart({super.key});
 
@@ -31,26 +31,8 @@ class BSChart extends StatelessWidget {
                     ?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-              _BalanceBar(
-                label: '자산',
-                value: bs.totalAssets,
-                color: AppColors.natureAsset,
-                maxValue: bs.totalAssets,
-              ),
-              const SizedBox(height: 6),
-              _BalanceBar(
-                label: '부채',
-                value: bs.totalLiabilities,
-                color: AppColors.natureLiability,
-                maxValue: bs.totalAssets,
-              ),
-              const SizedBox(height: 6),
-              _BalanceBar(
-                label: '자본',
-                value: bs.totalEquity,
-                color: AppColors.natureEquity,
-                maxValue: bs.totalAssets,
-              ),
+              // FiveAccountBox: 자산 기둥 vs 부채+자본 기둥
+              _FiveAccountBox(bs: bs),
               const SizedBox(height: 8),
               _BalanceEquation(bs: bs),
               const SizedBox(height: 12),
@@ -63,67 +45,178 @@ class BSChart extends StatelessWidget {
   }
 }
 
-class _BalanceBar extends StatelessWidget {
-  const _BalanceBar({
-    required this.label,
-    required this.value,
-    required this.color,
-    required this.maxValue,
-  });
-
-  final String label;
-  final int value;
-  final Color color;
-  final int maxValue;
+/// 자산(좌) vs 부채+자본(우) 두 기둥을 나란히 배치
+class _FiveAccountBox extends StatelessWidget {
+  const _FiveAccountBox({required this.bs});
+  final BalanceSheet bs;
 
   @override
   Widget build(BuildContext context) {
-    final ratio = maxValue > 0 ? value / maxValue : 0.0;
+    final total = bs.totalAssets > 0 ? bs.totalAssets : 1;
+    final liabilityRatio = (bs.totalLiabilities / total).clamp(0.0, 1.0);
+    final equityRatio = (bs.totalEquity / total).clamp(0.0, 1.0);
 
-    return Row(
-      children: [
-        SizedBox(
-          width: 36,
-          child: Text(
-            label,
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-          ),
-        ),
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: ratio.clamp(0.0, 1.0),
-              minHeight: 20,
-              backgroundColor: color.withValues(alpha: 0.12),
-              valueColor: AlwaysStoppedAnimation<Color>(color),
+    return SizedBox(
+      height: 160,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 좌: 자산 기둥
+          Expanded(
+            child: _AccountColumn(
+              label: '자산',
+              amount: bs.totalAssets,
+              color: AppColors.natureAsset,
+              fillRatio: 1.0,
+              segments: const [],
             ),
           ),
-        ),
-        const SizedBox(width: 8),
-        SizedBox(
-          width: 80,
-          child: Text(
-            _formatAmount(value),
-            textAlign: TextAlign.right,
+          const SizedBox(width: 8),
+          // 우: 부채 + 자본 누적 기둥
+          Expanded(
+            child: _StackedColumn(
+              segments: [
+                _StackedSegment(
+                  label: '부채',
+                  amount: bs.totalLiabilities,
+                  color: AppColors.natureLiability,
+                  ratio: liabilityRatio,
+                ),
+                _StackedSegment(
+                  label: '자본',
+                  amount: bs.totalEquity,
+                  color: AppColors.natureEquity,
+                  ratio: equityRatio,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AccountColumn extends StatelessWidget {
+  const _AccountColumn({
+    required this.label,
+    required this.amount,
+    required this.color,
+    required this.fillRatio,
+    required this.segments,
+  });
+
+  final String label;
+  final int amount;
+  final Color color;
+  final double fillRatio;
+  final List<dynamic> segments;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: color,
             ),
           ),
-        ),
-      ],
+          const Spacer(),
+          Text(
+            _fmt(amount),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  String _formatAmount(int v) {
-    if (v.abs() >= 100000000) {
-      return '${(v / 100000000).toStringAsFixed(1)}억';
-    } else if (v.abs() >= 10000) {
-      return '${(v / 10000).toStringAsFixed(0)}만';
-    }
-    return '₩${v.toString()}';
+  String _fmt(int v) {
+    if (v.abs() >= 100000000) return '${(v / 100000000).toStringAsFixed(1)}억';
+    if (v.abs() >= 10000) return '${(v / 10000).toStringAsFixed(0)}만';
+    return '₩$v';
+  }
+}
+
+class _StackedSegment {
+  const _StackedSegment({
+    required this.label,
+    required this.amount,
+    required this.color,
+    required this.ratio,
+  });
+
+  final String label;
+  final int amount;
+  final Color color;
+  final double ratio;
+}
+
+class _StackedColumn extends StatelessWidget {
+  const _StackedColumn({required this.segments});
+  final List<_StackedSegment> segments;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: segments.map((seg) {
+          return Flexible(
+            flex: (seg.ratio * 1000).round().clamp(1, 1000),
+            child: Container(
+              color: seg.color.withValues(alpha: 0.85),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    seg.label,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Text(
+                    _fmt(seg.amount),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  String _fmt(int v) {
+    if (v.abs() >= 100000000) return '${(v / 100000000).toStringAsFixed(1)}억';
+    if (v.abs() >= 10000) return '${(v / 10000).toStringAsFixed(0)}만';
+    return '₩$v';
   }
 }
 
