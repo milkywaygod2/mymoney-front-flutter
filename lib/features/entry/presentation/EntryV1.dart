@@ -33,16 +33,39 @@ class EntryV1 extends StatelessWidget {
                 description: state.parsedDescription,
               ),
               const SizedBox(height: 16),
-              if (state.debitAccountId != null || state.creditAccountId != null)
+              if (state.debitAccountId != null || state.creditAccountId != null || state.accountHint != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: FromToFlow(
-                    fromLabel: state.creditAccountId != null
-                        ? creditName
-                        : '출처 선택',
-                    toLabel: state.debitAccountId != null
-                        ? debitName
-                        : '도착 선택',
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: FromToFlow(
+                          fromLabel: state.creditAccountId != null
+                              ? creditName
+                              : '출처 선택',
+                          toLabel: state.debitAccountId != null
+                              ? debitName
+                              : '도착 선택',
+                        ),
+                      ),
+                      if (state.accountHint != null) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.secondaryContainer,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '💡 ${state.accountHint} 추천',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Theme.of(context).colorScheme.onSecondaryContainer,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               // 자연어 입력 필드
@@ -86,16 +109,6 @@ class EntryV1 extends StatelessWidget {
                   _ParsedResultRow(
                     label: '날짜',
                     value: '${state.parsedDate!.month}/${state.parsedDate!.day}',
-                  ),
-                if (state.parsedDebitKeyword != null)
-                  _ParsedResultRow(
-                    label: '비용 항목',
-                    value: state.parsedDebitKeyword!,
-                  ),
-                if (state.parsedCreditKeyword != null)
-                  _ParsedResultRow(
-                    label: '결제 수단',
-                    value: state.parsedCreditKeyword!,
                   ),
                 const SizedBox(height: 4),
                 const Text(
