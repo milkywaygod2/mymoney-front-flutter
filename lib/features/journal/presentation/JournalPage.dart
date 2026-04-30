@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/constants/Enums.dart';
 import '../../../core/domain/Transaction.dart';
+import '../../perspective/presentation/PerspectiveBloc.dart';
 import 'FlowCard.dart';
 import 'JournalBloc.dart';
 import 'JournalEvent.dart';
@@ -11,8 +12,21 @@ import 'TransactionForm.dart';
 
 /// 거래 페이지 — Split View (상단 FlowCard + 하단 리스트)
 /// 데스크톱: 좌우 Master-Detail, 모바일: 상하 Split
-class JournalPage extends StatelessWidget {
+class JournalPage extends StatefulWidget {
   const JournalPage({super.key});
+
+  @override
+  State<JournalPage> createState() => _JournalPageState();
+}
+
+class _JournalPageState extends State<JournalPage> {
+  @override
+  void initState() {
+    super.initState();
+    final perspective =
+        context.read<PerspectiveBloc>().state.effectivePerspective;
+    context.read<JournalBloc>().add(LoadTransactions(perspective: perspective));
+  }
 
   @override
   Widget build(BuildContext context) {
