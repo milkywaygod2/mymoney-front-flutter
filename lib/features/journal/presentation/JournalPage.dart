@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../entry/presentation/EntryPage.dart';
 import 'JournalBloc.dart';
 import 'JournalEvent.dart';
 import 'JournalState.dart';
 import 'JournalV1.dart';
 import 'JournalV2.dart';
 import 'JournalV3.dart';
-import 'TransactionForm.dart';
 
 /// JournalPage — V1/V2/V3 토글 컨테이너 (재작성)
 class JournalPage extends StatefulWidget {
@@ -60,7 +60,7 @@ class _JournalPageState extends State<JournalPage> with TickerProviderStateMixin
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () => TransactionForm.show(context),
+            onPressed: () => EntryPage.show(context),
           ),
         ],
       ),
