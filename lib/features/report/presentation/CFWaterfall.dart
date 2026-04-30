@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../app/theme/AppColors.dart';
 import '../../../core/models/CashFlowLineItem.dart';
 import '../../../core/constants/Enums.dart';
 import 'ReportBloc.dart';
@@ -97,9 +98,9 @@ class _WaterfallPainterWidget extends StatelessWidget {
     return CustomPaint(
       painter: _WaterfallPainter(
         bars: bars,
-        positiveColor: const Color(0xFF4CAF50), // TODO: U1 AppColors.income
-        negativeColor: const Color(0xFFF44336), // TODO: U1 AppColors.expense
-        baselineColor: const Color(0xFF607D8B),
+        positiveColor: AppColors.natureAsset,
+        negativeColor: AppColors.natureExpense,
+        baselineColor: AppColors.darkFg4,
         labelStyle: Theme.of(context).textTheme.labelSmall ??
             const TextStyle(fontSize: 10),
       ),

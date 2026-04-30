@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../app/theme/AppColors.dart';
 import 'ReportBloc.dart';
 import '../usecase/GenerateBalanceSheet.dart';
 import '../data/ReportQueryService.dart';
@@ -33,22 +34,21 @@ class BSChart extends StatelessWidget {
               _BalanceBar(
                 label: '자산',
                 value: bs.totalAssets,
-                // TODO: U1 머지 후 AppColors로 교체
-                color: const Color(0xFF4CAF50),
+                color: AppColors.natureAsset,
                 maxValue: bs.totalAssets,
               ),
               const SizedBox(height: 6),
               _BalanceBar(
                 label: '부채',
                 value: bs.totalLiabilities,
-                color: const Color(0xFFF44336),
+                color: AppColors.natureLiability,
                 maxValue: bs.totalAssets,
               ),
               const SizedBox(height: 6),
               _BalanceBar(
                 label: '자본',
                 value: bs.totalEquity,
-                color: const Color(0xFF9C27B0),
+                color: AppColors.natureEquity,
                 maxValue: bs.totalAssets,
               ),
               const SizedBox(height: 8),
@@ -194,19 +194,19 @@ class _BSDetailSectionState extends State<_BSDetailSection> {
           _EntryList(
             title: '자산',
             entries: widget.bs.listAssets,
-            color: const Color(0xFF4CAF50),
+            color: AppColors.natureAsset,
           ),
           const SizedBox(height: 4),
           _EntryList(
             title: '부채',
             entries: widget.bs.listLiabilities,
-            color: const Color(0xFFF44336),
+            color: AppColors.natureLiability,
           ),
           const SizedBox(height: 4),
           _EntryList(
             title: '자본',
             entries: widget.bs.listEquities,
-            color: const Color(0xFF9C27B0),
+            color: AppColors.natureEquity,
           ),
         ],
       ],

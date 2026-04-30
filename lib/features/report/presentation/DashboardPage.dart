@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../app/theme/AppColors.dart';
 import 'ReportBloc.dart';
 import 'RatioGrid.dart';
 import 'BSChart.dart';
@@ -174,8 +175,7 @@ class _SummaryHeader extends StatelessWidget {
               _SummaryCard(
                 label: '순자산',
                 amount: d.netAssets,
-                // TODO: U1 머지 후 AppColors로 교체
-                color: Theme.of(context).colorScheme.primary,
+                color: AppColors.darkPrimary,
                 changeRatio: _extractChangeRatio(mapComp, comparisonType),
               ),
               const SizedBox(height: 12),
@@ -185,7 +185,7 @@ class _SummaryHeader extends StatelessWidget {
                     child: _SummaryCard(
                       label: '수입',
                       amount: d.totalRevenue,
-                      color: const Color(0xFF4CAF50),
+                      color: AppColors.natureAsset,
                       changeRatio: d.revenueChangeRatio,
                     ),
                   ),
@@ -194,7 +194,7 @@ class _SummaryHeader extends StatelessWidget {
                     child: _SummaryCard(
                       label: '지출',
                       amount: d.totalExpense,
-                      color: const Color(0xFFF44336),
+                      color: AppColors.natureExpense,
                       changeRatio: d.expenseChangeRatio,
                     ),
                   ),
@@ -205,8 +205,8 @@ class _SummaryHeader extends StatelessWidget {
                 label: d.netIncome >= 0 ? '당기순이익' : '당기순손실',
                 amount: d.netIncome.abs(),
                 color: d.netIncome >= 0
-                    ? const Color(0xFF009688)
-                    : const Color(0xFFFF5722),
+                    ? AppColors.stateSuccess
+                    : AppColors.stateError,
               ),
               const SizedBox(height: 8),
               Row(
@@ -308,8 +308,8 @@ class _ChangeChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: isPositive
-            ? const Color(0xFF4CAF50).withValues(alpha: 0.1)
-            : const Color(0xFFF44336).withValues(alpha: 0.1),
+            ? AppColors.natureAsset.withValues(alpha: 0.1)
+            : AppColors.natureExpense.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
@@ -317,7 +317,7 @@ class _ChangeChip extends StatelessWidget {
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: isPositive ? const Color(0xFF4CAF50) : const Color(0xFFF44336),
+          color: isPositive ? AppColors.natureAsset : AppColors.natureExpense,
         ),
       ),
     );

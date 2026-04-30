@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../app/theme/AppColors.dart';
+
 /// 출처→도착 칩 — 복식부기 차변/대변 계정 시각화
 class FromToFlow extends StatelessWidget {
   const FromToFlow({
@@ -55,10 +57,9 @@ class _AccountChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: U1 머지 후 AppColors로 교체
     final color = isSource
-        ? const Color(0xFFF44336) // 출처 — 빨강 (대변 계정)
-        : const Color(0xFF4CAF50); // 도착 — 초록 (차변 계정)
+        ? AppColors.natureExpense // 출처 — 대변 계정
+        : AppColors.natureAsset;  // 도착 — 차변 계정
 
     return GestureDetector(
       onTap: onTap,

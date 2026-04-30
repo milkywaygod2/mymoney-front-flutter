@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../app/theme/AppColors.dart';
 import 'ReportBloc.dart';
 import '../usecase/GenerateIncomeStatement.dart';
 import '../data/ReportQueryService.dart';
@@ -60,15 +61,14 @@ class _PLBarChart extends StatelessWidget {
           label: '수익',
           value: pl.totalRevenue,
           maxValue: maxVal,
-          // TODO: U1 머지 후 AppColors로 교체
-          color: const Color(0xFF2196F3),
+          color: AppColors.revenueDeep,
         ),
         const SizedBox(height: 6),
         _Bar(
           label: '비용',
           value: pl.totalExpense,
           maxValue: maxVal,
-          color: const Color(0xFFF44336),
+          color: AppColors.natureExpense,
         ),
       ],
     );
@@ -143,7 +143,7 @@ class _NetIncomeChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isProfit = netIncome >= 0;
-    final color = isProfit ? const Color(0xFF4CAF50) : const Color(0xFFF44336);
+    final color = isProfit ? AppColors.stateSuccess : AppColors.stateError;
     final label = isProfit ? '당기순이익' : '당기순손실';
 
     return Container(
@@ -227,13 +227,13 @@ class _PLDetailSectionState extends State<_PLDetailSection> {
           _PLEntryList(
             title: '수익',
             entries: widget.pl.listRevenues,
-            color: const Color(0xFF2196F3),
+            color: AppColors.revenueDeep,
           ),
           const SizedBox(height: 4),
           _PLEntryList(
             title: '비용',
             entries: widget.pl.listExpenses,
-            color: const Color(0xFFF44336),
+            color: AppColors.natureExpense,
           ),
         ],
       ],
