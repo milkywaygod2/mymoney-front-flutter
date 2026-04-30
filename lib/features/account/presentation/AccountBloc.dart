@@ -31,7 +31,7 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
       final listRoots = listAccounts
           .where((a) => !a.equityTypePath.contains('.'))
           .toList();
-      emit(state.copyWith(listRoots: listRoots, isLoading: false));
+      emit(state.copyWith(listRoots: listRoots, listAll: listAccounts, isLoading: false));
     } on Exception catch (e) {
       emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
     }

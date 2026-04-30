@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/constants/Enums.dart';
 import '../../../core/domain/Transaction.dart';
+import '../../account/presentation/AccountBloc.dart';
+import '../../account/presentation/AccountState.dart';
 import 'JournalBloc.dart';
 import 'JournalState.dart';
 import 'widgets/DayGroupHeader.dart';
@@ -24,11 +26,16 @@ class _JournalV1State extends State<JournalV1> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<JournalBloc, JournalState>(
-      builder: (context, state) {
-        final grouped = _groupByDate(state.listTransactions, _filter, _isDoublEntry);
+    return BlocBuilder<AccountBloc, AccountState>(
+      builder: (context, accountState) {
+        final nameMap = {
+          for (final a in accountState.listAll) a.id.value: a.name,
+        };
+        return BlocBuilder<JournalBloc, JournalState>(
+          builder: (context, state) {
+            final grouped = _groupByDate(state.listTransactions, _filter, _isDoublEntry);
 
-        return Column(
+            return Column(
           children: [
             // 헤더
             Padding(
@@ -85,7 +92,7 @@ class _JournalV1State extends State<JournalV1> {
                         child: _isDoublEntry
                             ? Column(
                                 children: g.items
-                                    .map((tx) => _DoubleEntryCard(tx: tx))
+                                    .map((tx) => _DoubleEntryCard(tx: tx, nameMap: nameMap))
                                     .toList(),
                               )
                             : Container(
@@ -104,6 +111,7 @@ class _JournalV1State extends State<JournalV1> {
                                       isLast: i == g.items.length - 1,
                                       isOpen: isOpen,
                                       onTap: () => setState(() => _openId = isOpen ? null : tx.id.value),
+                                      nameMap: nameMap,
                                     );
                                   }),
                                 ),
@@ -115,6 +123,8 @@ class _JournalV1State extends State<JournalV1> {
               ),
             ),
           ],
+          );
+        },
         );
       },
     );
@@ -313,8 +323,9 @@ class _SumCol extends StatelessWidget {
 }
 
 class _DoubleEntryCard extends StatelessWidget {
-  const _DoubleEntryCard({required this.tx});
+  const _DoubleEntryCard({required this.tx, required this.nameMap});
   final Transaction tx;
+  final Map<int, String> nameMap;
 
   @override
   Widget build(BuildContext context) {
@@ -366,7 +377,7 @@ class _DoubleEntryCard extends StatelessWidget {
                       child: SizedBox(
                         height: layout.debitHs[i],
                         child: MiniPosting(
-                          accountName: '계정 ${debits[i].accountId.value}',
+                          accountName: nameMap[debits[i].accountId.value] ?? '#${debits[i].accountId.value}',
                           kind: 'expense',
                           icon: '🍎',
                           amount: debits[i].baseAmount,
@@ -386,7 +397,7 @@ class _DoubleEntryCard extends StatelessWidget {
                       child: SizedBox(
                         height: layout.creditHs[i],
                         child: MiniPosting(
-                          accountName: '계정 ${credits[i].accountId.value}',
+                          accountName: nameMap[credits[i].accountId.value] ?? '#${credits[i].accountId.value}',
                           kind: 'asset',
                           icon: '🌳',
                           amount: credits[i].baseAmount,
@@ -406,11 +417,12 @@ class _DoubleEntryCard extends StatelessWidget {
 }
 
 class _SingleEntryRow extends StatelessWidget {
-  const _SingleEntryRow({required this.tx, required this.isLast, required this.isOpen, required this.onTap});
+  const _SingleEntryRow({required this.tx, required this.isLast, required this.isOpen, required this.onTap, required this.nameMap});
   final Transaction tx;
   final bool isLast;
   final bool isOpen;
   final VoidCallback onTap;
+  final Map<int, String> nameMap;
 
   @override
   Widget build(BuildContext context) {
@@ -458,7 +470,7 @@ class _SingleEntryRow extends StatelessWidget {
             ),
           ),
         ),
-        if (isOpen) _ExpandedPosting(tx: tx),
+        if (isOpen) _ExpandedPosting(tx: tx, nameMap: nameMap),
         if (!isLast || isOpen) const Divider(height: 1),
       ],
     );
@@ -476,8 +488,9 @@ class _SingleEntryRow extends StatelessWidget {
 }
 
 class _ExpandedPosting extends StatelessWidget {
-  const _ExpandedPosting({required this.tx});
+  const _ExpandedPosting({required this.tx, required this.nameMap});
   final Transaction tx;
+  final Map<int, String> nameMap;
 
   @override
   Widget build(BuildContext context) {
@@ -501,7 +514,7 @@ class _ExpandedPosting extends StatelessWidget {
                 child: Column(
                   children: debits.map((l) => LedgerPosting(
                     side: '차',
-                    accountName: '계정 ${l.accountId.value}',
+                    accountName: nameMap[l.accountId.value] ?? '#${l.accountId.value}',
                     kind: 'expense',
                     icon: '🍎',
                     amount: l.baseAmount,
@@ -513,7 +526,7 @@ class _ExpandedPosting extends StatelessWidget {
                 child: Column(
                   children: credits.map((l) => LedgerPosting(
                     side: '대',
-                    accountName: '계정 ${l.accountId.value}',
+                    accountName: nameMap[l.accountId.value] ?? '#${l.accountId.value}',
                     kind: 'asset',
                     icon: '🌳',
                     amount: l.baseAmount,

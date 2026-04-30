@@ -15,7 +15,8 @@ T _$identity<T>(T value) => value;
 mixin _$AccountState {
 
 /// 최상위 계정 목록 (5대 분류: 자산/부채/자본/수익/비용)
- List<Account> get listRoots;/// 펼쳐진 노드 ID 집합 — 렌더링 시 해당 노드만 자식 표시
+ List<Account> get listRoots;/// 모든 활성 계정 flat 목록 — 계정명 조회용
+ List<Account> get listAll;/// 펼쳐진 노드 ID 집합 — 렌더링 시 해당 노드만 자식 표시
  Set<AccountId> get setExpandedIds;/// 검색 결과 — 검색어에 매칭되는 계정 목록
  List<Account> get listSearchResults;/// 로딩 상태
  bool get isLoading;/// 에러 메시지 (null이면 에러 없음)
@@ -30,16 +31,16 @@ $AccountStateCopyWith<AccountState> get copyWith => _$AccountStateCopyWithImpl<A
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AccountState&&const DeepCollectionEquality().equals(other.listRoots, listRoots)&&const DeepCollectionEquality().equals(other.setExpandedIds, setExpandedIds)&&const DeepCollectionEquality().equals(other.listSearchResults, listSearchResults)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AccountState&&const DeepCollectionEquality().equals(other.listRoots, listRoots)&&const DeepCollectionEquality().equals(other.listAll, listAll)&&const DeepCollectionEquality().equals(other.setExpandedIds, setExpandedIds)&&const DeepCollectionEquality().equals(other.listSearchResults, listSearchResults)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(listRoots),const DeepCollectionEquality().hash(setExpandedIds),const DeepCollectionEquality().hash(listSearchResults),isLoading,errorMessage);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(listRoots),const DeepCollectionEquality().hash(listAll),const DeepCollectionEquality().hash(setExpandedIds),const DeepCollectionEquality().hash(listSearchResults),isLoading,errorMessage);
 
 @override
 String toString() {
-  return 'AccountState(listRoots: $listRoots, setExpandedIds: $setExpandedIds, listSearchResults: $listSearchResults, isLoading: $isLoading, errorMessage: $errorMessage)';
+  return 'AccountState(listRoots: $listRoots, listAll: $listAll, setExpandedIds: $setExpandedIds, listSearchResults: $listSearchResults, isLoading: $isLoading, errorMessage: $errorMessage)';
 }
 
 
@@ -50,7 +51,7 @@ abstract mixin class $AccountStateCopyWith<$Res>  {
   factory $AccountStateCopyWith(AccountState value, $Res Function(AccountState) _then) = _$AccountStateCopyWithImpl;
 @useResult
 $Res call({
- List<Account> listRoots, Set<AccountId> setExpandedIds, List<Account> listSearchResults, bool isLoading, String? errorMessage
+ List<Account> listRoots, List<Account> listAll, Set<AccountId> setExpandedIds, List<Account> listSearchResults, bool isLoading, String? errorMessage
 });
 
 
@@ -67,9 +68,10 @@ class _$AccountStateCopyWithImpl<$Res>
 
 /// Create a copy of AccountState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? listRoots = null,Object? setExpandedIds = null,Object? listSearchResults = null,Object? isLoading = null,Object? errorMessage = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? listRoots = null,Object? listAll = null,Object? setExpandedIds = null,Object? listSearchResults = null,Object? isLoading = null,Object? errorMessage = freezed,}) {
   return _then(_self.copyWith(
 listRoots: null == listRoots ? _self.listRoots : listRoots // ignore: cast_nullable_to_non_nullable
+as List<Account>,listAll: null == listAll ? _self.listAll : listAll // ignore: cast_nullable_to_non_nullable
 as List<Account>,setExpandedIds: null == setExpandedIds ? _self.setExpandedIds : setExpandedIds // ignore: cast_nullable_to_non_nullable
 as Set<AccountId>,listSearchResults: null == listSearchResults ? _self.listSearchResults : listSearchResults // ignore: cast_nullable_to_non_nullable
 as List<Account>,isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
@@ -159,10 +161,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<Account> listRoots,  Set<AccountId> setExpandedIds,  List<Account> listSearchResults,  bool isLoading,  String? errorMessage)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<Account> listRoots,  List<Account> listAll,  Set<AccountId> setExpandedIds,  List<Account> listSearchResults,  bool isLoading,  String? errorMessage)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AccountState() when $default != null:
-return $default(_that.listRoots,_that.setExpandedIds,_that.listSearchResults,_that.isLoading,_that.errorMessage);case _:
+return $default(_that.listRoots,_that.listAll,_that.setExpandedIds,_that.listSearchResults,_that.isLoading,_that.errorMessage);case _:
   return orElse();
 
 }
@@ -180,10 +182,10 @@ return $default(_that.listRoots,_that.setExpandedIds,_that.listSearchResults,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<Account> listRoots,  Set<AccountId> setExpandedIds,  List<Account> listSearchResults,  bool isLoading,  String? errorMessage)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<Account> listRoots,  List<Account> listAll,  Set<AccountId> setExpandedIds,  List<Account> listSearchResults,  bool isLoading,  String? errorMessage)  $default,) {final _that = this;
 switch (_that) {
 case _AccountState():
-return $default(_that.listRoots,_that.setExpandedIds,_that.listSearchResults,_that.isLoading,_that.errorMessage);case _:
+return $default(_that.listRoots,_that.listAll,_that.setExpandedIds,_that.listSearchResults,_that.isLoading,_that.errorMessage);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -200,10 +202,10 @@ return $default(_that.listRoots,_that.setExpandedIds,_that.listSearchResults,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<Account> listRoots,  Set<AccountId> setExpandedIds,  List<Account> listSearchResults,  bool isLoading,  String? errorMessage)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<Account> listRoots,  List<Account> listAll,  Set<AccountId> setExpandedIds,  List<Account> listSearchResults,  bool isLoading,  String? errorMessage)?  $default,) {final _that = this;
 switch (_that) {
 case _AccountState() when $default != null:
-return $default(_that.listRoots,_that.setExpandedIds,_that.listSearchResults,_that.isLoading,_that.errorMessage);case _:
+return $default(_that.listRoots,_that.listAll,_that.setExpandedIds,_that.listSearchResults,_that.isLoading,_that.errorMessage);case _:
   return null;
 
 }
@@ -215,7 +217,7 @@ return $default(_that.listRoots,_that.setExpandedIds,_that.listSearchResults,_th
 
 
 class _AccountState implements AccountState {
-  const _AccountState({final  List<Account> listRoots = const [], final  Set<AccountId> setExpandedIds = const {}, final  List<Account> listSearchResults = const [], this.isLoading = false, this.errorMessage}): _listRoots = listRoots,_setExpandedIds = setExpandedIds,_listSearchResults = listSearchResults;
+  const _AccountState({final  List<Account> listRoots = const [], final  List<Account> listAll = const [], final  Set<AccountId> setExpandedIds = const {}, final  List<Account> listSearchResults = const [], this.isLoading = false, this.errorMessage}): _listRoots = listRoots,_listAll = listAll,_setExpandedIds = setExpandedIds,_listSearchResults = listSearchResults;
   
 
 /// 최상위 계정 목록 (5대 분류: 자산/부채/자본/수익/비용)
@@ -225,6 +227,15 @@ class _AccountState implements AccountState {
   if (_listRoots is EqualUnmodifiableListView) return _listRoots;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_listRoots);
+}
+
+/// 모든 활성 계정 flat 목록 — 계정명 조회용
+ final  List<Account> _listAll;
+/// 모든 활성 계정 flat 목록 — 계정명 조회용
+@override@JsonKey() List<Account> get listAll {
+  if (_listAll is EqualUnmodifiableListView) return _listAll;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_listAll);
 }
 
 /// 펼쳐진 노드 ID 집합 — 렌더링 시 해당 노드만 자식 표시
@@ -260,16 +271,16 @@ _$AccountStateCopyWith<_AccountState> get copyWith => __$AccountStateCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AccountState&&const DeepCollectionEquality().equals(other._listRoots, _listRoots)&&const DeepCollectionEquality().equals(other._setExpandedIds, _setExpandedIds)&&const DeepCollectionEquality().equals(other._listSearchResults, _listSearchResults)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AccountState&&const DeepCollectionEquality().equals(other._listRoots, _listRoots)&&const DeepCollectionEquality().equals(other._listAll, _listAll)&&const DeepCollectionEquality().equals(other._setExpandedIds, _setExpandedIds)&&const DeepCollectionEquality().equals(other._listSearchResults, _listSearchResults)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_listRoots),const DeepCollectionEquality().hash(_setExpandedIds),const DeepCollectionEquality().hash(_listSearchResults),isLoading,errorMessage);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_listRoots),const DeepCollectionEquality().hash(_listAll),const DeepCollectionEquality().hash(_setExpandedIds),const DeepCollectionEquality().hash(_listSearchResults),isLoading,errorMessage);
 
 @override
 String toString() {
-  return 'AccountState(listRoots: $listRoots, setExpandedIds: $setExpandedIds, listSearchResults: $listSearchResults, isLoading: $isLoading, errorMessage: $errorMessage)';
+  return 'AccountState(listRoots: $listRoots, listAll: $listAll, setExpandedIds: $setExpandedIds, listSearchResults: $listSearchResults, isLoading: $isLoading, errorMessage: $errorMessage)';
 }
 
 
@@ -280,7 +291,7 @@ abstract mixin class _$AccountStateCopyWith<$Res> implements $AccountStateCopyWi
   factory _$AccountStateCopyWith(_AccountState value, $Res Function(_AccountState) _then) = __$AccountStateCopyWithImpl;
 @override @useResult
 $Res call({
- List<Account> listRoots, Set<AccountId> setExpandedIds, List<Account> listSearchResults, bool isLoading, String? errorMessage
+ List<Account> listRoots, List<Account> listAll, Set<AccountId> setExpandedIds, List<Account> listSearchResults, bool isLoading, String? errorMessage
 });
 
 
@@ -297,9 +308,10 @@ class __$AccountStateCopyWithImpl<$Res>
 
 /// Create a copy of AccountState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? listRoots = null,Object? setExpandedIds = null,Object? listSearchResults = null,Object? isLoading = null,Object? errorMessage = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? listRoots = null,Object? listAll = null,Object? setExpandedIds = null,Object? listSearchResults = null,Object? isLoading = null,Object? errorMessage = freezed,}) {
   return _then(_AccountState(
 listRoots: null == listRoots ? _self._listRoots : listRoots // ignore: cast_nullable_to_non_nullable
+as List<Account>,listAll: null == listAll ? _self._listAll : listAll // ignore: cast_nullable_to_non_nullable
 as List<Account>,setExpandedIds: null == setExpandedIds ? _self._setExpandedIds : setExpandedIds // ignore: cast_nullable_to_non_nullable
 as Set<AccountId>,listSearchResults: null == listSearchResults ? _self._listSearchResults : listSearchResults // ignore: cast_nullable_to_non_nullable
 as List<Account>,isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
