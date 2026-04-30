@@ -13,6 +13,7 @@ import '../../features/journal/data/TransactionDao.dart';
 import '../../features/journal/presentation/JournalPage.dart';
 import '../../features/report/presentation/DashboardPage.dart';
 import '../../features/report/presentation/ReportBloc.dart';
+import '../../features/settings/presentation/SettingsPage.dart';
 
 /// 앱 라우터 — 4탭 셸 네비게이션
 class AppRouter {
@@ -51,8 +52,7 @@ class AppRouter {
           ),
           GoRoute(
             path: '/more',
-            builder: (context, state) =>
-                const _PlaceholderPage(title: '더보기'),
+            builder: (context, state) => const SettingsPage(),
           ),
         ],
       ),
@@ -70,10 +70,10 @@ class _ShellScaffold extends StatelessWidget {
     NavigationDestination(icon: Icon(Icons.home), label: '홈'),
     NavigationDestination(icon: Icon(Icons.receipt_long), label: '거래'),
     NavigationDestination(icon: Icon(Icons.analytics), label: '분석'),
-    NavigationDestination(icon: Icon(Icons.account_tree), label: '계정'),
+    NavigationDestination(icon: Icon(Icons.settings), label: '설정'),
   ];
 
-  static const _listPaths = ['/home', '/journal', '/report', '/account'];
+  static const _listPaths = ['/home', '/journal', '/report', '/more'];
 
   int _getCurrentIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
@@ -120,19 +120,3 @@ class _ShellScaffold extends StatelessWidget {
   }
 }
 
-/// 임시 플레이스홀더 — Wave 1+ 에서 실제 페이지로 교체
-class _PlaceholderPage extends StatelessWidget {
-  const _PlaceholderPage({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.headlineMedium,
-      ),
-    );
-  }
-}
