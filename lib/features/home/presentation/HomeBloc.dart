@@ -48,6 +48,7 @@ class HomeViewModel {
     equity: 0,
     revenue: 0,
     expense: 0,
+    periodLabel: '',
   );
 }
 
