@@ -38,11 +38,10 @@ class AppRouter {
           ),
           GoRoute(
             path: '/account',
-            builder: (context, state) => BlocProvider(
-              create: (ctx) =>
-                  AccountBloc()..add(const AccountEvent.loadTree()),
-              child: const AccountTreePage(),
-            ),
+            builder: (context, state) {
+              context.read<AccountBloc>().add(const AccountEvent.loadTree());
+              return const AccountTreePage();
+            },
           ),
           GoRoute(
             path: '/more',
