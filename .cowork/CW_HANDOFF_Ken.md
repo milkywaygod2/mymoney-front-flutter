@@ -12,6 +12,7 @@
 | 커밋 해시 | 메시지 |
 |-----------|--------|
 | `06b43b7` | FEAT: Wave U2 Home 대시보드 + Wave U3 Journal 거래내역 UI 구현 |
+| `ed31b23` | FEAT: U1 AppColors 토큰 적용 — 하드코딩 색상 전체 교체 |
 
 ---
 
@@ -78,7 +79,7 @@
 
 ## 미완료 / TODO
 
-- 색상 토큰: `// TODO: U1 머지 후 AppColors로 교체` 주석으로 전체 하드코딩 처리됨
+- ~~색상 토큰: `// TODO: U1 머지 후 AppColors로 교체` 주석으로 전체 하드코딩 처리됨~~ → `ed31b23`에서 완료
 - MiniPosting의 계정명/kind: 현재 `accountId.value` 표시 → Account 조회 연동 필요
 - HomeBloc spark7d: 현재 단순 계산식 → 일별 스냅샷 쿼리 연동 필요
 
