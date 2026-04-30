@@ -28,6 +28,7 @@ class JournalV2 extends StatefulWidget {
 
 class _JournalV2State extends State<JournalV2> {
   String _searchQuery = '';
+  String _filter = '전체';
   late DateTime _selectedMonth;
 
   @override
@@ -87,7 +88,7 @@ class _JournalV2State extends State<JournalV2> {
         final accountMap = _buildAccountMap(accountState);
         return BlocBuilder<JournalBloc, JournalState>(
           builder: (context, state) {
-            final grouped = _groupByDate(state.listTransactions, _selectedMonth, _searchQuery);
+            final grouped = _groupByDate(state.listTransactions, _selectedMonth, _searchQuery, _filter, accountMap);
 
         return Column(
           children: [
@@ -146,6 +147,31 @@ class _JournalV2State extends State<JournalV2> {
                   ],
                 ),
               ),
+            // 필터 칩
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                children: ['전체', '수익', '비용', '이체'].map((c) {
+                  final active = _filter == c;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: GestureDetector(
+                      onTap: () => setState(() => _filter = c),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: active ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.surfaceContainerHigh,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(c, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: active ? Theme.of(context).colorScheme.surface : Theme.of(context).colorScheme.onSurface)),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 8),
             // 컬럼 헤더
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -166,7 +192,9 @@ class _JournalV2State extends State<JournalV2> {
                   child: Text(
                     _searchQuery.isNotEmpty
                         ? '"$_searchQuery" 검색 결과 없음'
-                        : '${_selectedMonth.year}년 ${_selectedMonth.month}월 거래 없음',
+                        : _filter != '전체'
+                            ? '${_selectedMonth.year}년 ${_selectedMonth.month}월 $_filter 거래 없음'
+                            : '${_selectedMonth.year}년 ${_selectedMonth.month}월 거래 없음',
                     style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
                 ),
@@ -222,15 +250,36 @@ class _DayGroup {
   final int dayNet;
 }
 
+bool _matchesFilter(Transaction t, String filter, Map<int, ({String name, String kind})> accountMap) {
+  if (filter == '전체') return true;
+  final debits = t.listLines.where((l) => l.entryType == EntryType.debit).toList();
+  final credits = t.listLines.where((l) => l.entryType == EntryType.credit).toList();
+  if (filter == '수익') {
+    return credits.isNotEmpty && (accountMap[credits.first.accountId.value]?.kind == 'revenue');
+  }
+  if (filter == '비용') {
+    return debits.isNotEmpty && (accountMap[debits.first.accountId.value]?.kind == 'expense');
+  }
+  if (filter == '이체') {
+    return debits.isNotEmpty && credits.isNotEmpty &&
+        (accountMap[debits.first.accountId.value]?.kind == 'asset') &&
+        (accountMap[credits.first.accountId.value]?.kind == 'asset');
+  }
+  return true;
+}
+
 List<_DayGroup> _groupByDate(
   List<Transaction> txns,
   DateTime selectedMonth,
   String searchQuery,
+  String filter,
+  Map<int, ({String name, String kind})> accountMap,
 ) {
   final q = searchQuery.toLowerCase();
   final filtered = txns.where((t) {
     if (t.date.year != selectedMonth.year || t.date.month != selectedMonth.month) return false;
     if (q.isNotEmpty && !t.description.toLowerCase().contains(q)) return false;
+    if (!_matchesFilter(t, filter, accountMap)) return false;
     return true;
   }).toList();
 
