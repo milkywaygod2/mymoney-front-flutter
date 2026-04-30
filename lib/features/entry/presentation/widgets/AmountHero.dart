@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/AppColors.dart';
+
 /// 큰 금액 표시 영역 — Entry 모든 V에서 공통 사용
 class AmountHero extends StatelessWidget {
   const AmountHero({
@@ -17,8 +19,7 @@ class AmountHero extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       decoration: BoxDecoration(
-        // TODO: U1 머지 후 AppColors.surface로 교체
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        color: AppColors.darkSurface,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -34,8 +35,7 @@ class AmountHero extends StatelessWidget {
             '₩$display',
             style: Theme.of(context).textTheme.displaySmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  // TODO: U1 AppColors.primary로 교체
-                  color: Theme.of(context).colorScheme.primary,
+                  color: AppColors.darkPrimary,
                 ),
           ),
         ],

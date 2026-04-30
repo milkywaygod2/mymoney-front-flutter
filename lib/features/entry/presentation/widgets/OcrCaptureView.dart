@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/AppColors.dart';
+
 /// V3 카메라 프리뷰 — camera 패키지 연동 전 stub UI
 class OcrCaptureView extends StatelessWidget {
   const OcrCaptureView({
@@ -17,8 +19,7 @@ class OcrCaptureView extends StatelessWidget {
           child: Container(
             margin: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              // TODO: U1 AppColors로 교체
-              color: Colors.black87,
+              color: AppColors.darkBg,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Stack(
