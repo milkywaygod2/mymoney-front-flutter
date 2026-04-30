@@ -44,7 +44,10 @@ class _DashboardPageState extends State<DashboardPage> {
           _ComparisonToggle(
             selected: _comparisonType,
             labels: _kComparisonLabels,
-            onChanged: (v) => setState(() => _comparisonType = v),
+            onChanged: (v) {
+              setState(() => _comparisonType = v);
+              _onComparisonChanged(v);
+            },
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -80,6 +83,10 @@ class _DashboardPageState extends State<DashboardPage> {
                 _SummaryHeader(
                   comparisonType: _comparisonType,
                 ),
+                const Divider(height: 1),
+
+                // 1-1. 기간 비교 변화율 카드
+                _PeriodComparisonCard(comparisonType: _comparisonType),
                 const Divider(height: 1),
 
                 // 2. 재무비율 그리드 (29종)
@@ -123,6 +130,16 @@ class _DashboardPageState extends State<DashboardPage> {
       bloc.add(LoadPeriodComparisons(asOfDate: now, currentPeriodId: pid));
       bloc.add(LoadCashFlowStatement(periodId: pid, snapshotDate: now));
       bloc.add(LoadEquityChangeStatement(periodId: pid, snapshotDate: now));
+    }
+  }
+
+  void _onComparisonChanged(String type) {
+    final bloc = context.read<ReportBloc>();
+    if (bloc.state.activePeriodId != null) {
+      bloc.add(LoadPeriodComparisons(
+        asOfDate: DateTime.now(),
+        currentPeriodId: bloc.state.activePeriodId!,
+      ));
     }
   }
 }
@@ -421,6 +438,99 @@ class _EmptyView extends StatelessWidget {
           const Text('데이터를 불러오는 중...'),
           const SizedBox(height: 16),
           FilledButton(onPressed: onLoad, child: const Text('새로고침')),
+        ],
+      ),
+    );
+  }
+}
+
+/// 기간 비교 변화율 카드 — mapPeriodComparisons에서 선택된 타입의 항목을 표시
+class _PeriodComparisonCard extends StatelessWidget {
+  const _PeriodComparisonCard({required this.comparisonType});
+  final String comparisonType;
+
+  static const _typeLabel = {
+    'mom': '전월 대비',
+    'qoq': '전분기 대비',
+    'yoy': '전년동기 대비',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ReportBloc, ReportState>(
+      buildWhen: (prev, curr) =>
+          prev.mapPeriodComparisons != curr.mapPeriodComparisons,
+      builder: (context, state) {
+        final list = state.mapPeriodComparisons?[comparisonType];
+        if (list == null || list.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Text(
+              '${_typeLabel[comparisonType] ?? comparisonType} 비교 데이터 없음',
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          );
+        }
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _typeLabel[comparisonType] ?? comparisonType,
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: list.map((c) => _ComparisonItem(item: c)).toList(),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ComparisonItem extends StatelessWidget {
+  const _ComparisonItem({required this.item});
+  final PeriodComparison item;
+
+  @override
+  Widget build(BuildContext context) {
+    final ratio = item.changeRatio;
+    final isPositive = ratio >= 0;
+    final pct = (ratio / 100.0).toStringAsFixed(2);
+    final sign = isPositive ? '+' : '';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            item.label,
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            '$sign$pct%',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: isPositive ? AppColors.natureAsset : AppColors.natureExpense,
+            ),
+          ),
         ],
       ),
     );
