@@ -49,7 +49,7 @@ class _JournalV1State extends State<JournalV1> {
         final accountMap = _buildAccountMap(accountState);
         return BlocBuilder<JournalBloc, JournalState>(
           builder: (context, state) {
-            final grouped = _groupByDate(state.listTransactions, _filter, _isDoublEntry);
+            final grouped = _groupByDate(state.listTransactions, _filter, _isDoublEntry, accountMap);
 
         return Column(
           children: [
@@ -156,12 +156,22 @@ class _DayGroup {
   final int dayNet;
 }
 
-List<_DayGroup> _groupByDate(List<Transaction> txns, String filter, bool isDouble) {
+List<_DayGroup> _groupByDate(
+  List<Transaction> txns,
+  String filter,
+  bool isDouble,
+  Map<int, ({String name, String kind})> accountMap,
+) {
   final filtered = isDouble
       ? txns
       : txns.where((t) {
           if (filter == '전체') return true;
-          // flow 판단: 대변 수익 > 0 이면 in, 대변 비용 > 0 이면 out 등 단순 처리
+          if (filter == '이체') {
+            // 모든 분개 라인의 계정이 asset인 경우만 이체로 간주
+            return t.listLines.every(
+              (l) => accountMap[l.accountId.value]?.kind == 'asset',
+            );
+          }
           final hasRevenue = t.listLines.any((l) => l.entryType == EntryType.credit);
           if (filter == '수익') return hasRevenue;
           if (filter == '비용') return !hasRevenue;
