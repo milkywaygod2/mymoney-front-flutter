@@ -514,12 +514,23 @@ class _PeriodComparisonCard extends StatelessWidget {
         final list = state.mapPeriodComparisons?[comparisonType];
         if (list == null || list.isEmpty) {
           return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Text(
-              '${_typeLabel[comparisonType] ?? comparisonType} 비교 데이터 없음',
-              style: TextStyle(
-                fontSize: 12,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.compare_arrows,
+                      size: 36,
+                      color: Theme.of(context).colorScheme.outlineVariant),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${_typeLabel[comparisonType] ?? comparisonType} 비교 데이터 없음',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
             ),
           );
