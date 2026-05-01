@@ -121,3 +121,46 @@ U1(`agent-automation`)이 워크트리에 머지된 후 모든 `const Color(0x..
 - EntryAutoPlay: 3페이즈 Interval 기반 CurvedAnimation 구현 (enter: 0~22%, fly: 22~72%, arrive: 72~94%)
 - CFWaterfall: CustomPainter로 폭포 차트 수학 로직 구현 (running total → bar 상단 Y 계산)
 - ClusterMap: 5클러스터 배치좌표(상대 비율) + 계정수 비례 버블 크기 + 관계선 CustomPainter
+
+---
+
+## QA 폴리싱 (v3.0 QA 이전)
+
+추가 커밋 (agent-automation 브랜치 머지 완료):
+| 커밋 | 내용 |
+|------|------|
+| `85d3305` | FEAT: HomePage 에러 상태 재시도 버튼 추가 |
+| `c8971cd` | FEAT: CFWaterfall 현금흐름 항목별 색상 범례 추가 |
+| `c1052b3` | FEAT: JournalV2 빈 상태 아이콘 추가 |
+
+---
+
+## QA Step 1 결과 (Iteration 1, 2026-05-01)
+
+### U4 Entry — **GAP 4건 → 수정 중 (3건 Fix, 1건 ACCEPT)**
+- PASS: V2 NumPad/AccountPicker, V3 OCR, AutoPlay 3페이즈, EntryPage 토글/저장
+- GAP-1: EntryV1 "비슷한 거래" 추천 칩 미구현 → **Fix 지시 수신**
+- GAP-2: EntryV1 부기 모드 토글 → ACCEPT (V2에서 계정 선택 가능, 안내 텍스트 대체)
+- GAP-3: EntryV1 상대처/메모 row 미구현 → **Fix 지시 수신**
+- GAP-4: EntryAutoPlay overlay 방식 불일치 → ACCEPT (기능 동등)
+
+### U5 AccountTree — **GAP 3건 → 수정 중 (2건 Fix, 1건 ACCEPT)**
+- PASS: 3모드 토글, BrowseMode 트리, MapMode 5클러스터, ConfigMode 기본
+- GAP-5: AccountBrowse showAdvanced 토글 미구현 → **Fix 지시 수신**
+- GAP-6: TreeRow P3/P4 priority 뱃지 미구현 → **Fix 지시 수신**
+- GAP-7: ConfigMode 계정별 개별 메타포 지정 → ACCEPT (이모지 단순화 = 설계 의도)
+
+### Step 2 대기 중
+- Fix 4건 완료 후 Step 2 시작 예정
+
+---
+
+## v3.0 QA COMPLETE (2026-05-02)
+
+**Iteration 13 / 연속 2회 풀패스 (Iter 12+13) — COMPLETE**
+
+- Step 1~3 전원 PASS, GAP+FIXED 0건
+- U4 Entry: EntryPage/V1/V2/V3/EntryBloc/widgets 전수 대조 이상 없음
+- U5 AccountTree: AccountTreePage/Browse/Map/Config/widgets 전수 대조 이상 없음
+- U6 Report Dashboard: DashboardPage/CFWaterfall/CETable 포함 (Raj-2와 공동 담당)
+- KNOWN-GAP 등록: EntryV1 추천칩·상대처/메모 row·부기모드토글, EntryAutoPlay 9씬, AccountBrowse showAdvanced, TreeRow P3/P4 뱃지, ConfigMode 메타포, NumPad 행 순서, EntryPage 닫기 confirm (총 9건 — 도메인 확장 시 구현)

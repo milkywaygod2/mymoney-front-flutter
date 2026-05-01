@@ -85,5 +85,41 @@
 
 ---
 
+## QA 폴리싱 (v3.0 QA 이전)
+
+추가 커밋 (agent-automation 브랜치 머지 완료):
+| 커밋 | 내용 |
+|------|------|
+| `102547b` | FEAT: HomePage BlocListener<PerspectiveBloc> 전환 감지 추가 |
+| `144ba4b` | FEAT: BSChart/PLChart/CETable 로딩 플레이스홀더 추가 |
+| `5d9cd6f` | FEAT: AccountBrowse 검색 빈 상태 아이콘 + AccountMap 빈 상태 개선 |
+| `4c4e089` | FEAT: JournalV3 빈 상태 아이콘 추가 |
+| `ca7af60` | FIX: BSChart/PLChart/CETable curly_braces_in_flow_control lint 수정 |
+
+---
+
+## QA Step 1 결과 (Iteration 1, 2026-05-01)
+
+### U2 Home — **GAP 1건 → 수정 중**
+- PASS: HomeV1/V3/HomePage, widgets 전체
+- GAP: HomeV2 "오늘의 가지" 섹션 미구현 (home.jsx:237-259) → **수정 지시 수신, 진행 중**
+
+### U3 Journal — **PASS** (GAP 0건)
+- JournalV1/V2/V3/Page + widgets 7종 전수 대조 완료
+
+### Step 2 대기 중
+- HomeV2 GAP 수정 완료 후 Step 2 시작 예정
+
 ## 보고 일시
 2026-05-01
+
+---
+
+## v3.0 QA COMPLETE (2026-05-02)
+
+**Iteration 13 / 연속 2회 풀패스 (Iter 12+13) — COMPLETE**
+
+- Step 1~3 전원 PASS, GAP+FIXED 0건
+- U2 Home: HomePage/HomeV1/V2/V3/HomeBloc/widgets 전수 대조 이상 없음
+- U3 Journal: JournalPage/V1/V2/V3/widgets 전수 대조 이상 없음
+- KNOWN-GAP 1건 등록: `_NetIncomeChip` 디자인 명세 일탈 (wave-2 §5 vs 구현 11px stateSuccess/Error 칩 — UX 우수로 ACCEPT)
