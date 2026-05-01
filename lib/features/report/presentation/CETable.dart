@@ -51,8 +51,14 @@ class _CETableContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Table(
-      border: TableBorder.all(
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeOut,
+      builder: (_, opacity, __) => Opacity(
+        opacity: opacity,
+        child: Table(
+          border: TableBorder.all(
         color: Colors.grey.withValues(alpha: 0.3),
         width: 0.5,
       ),
@@ -81,6 +87,8 @@ class _CETableContent extends StatelessWidget {
         // 데이터 행
         ...listItems.map((item) => _buildRow(item)),
       ],
+        ),
+      ),
     );
   }
 
