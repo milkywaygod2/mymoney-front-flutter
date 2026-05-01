@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../entry/presentation/EntryPage.dart';
 import '../../perspective/presentation/LensSwitcher.dart';
 import '../../perspective/presentation/PerspectiveBloc.dart';
+import '../../perspective/presentation/PerspectiveState.dart';
 import '../../report/presentation/ReportBloc.dart';
 import 'HomeBloc.dart';
 import 'HomeV1.dart';
@@ -92,24 +93,32 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         tooltip: '거래 입력',
         child: const Icon(Icons.add),
       ),
-      body: BlocBuilder<HomeBloc, HomeState>(
-        builder: (context, state) {
-          if (state.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (state.errorMessage != null) {
-            return Center(
-              child: Text(
-                state.errorMessage!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            );
-          }
-          return FadeTransition(
-            opacity: _fadeAnim,
-            child: _buildVariant(state.viewModel),
-          );
+      body: BlocListener<PerspectiveBloc, PerspectiveState>(
+        listenWhen: (prev, curr) =>
+            prev.effectivePerspective?.id != curr.effectivePerspective?.id,
+        listener: (context, _) {
+          context.read<HomeBloc>().add(const RefreshHome());
+          context.read<ReportBloc>().add(const LoadDashboard());
         },
+        child: BlocBuilder<HomeBloc, HomeState>(
+          builder: (context, state) {
+            if (state.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (state.errorMessage != null) {
+              return Center(
+                child: Text(
+                  state.errorMessage!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              );
+            }
+            return FadeTransition(
+              opacity: _fadeAnim,
+              child: _buildVariant(state.viewModel),
+            );
+          },
+        ),
       ),
     );
   }
