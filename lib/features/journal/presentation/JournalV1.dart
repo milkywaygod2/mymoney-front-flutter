@@ -3,8 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/constants/Enums.dart';
 import '../../../core/domain/Transaction.dart';
+import '../../../core/models/TypedId.dart';
 import '../../account/presentation/AccountBloc.dart';
 import '../../account/presentation/AccountState.dart';
+import '../../report/presentation/ReportBloc.dart';
 import 'JournalBloc.dart';
 import 'JournalEvent.dart';
 import 'JournalState.dart';
@@ -716,6 +718,24 @@ class _ExpandedPosting extends StatelessWidget {
               ),
             ],
           ),
+          if (tx.status == TransactionStatus.draft) ...[
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Builder(
+                builder: (ctx) {
+                  final journalBloc = ctx.read<JournalBloc>();
+                  final periodId = ctx.read<ReportBloc>().state.activePeriodId;
+                  return FilledButton.tonal(
+                    onPressed: periodId == null ? null : () {
+                      journalBloc.add(PostTransactionEvent(id: tx.id, periodId: PeriodId(periodId)));
+                    },
+                    child: const Text('전기 처리', style: TextStyle(fontSize: 12)),
+                  );
+                },
+              ),
+            ),
+          ],
         ],
       ),
     );
