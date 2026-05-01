@@ -1,139 +1,122 @@
 import 'package:flutter/material.dart';
+
 import 'scene_common.dart';
 
-/// Scene7 — 이자 수익: (차)보통예금 / (대)이자수익
+/// Scene 7 — 이자 수익
+/// 분개: (차) 보통예금 / (대) 이자수익
 class Scene7 extends StatelessWidget {
-  const Scene7({super.key, required this.progress});
+  const Scene7({super.key, required this.controller});
+  final AnimationController controller;
 
-  final double progress;
-
-  double _interval(double t, double start, double end) {
-    if (t <= start) return 0.0;
-    if (t >= end) return 1.0;
-    return (t - start) / (end - start);
-  }
+  static const List<double> _stagger = [0.0, 0.13, 0.26];
 
   @override
   Widget build(BuildContext context) {
-    // 0.00~0.20 enter
-    final enterT = _interval(progress, 0.0, 0.20);
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (_, __) {
+        final t = controller.value;
 
-    // 0.20~0.50 signature: AssetContract stroke pathLength 0→1
-    final signT = _interval(progress, 0.20, 0.50);
+        // 0.00~0.20: Enter — CR AssetContract, DR MetaDollar
+        final pEnter = (t / 0.20).clamp(0.0, 1.0);
 
-    // 0.50~0.90 small bills — 3장 CR→DR arch
-    const billCount = 3;
-    const crOffset = Offset(220, 60);
-    const drOffset = Offset(20, 60);
+        // 0.20~0.50: Signature stroke — pathLength 0→1
+        final pSign = t > 0.20 ? ((t - 0.20) / 0.30).clamp(0.0, 1.0) : 0.0;
 
-    // 0.85~1.00 DR pulse
-    final pulseT = _interval(progress, 0.85, 1.0);
-    final drScale = 1.0 + (pulseT < 0.5 ? pulseT * 2 * 0.22 : (1 - (pulseT - 0.5) * 2) * 0.22 + 0.04);
+        // 0.85~1.00: DR pulse
+        final pPulse = t > 0.85 ? ((t - 0.85) / 0.15).clamp(0.0, 1.0) : 0.0;
+        final drScale = pPulse < 0.5
+            ? 1.0 + pPulse * 2 * 0.22
+            : 1.22 - (pPulse * 2 - 1) * 0.12;
 
-    return SceneFrame(
-      animArea: Stack(
-        children: [
-          // CR: 📋 계약서 (이자수익 출처)
-          Positioned(
-            right: 0,
-            top: 20,
-            child: Opacity(
-              opacity: enterT.clamp(0.0, 1.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      const Text('📋', style: TextStyle(fontSize: 40)),
-                      // signature stroke overlay
-                      if (signT > 0)
-                        CustomPaint(
-                          size: const Size(44, 44),
-                          painter: _StrokePainter(signT),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '이자수익',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+        return SizedBox(
+          width: stageW,
+          height: stageH,
+          child: Stack(
+            children: [
+              // CR: AssetContract (계약서 — 대변 수익↑)
+              Anchor(
+                x: crX,
+                opacity: pEnter,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const AssetContract(size: 64),
+                    if (pSign > 0)
+                      CustomPaint(
+                        size: const Size(64, 64),
+                        painter: _SignaturePainter(pSign),
+                      ),
+                  ],
+                ),
               ),
-            ),
+              // DR: MetaDollar (보통예금 — 차변 자산↑)
+              Anchor(
+                x: drX,
+                opacity: pEnter,
+                scale: drScale,
+                child: const MetaDollar(size: 64),
+              ),
+              // Bill shower — 3장 CR→DR
+              ..._stagger.indexed.map((entry) {
+                final (i, delay) = entry;
+                final start = 0.50 + delay;
+                if (t < start) return const SizedBox.shrink();
+                final end = (start + 0.35).clamp(0.0, 0.92);
+                final local = ((t - start) / (end - start)).clamp(0.0, 1.0);
+                if (local >= 1.0) return const SizedBox.shrink();
+                final pos = arch(
+                  from: const Offset(crX, rowY),
+                  to: const Offset(drX, rowY),
+                  t: local,
+                  h: 25 + i * 8.0,
+                );
+                return FlyingPiece(
+                  key: ValueKey('bill7_$i'),
+                  x: pos.dx,
+                  y: pos.dy,
+                  opacity: 1.0 - (local > 0.8 ? (local - 0.8) / 0.2 : 0.0),
+                  child: const MetaDollar(size: 28),
+                );
+              }),
+              SideLabel(x: drX, side: '차변 · 자산↑', label: '보통예금'),
+              SideLabel(x: crX, side: '대변 · 수익↑', label: '이자수익'),
+            ],
           ),
-          // DR: 💵 보통예금 (지갑)
-          Positioned(
-            left: 0,
-            top: 20,
-            child: Opacity(
-              opacity: enterT.clamp(0.0, 1.0),
-              child: Anchor(emoji: metaDollar, label: '보통예금', scale: drScale),
-            ),
-          ),
-          // Bill shower — 3장 CR→DR
-          for (var i = 0; i < billCount; i++) ...[
-            Builder(builder: (ctx) {
-              final billStart = 0.50 + i * 0.10;
-              final billEnd = (billStart + 0.35).clamp(0.0, 0.90);
-              final billT = _interval(progress, billStart, billEnd);
-              return FlyingPiece(
-                emoji: metaDollar,
-                progress: billT,
-                startOffset: crOffset,
-                endOffset: drOffset,
-                archHeight: -50,
-                archOffsetX: (i - 1) * 7.0,
-                visible: progress >= billStart,
-              );
-            }),
-          ],
-        ],
-      ),
-      sideLabel: const SideLabel(
-        drTitle: '차변 · 자산↑',
-        drSub: '보통예금',
-        crTitle: '대변 · 수익↑',
-        crSub: '이자수익',
-      ),
+        );
+      },
     );
   }
 }
 
-/// 계약서 서명 획 CustomPainter (pathLength 0→1)
-class _StrokePainter extends CustomPainter {
-  const _StrokePainter(this.pathLength);
+/// 계약서 서명 획 (pathLength 0→1)
+class _SignaturePainter extends CustomPainter {
+  const _SignaturePainter(this.pathLength);
   final double pathLength;
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.blue.withValues(alpha: 0.75)
+      ..color = const Color(0xFF4FC3F7).withValues(alpha: 0.85)
       ..strokeWidth = 2.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
     final path = Path()
-      ..moveTo(size.width * 0.20, size.height * 0.60)
+      ..moveTo(size.width * 0.18, size.height * 0.62)
       ..cubicTo(
-        size.width * 0.35, size.height * 0.40,
-        size.width * 0.55, size.height * 0.75,
-        size.width * 0.80, size.height * 0.55,
+        size.width * 0.34, size.height * 0.42,
+        size.width * 0.56, size.height * 0.74,
+        size.width * 0.82, size.height * 0.52,
       );
 
-    final pathMetrics = path.computeMetrics().first;
-    final extractPath = pathMetrics.extractPath(
-      0,
-      pathMetrics.length * pathLength,
+    final metrics = path.computeMetrics().first;
+    canvas.drawPath(
+      metrics.extractPath(0, metrics.length * pathLength),
+      paint,
     );
-    canvas.drawPath(extractPath, paint);
   }
 
   @override
-  bool shouldRepaint(_StrokePainter old) => old.pathLength != pathLength;
+  bool shouldRepaint(_SignaturePainter old) => old.pathLength != pathLength;
 }
