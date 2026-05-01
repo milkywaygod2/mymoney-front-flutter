@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../app/theme/AppColors.dart';
+import 'scenes/scene_registry.dart';
 
 /// 거래 저장 후 2초 애니메이션 위젯
-/// 3페이즈: enter(0~22%), fly(22~72%), arrive(72~94%)
+/// sceneIndex 0~8: 씬별 애니메이션 / sceneIndex -1: 범용 3페이즈 fallback
 class EntryAutoPlay extends StatefulWidget {
   const EntryAutoPlay({
     super.key,
     required this.description,
     required this.onFinished,
+    this.sceneIndex = -1,
   });
 
   final String description;
   final VoidCallback onFinished;
+  /// 0~8: 씬 애니메이션, -1: 범용 fallback
+  final int sceneIndex;
 
   @override
   State<EntryAutoPlay> createState() => _EntryAutoPlayState();
@@ -22,14 +26,13 @@ class _EntryAutoPlayState extends State<EntryAutoPlay>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
 
-  // 페이즈 구간 (비율)
-  static const double kEnterEnd = 0.22;
-  static const double kFlyEnd = 0.72;
+  static const double kEnterEnd  = 0.22;
+  static const double kFlyEnd    = 0.72;
   static const double kArriveEnd = 0.94;
 
-  late final Animation<double> _enterAnim;   // 0.0 → 1.0 (enter phase)
-  late final Animation<double> _flyAnim;     // 0.0 → 1.0 (fly phase)
-  late final Animation<double> _arriveAnim;  // 0.0 → 1.0 (arrive phase)
+  late final Animation<double> _enterAnim;
+  late final Animation<double> _flyAnim;
+  late final Animation<double> _arriveAnim;
 
   @override
   void initState() {
@@ -75,8 +78,95 @@ class _EntryAutoPlayState extends State<EntryAutoPlay>
 
   @override
   Widget build(BuildContext context) {
+    final idx = widget.sceneIndex;
+    if (idx >= 0 && idx < scenes.length) {
+      return _SceneShell(
+        description: widget.description,
+        controller: _controller,
+        sceneIndex: idx,
+      );
+    }
+    return _FallbackAnimation(
+      enterAnim: _enterAnim,
+      flyAnim: _flyAnim,
+      arriveAnim: _arriveAnim,
+      description: widget.description,
+    );
+  }
+}
+
+/// 씬 렌더링 쉘 — 360×260 스테이지 + 헤더
+class _SceneShell extends StatelessWidget {
+  const _SceneShell({
+    required this.description,
+    required this.controller,
+    required this.sceneIndex,
+  });
+  final String description;
+  final AnimationController controller;
+  final int sceneIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    final meta = scenes[sceneIndex];
+    return Container(
+      color: Colors.black.withValues(alpha: 0.85),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              children: [
+                Text(
+                  meta.title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  meta.sub,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white54,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(
+            width: 360,
+            height: 260,
+            child: meta.build(controller),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 범용 fallback — 기존 3페이즈 (체크아이콘 + 설명 + 저장됨 배지)
+class _FallbackAnimation extends StatelessWidget {
+  const _FallbackAnimation({
+    required this.enterAnim,
+    required this.flyAnim,
+    required this.arriveAnim,
+    required this.description,
+  });
+  final Animation<double> enterAnim;
+  final Animation<double> flyAnim;
+  final Animation<double> arriveAnim;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: _controller,
+      animation: enterAnim,
       builder: (context, _) {
         return Center(
           child: Padding(
@@ -84,9 +174,8 @@ class _EntryAutoPlayState extends State<EntryAutoPlay>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Enter 페이즈: 아이콘 페이드인
                 Opacity(
-                  opacity: _enterAnim.value,
+                  opacity: enterAnim.value,
                   child: const Icon(
                     Icons.check_circle_outline,
                     size: 64,
@@ -94,14 +183,12 @@ class _EntryAutoPlayState extends State<EntryAutoPlay>
                   ),
                 ),
                 const SizedBox(height: 16),
-
-                // Fly 페이즈: 거래 설명 슬라이드업
                 Transform.translate(
-                  offset: Offset(0, (1 - _flyAnim.value) * 20),
+                  offset: Offset(0, (1 - flyAnim.value) * 20),
                   child: Opacity(
-                    opacity: _flyAnim.value,
+                    opacity: flyAnim.value,
                     child: Text(
-                      widget.description,
+                      description,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 16,
@@ -111,12 +198,10 @@ class _EntryAutoPlayState extends State<EntryAutoPlay>
                   ),
                 ),
                 const SizedBox(height: 8),
-
-                // Arrive 페이즈: "저장됨" 확인 텍스트 + 스케일
                 Transform.scale(
-                  scale: 0.8 + _arriveAnim.value * 0.2,
+                  scale: 0.8 + arriveAnim.value * 0.2,
                   child: Opacity(
-                    opacity: _arriveAnim.value,
+                    opacity: arriveAnim.value,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,

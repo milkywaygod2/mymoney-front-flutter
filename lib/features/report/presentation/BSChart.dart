@@ -17,18 +17,25 @@ class BSChart extends StatelessWidget {
       builder: (context, state) {
         final bs = state.balanceSheet;
         if (bs == null) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('재무상태표', style: TextStyle(fontWeight: FontWeight.bold)),
-                SizedBox(height: 12),
-                Center(
-                  child: SizedBox(width: 20, height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2)),
-                ),
-              ],
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.account_balance_outlined,
+                      size: 36,
+                      color: Theme.of(context).colorScheme.outlineVariant),
+                  const SizedBox(height: 8),
+                  Text(
+                    '재무상태표 데이터 없음',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         }

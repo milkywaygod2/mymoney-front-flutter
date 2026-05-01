@@ -8,6 +8,7 @@ import 'EntryV1.dart';
 import 'EntryV2.dart';
 import 'EntryV3.dart';
 import 'widgets/EntryAutoPlay.dart';
+import 'widgets/scenes/scene_registry.dart';
 
 /// Entry 거래 입력 BottomSheet 컨테이너
 /// V1(자연어) / V2(숫자패드) / V3(OCR) 세그먼트 토글
@@ -60,6 +61,7 @@ class _EntryPageState extends State<EntryPage> {
         if (state.status == EntryStatus.done) {
           return _AnimationSheet(
             description: state.savedTransactionDescription ?? '거래 입력',
+            sceneIndex: selectScene(state),
             onFinished: () {
               context.read<EntryBloc>().add(const EntryAnimationFinished());
               Navigator.of(context).pop();
@@ -249,10 +251,12 @@ class _AnimationSheet extends StatefulWidget {
   const _AnimationSheet({
     required this.description,
     required this.onFinished,
+    this.sceneIndex = -1,
   });
 
   final String description;
   final VoidCallback onFinished;
+  final int sceneIndex;
 
   @override
   State<_AnimationSheet> createState() => _AnimationSheetState();
@@ -281,6 +285,7 @@ class _AnimationSheetState extends State<_AnimationSheet> {
                 key: const ValueKey('autoplay'),
                 description: widget.description,
                 onFinished: widget.onFinished,
+                sceneIndex: widget.sceneIndex,
               )
             : Center(
                 key: const ValueKey('check'),
