@@ -305,13 +305,62 @@ class _JournalRow extends StatelessWidget {
   final bool isLast;
   final Map<int, ({String name, String kind})> accountMap;
 
+  void _showDetail(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(tx.description, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text('날짜: ${tx.date.year}.${tx.date.month}.${tx.date.day}'),
+            const SizedBox(height: 4),
+            Text('금액: ₩${_fmt(tx.listLines.where((l) => l.entryType == EntryType.debit).fold(0, (s, l) => s + l.baseAmount))}'),
+            const SizedBox(height: 4),
+            Text(
+              '상태: ${tx.status.name}',
+              style: TextStyle(color: tx.status == TransactionStatus.posted ? Colors.green : Colors.orange),
+            ),
+            const SizedBox(height: 16),
+            ...tx.listLines.map((l) => Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                children: [
+                  Text(l.entryType == EntryType.debit ? '차변' : '대변', style: const TextStyle(fontSize: 12)),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(l.accountId.value.toString())),
+                  Text('₩${_fmt(l.baseAmount)}'),
+                ],
+              ),
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _fmt(int v) {
+    final str = v.toString();
+    final buf = StringBuffer();
+    for (var i = 0; i < str.length; i++) {
+      if (i > 0 && (str.length - i) % 3 == 0) buf.write(',');
+      buf.write(str[i]);
+    }
+    return buf.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
     final debits = tx.listLines.where((l) => l.entryType == EntryType.debit).toList();
     final credits = tx.listLines.where((l) => l.entryType == EntryType.credit).toList();
     final rowCount = debits.length > credits.length ? debits.length : credits.length;
 
-    return Container(
+    return InkWell(
+      onTap: () => _showDetail(context),
+      child: Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         border: isLast ? null : Border(bottom: BorderSide(color: Theme.of(context).colorScheme.outlineVariant, width: 1)),
@@ -386,6 +435,7 @@ class _JournalRow extends StatelessWidget {
           }),
         ],
       ),
+    ),
     );
   }
 }
