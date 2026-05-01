@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../app/theme/AppColors.dart';
 import '../../account/presentation/AccountBloc.dart';
 import '../../account/presentation/AccountState.dart';
 import 'EntryBloc.dart';
@@ -154,6 +155,8 @@ class _EntryV1State extends State<EntryV1> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Divider(),
+                    if (state.confidence != null)
+                      _ConfidenceBanner(confidence: state.confidence!),
                     _ParsedResultRow(label: '인식 금액', value: '₩${state.amountDisplay}'),
                     if (state.parsedDescription != null)
                       _ParsedResultRow(
@@ -226,6 +229,41 @@ class _SuggestedChips extends StatelessWidget {
             visualDensity: VisualDensity.compact,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ConfidenceBanner extends StatelessWidget {
+  const _ConfidenceBanner({required this.confidence});
+  final double confidence;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color bg;
+    final String label;
+    if (confidence >= 0.9) {
+      bg = AppColors.stateSuccess;
+      label = '✓ 자동 확정';
+    } else if (confidence >= 0.7) {
+      bg = AppColors.stateWarning;
+      label = '⚠ 확인 필요';
+    } else {
+      bg = AppColors.stateError;
+      label = '✗ 직접 수정';
+    }
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: bg.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: bg.withValues(alpha: 0.4)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: bg),
       ),
     );
   }

@@ -70,6 +70,18 @@ class EntryAnimationFinished extends EntryEvent {
   const EntryAnimationFinished();
 }
 
+/// V2 날짜 변경
+class EntryDateChanged extends EntryEvent {
+  const EntryDateChanged(this.date);
+  final DateTime date;
+}
+
+/// V2 메모 변경
+class EntryMemoChanged extends EntryEvent {
+  const EntryMemoChanged(this.memo);
+  final String memo;
+}
+
 /// 초기화
 class EntryReset extends EntryEvent {
   const EntryReset();
@@ -95,6 +107,9 @@ class EntryState {
     this.accountHint,
     this.debitAccountId,
     this.creditAccountId,
+    this.confidence,
+    this.merchant,
+    this.memo,
     this.errorMessage,
     this.savedTransactionDescription,
   });
@@ -115,6 +130,13 @@ class EntryState {
   final String amountDisplay;
   final AccountId? debitAccountId;
   final AccountId? creditAccountId;
+
+  /// AI 파싱 신뢰도 0.0~1.0
+  final double? confidence;
+  /// 상대처 (가맹점/거래처)
+  final String? merchant;
+  /// 메모
+  final String? memo;
 
   final String? errorMessage;
   /// 저장 완료 후 애니메이션에 사용할 거래 설명
@@ -143,6 +165,9 @@ class EntryState {
     String? accountHint,
     AccountId? debitAccountId,
     AccountId? creditAccountId,
+    double? confidence,
+    String? merchant,
+    String? memo,
     String? errorMessage,
     String? savedTransactionDescription,
   }) {
@@ -157,6 +182,9 @@ class EntryState {
       accountHint: accountHint ?? this.accountHint,
       debitAccountId: debitAccountId ?? this.debitAccountId,
       creditAccountId: creditAccountId ?? this.creditAccountId,
+      confidence: confidence ?? this.confidence,
+      merchant: merchant ?? this.merchant,
+      memo: memo ?? this.memo,
       errorMessage: errorMessage,
       savedTransactionDescription:
           savedTransactionDescription ?? this.savedTransactionDescription,
@@ -180,6 +208,8 @@ class EntryBloc extends Bloc<EntryEvent, EntryState> {
     on<EntryCreditAccountSelected>(_onCreditSelected);
     on<EntryOcrResultReceived>(_onOcrResult);
     on<EntryModeChanged>(_onModeChanged);
+    on<EntryDateChanged>(_onDateChanged);
+    on<EntryMemoChanged>(_onMemoChanged);
     on<EntrySave>(_onSave);
     on<EntryAnimationFinished>(_onAnimationFinished);
     on<EntryReset>(_onReset);
@@ -281,6 +311,7 @@ class EntryBloc extends Bloc<EntryEvent, EntryState> {
       parsedDate: parsedDate,
       accountHint: accountHint,
       amountDisplay: amount != null ? _formatAmount(amount) : '0',
+      confidence: 0.9,
     ));
   }
 
@@ -333,6 +364,14 @@ class EntryBloc extends Bloc<EntryEvent, EntryState> {
 
   void _onModeChanged(EntryModeChanged e, Emitter<EntryState> emit) {
     emit(state.copyWith(mode: e.mode));
+  }
+
+  void _onDateChanged(EntryDateChanged e, Emitter<EntryState> emit) {
+    emit(state.copyWith(parsedDate: e.date));
+  }
+
+  void _onMemoChanged(EntryMemoChanged e, Emitter<EntryState> emit) {
+    emit(state.copyWith(memo: e.memo));
   }
 
   Future<void> _onSave(EntrySave _, Emitter<EntryState> emit) async {
