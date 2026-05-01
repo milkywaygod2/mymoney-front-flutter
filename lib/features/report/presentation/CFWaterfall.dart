@@ -335,12 +335,50 @@ class CFWaterfallFull extends StatelessWidget {
                 ?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Wrap(
+              spacing: 12,
+              runSpacing: 4,
+              children: [
+                _LegendChip(color: const Color(0xFF10B981), label: '영업'),
+                _LegendChip(color: const Color(0xFF3B82F6), label: '투자'),
+                _LegendChip(color: const Color(0xFFF59E0B), label: '재무'),
+                _LegendChip(color: const Color(0xFF8B5CF6), label: '기말'),
+              ],
+            ),
+          ),
           SizedBox(
             height: 220,
             child: _WaterfallPainterWidget(bars: bars),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _LegendChip extends StatelessWidget {
+  const _LegendChip({required this.color, required this.label});
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+      ],
     );
   }
 }
