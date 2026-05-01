@@ -86,6 +86,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         onPressed: () => EntryPage.show(context).then((_) {
           if (context.mounted) {
             context.read<HomeBloc>().add(const RefreshHome());
+            context.read<ReportBloc>().add(const LoadDashboard());
           }
         }),
         tooltip: '거래 입력',
