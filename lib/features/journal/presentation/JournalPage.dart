@@ -123,9 +123,23 @@ class _JournalPageState extends State<JournalPage> with TickerProviderStateMixin
             }
             if (state.errorMessage != null) {
               return Center(
-                child: Text(
-                  state.errorMessage!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      state.errorMessage!,
+                      style: TextStyle(color: Theme.of(context).colorScheme.error),
+                    ),
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        final perspective = context.read<PerspectiveBloc>().state.effectivePerspective;
+                        context.read<JournalBloc>().add(LoadTransactions(perspective: perspective));
+                      },
+                      icon: const Icon(Icons.refresh, size: 16),
+                      label: const Text('다시 시도'),
+                    ),
+                  ],
                 ),
               );
             }

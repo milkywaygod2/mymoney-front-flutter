@@ -8,6 +8,7 @@ import '../../perspective/presentation/PerspectiveBloc.dart';
 import '../../perspective/presentation/PerspectiveState.dart';
 import 'AccountBloc.dart';
 import 'AccountEvent.dart';
+import 'AccountState.dart';
 import 'AccountBrowse.dart';
 import 'AccountMap.dart';
 import 'AccountConfig.dart';
@@ -90,12 +91,36 @@ class _AccountTreePageState extends State<AccountTreePage> {
         listener: (context, state) {
           context.read<AccountBloc>().add(const AccountEvent.loadTree());
         },
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
-          child: switch (_mode) {
-            AccountViewMode.browse => const AccountBrowse(key: ValueKey('browse')),
-            AccountViewMode.map => const AccountMap(key: ValueKey('map')),
-            AccountViewMode.config => const AccountConfig(key: ValueKey('config')),
+        child: BlocBuilder<AccountBloc, AccountState>(
+          buildWhen: (prev, curr) => prev.errorMessage != curr.errorMessage,
+          builder: (context, state) {
+            if (state.errorMessage != null) {
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      state.errorMessage!,
+                      style: TextStyle(color: Theme.of(context).colorScheme.error),
+                    ),
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      onPressed: () => context.read<AccountBloc>().add(const AccountEvent.loadTree()),
+                      icon: const Icon(Icons.refresh, size: 16),
+                      label: const Text('다시 시도'),
+                    ),
+                  ],
+                ),
+              );
+            }
+            return AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: switch (_mode) {
+                AccountViewMode.browse => const AccountBrowse(key: ValueKey('browse')),
+                AccountViewMode.map => const AccountMap(key: ValueKey('map')),
+                AccountViewMode.config => const AccountConfig(key: ValueKey('config')),
+              },
+            );
           },
         ),
       ),
