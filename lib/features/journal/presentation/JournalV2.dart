@@ -7,6 +7,7 @@ import '../../../core/domain/Transaction.dart';
 import '../../account/presentation/AccountBloc.dart';
 import '../../account/presentation/AccountState.dart';
 import 'JournalBloc.dart';
+import 'JournalEvent.dart';
 import 'JournalState.dart';
 import 'widgets/DayGroupHeader.dart';
 import 'widgets/PostingCell.dart';
@@ -311,7 +312,35 @@ class _JournalRow extends StatelessWidget {
     final credits = tx.listLines.where((l) => l.entryType == EntryType.credit).toList();
     final rowCount = debits.length > credits.length ? debits.length : credits.length;
 
-    return Container(
+    return Dismissible(
+      key: ValueKey(tx.id.value),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        color: Colors.red.shade700,
+        child: const Icon(Icons.delete_outline, color: Colors.white),
+      ),
+      confirmDismiss: (_) async {
+        return await showDialog<bool>(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text('거래 삭제'),
+            content: const Text('이 거래를 삭제할까요?'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('취소')),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('삭제', style: TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+        ) ?? false;
+      },
+      onDismissed: (_) {
+        context.read<JournalBloc>().add(DeleteTransactionEvent(id: tx.id));
+      },
+      child: Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         border: isLast ? null : Border(bottom: BorderSide(color: Theme.of(context).colorScheme.outlineVariant, width: 1)),
@@ -385,6 +414,7 @@ class _JournalRow extends StatelessWidget {
             );
           }),
         ],
+      ),
       ),
     );
   }
