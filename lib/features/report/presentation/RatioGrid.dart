@@ -71,13 +71,27 @@ class RatioGrid extends StatelessWidget {
                       ?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ),
-              ..._kSections.map((section) {
+              ..._kSections.indexed.map((entry) {
+                final (si, section) = entry;
                 final filtered = listRatios
                     .where((r) => section.listCodes.contains(r.ratioCode))
                     .toList();
-                return _RatioSectionWidget(
-                  section: section,
-                  listRatios: filtered,
+                return TweenAnimationBuilder<double>(
+                  key: ValueKey(section.label),
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  duration: Duration(milliseconds: 350 + si * 100),
+                  curve: Curves.easeOut,
+                  builder: (context, progress, child) => Opacity(
+                    opacity: progress,
+                    child: Transform.translate(
+                      offset: Offset(0, (1 - progress) * 12),
+                      child: child,
+                    ),
+                  ),
+                  child: _RatioSectionWidget(
+                    section: section,
+                    listRatios: filtered,
+                  ),
                 );
               }),
             ],
