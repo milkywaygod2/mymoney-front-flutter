@@ -17,7 +17,20 @@ class PLChart extends StatelessWidget {
           prev.incomeStatement != curr.incomeStatement,
       builder: (context, state) {
         final pl = state.incomeStatement;
-        if (pl == null) return const SizedBox.shrink();
+        if (pl == null) return const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('손익계산서', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 12),
+              Center(
+                child: SizedBox(width: 20, height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2)),
+              ),
+            ],
+          ),
+        );
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

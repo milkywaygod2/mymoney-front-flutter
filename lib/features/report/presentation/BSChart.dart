@@ -16,7 +16,20 @@ class BSChart extends StatelessWidget {
       buildWhen: (prev, curr) => prev.balanceSheet != curr.balanceSheet,
       builder: (context, state) {
         final bs = state.balanceSheet;
-        if (bs == null) return const SizedBox.shrink();
+        if (bs == null) return const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('재무상태표', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 12),
+              Center(
+                child: SizedBox(width: 20, height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2)),
+              ),
+            ],
+          ),
+        );
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

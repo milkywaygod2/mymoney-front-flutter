@@ -16,7 +16,20 @@ class CETable extends StatelessWidget {
           prev.equityChangeStatement != curr.equityChangeStatement,
       builder: (context, state) {
         final ce = state.equityChangeStatement;
-        if (ce == null) return const SizedBox.shrink();
+        if (ce == null) return const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('자본변동표', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 12),
+              Center(
+                child: SizedBox(width: 20, height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2)),
+              ),
+            ],
+          ),
+        );
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
