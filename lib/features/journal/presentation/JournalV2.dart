@@ -164,7 +164,7 @@ class _JournalV2State extends State<JournalV2> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                         decoration: BoxDecoration(
-                          color: active ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.surfaceContainerHigh,
+                          color: active ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(c, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: active ? Theme.of(context).colorScheme.surface : Theme.of(context).colorScheme.onSurface)),
@@ -230,7 +230,7 @@ class _JournalV2State extends State<JournalV2> {
                           DayGroupHeader(date: g.date, dayNet: g.dayNet),
                           Container(
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                              color: Theme.of(context).colorScheme.surfaceContainerHighest,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
                             ),

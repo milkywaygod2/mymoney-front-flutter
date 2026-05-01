@@ -37,13 +37,32 @@ class HomeV3 extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
+                  _eyelet(),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.1 * 10,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
                   '이번 달 현금·카드 흐름',
                   style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, height: 1.2),
                 ),
                 const SizedBox(height: 3),
-                Text(
-                  '수익 > 비용이면 수익 쪽으로 기울어요.',
-                  style: TextStyle(fontSize: 10.5, color: Theme.of(context).colorScheme.onSurfaceVariant, height: 1.4),
+                RichText(
+                  text: TextSpan(
+                    style: TextStyle(fontSize: 10.5, color: Theme.of(context).colorScheme.onSurfaceVariant, height: 1.4),
+                    children: [
+                      const TextSpan(text: '5대 계정 어느 거래든 '),
+                      TextSpan(
+                        text: '현금·카드의 증감을 유발하는 모든 금액',
+                        style: TextStyle(fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface),
+                      ),
+                      const TextSpan(text: '이 누적돼\n이 저울에 반영돼요. 수익 > 비용이면 수익 쪽으로 기울어요.'),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -72,7 +91,7 @@ class HomeV3 extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
                   ),
@@ -145,6 +164,12 @@ class HomeV3 extends StatelessWidget {
     );
   }
 
+}
+
+String _eyelet() {
+  final now = DateTime.now();
+  const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+  return '${now.month}월 · ${weekdays[now.weekday % 7]}요일';
 }
 
 class _NetIncomeChip extends StatelessWidget {

@@ -7,4 +7,8 @@
 (없음)
 
 ## 처리 완료
-(없음)
+
+| 날짜 | 파일 | 이슈 | 처리 |
+|------|------|------|------|
+| 2026-05-01 | BSChart.dart, PLChart.dart, CETable.dart | `curly_braces_in_flow_control_structures` — `if (x == null) return ...` 중괄호 누락 | FIX (ca7af60) |
+| 2026-05-01 | CFWaterfall.dart | 빈 상태 Text 단독 — 아이콘+텍스트 패턴 미적용 | FIX (13fb858) |

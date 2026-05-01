@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../app/theme/AppColors.dart';
-import '../../../../core/domain/Account.dart';
 import '../../../../core/constants/Enums.dart';
+import '../../../../core/domain/Account.dart';
 import '../../../../core/models/TypedId.dart';
 import '../AccountBloc.dart';
 import '../AccountEvent.dart';
@@ -209,11 +209,11 @@ class _NatureChip extends StatelessWidget {
   };
 
   static const _kColors = {
-    AccountNature.asset: Color(0xFF4CAF50),
-    AccountNature.liability: Color(0xFFF44336),
-    AccountNature.equity: Color(0xFF9C27B0),
-    AccountNature.revenue: Color(0xFF2196F3),
-    AccountNature.expense: Color(0xFFFF9800),
+    AccountNature.asset: AppColors.natureAsset,
+    AccountNature.liability: AppColors.natureLiability,
+    AccountNature.equity: AppColors.natureEquity,
+    AccountNature.revenue: AppColors.natureRevenue,
+    AccountNature.expense: AppColors.natureExpense,
   };
 
   @override

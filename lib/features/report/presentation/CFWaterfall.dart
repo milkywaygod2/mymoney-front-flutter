@@ -47,9 +47,16 @@ class CFWaterfall extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               const Center(
-                child: Text(
-                  'CF 보고서 데이터가 없습니다',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.waterfall_chart_outlined, size: 40, color: Color(0xFFD1D5DB)),
+                    SizedBox(height: 8),
+                    Text(
+                      'CF 보고서 데이터가 없습니다',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 8),

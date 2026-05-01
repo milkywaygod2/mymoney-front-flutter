@@ -46,11 +46,13 @@ class ProportionalScale extends StatelessWidget {
     );
   }
 
-  /// tilt: 수익 > 비용이면 오른쪽으로 기울어짐 (양수), ±18° clamp
+  /// tilt: log2(revenue/expense) × 18°, ±18° clamp (원본 JSX 동일)
   static double _computeTilt(int revenue, int expense) {
-    final total = revenue + expense;
-    if (total <= 0) return 0.0;
-    final norm = ((revenue - expense) / total).clamp(-1.0, 1.0);
+    if (expense <= 0 && revenue <= 0) return 0.0;
+    if (expense <= 0) return 18.0;
+    if (revenue <= 0) return -18.0;
+    final ratio = revenue / expense;
+    final norm = (log(ratio) / log(2)).clamp(-1.0, 1.0);
     return norm * 18.0;
   }
 }

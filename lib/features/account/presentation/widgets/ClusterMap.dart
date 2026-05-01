@@ -2,8 +2,9 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-import '../../../../core/domain/Account.dart';
+import '../../../../app/theme/AppColors.dart';
 import '../../../../core/constants/Enums.dart';
+import '../../../../core/domain/Account.dart';
 import 'MetaphorIcon.dart';
 
 /// 5클러스터 계정 지도 시각화 — CustomPainter 기반
@@ -70,11 +71,11 @@ class _ClusterBubbleState extends State<_ClusterBubble> {
   bool _isShowingSheet = false;
 
   static const _kNatureColors = {
-    AccountNature.asset: Color(0xFF4CAF50),
-    AccountNature.liability: Color(0xFFF44336),
-    AccountNature.equity: Color(0xFF9C27B0),
-    AccountNature.revenue: Color(0xFF2196F3),
-    AccountNature.expense: Color(0xFFFF9800),
+    AccountNature.asset: AppColors.natureAsset,
+    AccountNature.liability: AppColors.natureLiability,
+    AccountNature.equity: AppColors.natureEquity,
+    AccountNature.revenue: AppColors.natureRevenue,
+    AccountNature.expense: AppColors.natureExpense,
   };
 
   static const _kNatureLabels = {
@@ -99,8 +100,8 @@ class _ClusterBubbleState extends State<_ClusterBubble> {
         final y = pos.dy * constraints.maxHeight - size / 2;
 
         return Positioned(
-          left: x.clamp(0.0, constraints.maxWidth - size),
-          top: y.clamp(0.0, constraints.maxHeight - size),
+          left: x.clamp(0.0, (constraints.maxWidth - size).clamp(0.0, double.infinity)),
+          top: y.clamp(0.0, (constraints.maxHeight - size).clamp(0.0, double.infinity)),
           child: GestureDetector(
             onTap: () => _showAccountList(context),
             child: Container(
