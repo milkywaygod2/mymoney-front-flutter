@@ -6,6 +6,7 @@ import '../../../core/domain/Transaction.dart';
 import '../../account/presentation/AccountBloc.dart';
 import '../../account/presentation/AccountState.dart';
 import 'JournalBloc.dart';
+import 'JournalEvent.dart';
 import 'JournalState.dart';
 import 'widgets/DayGroupHeader.dart';
 import 'widgets/FlowArrow.dart';
@@ -230,9 +231,37 @@ class _FlowCard extends StatelessWidget {
 
     final totalAmt = debits.fold<int>(0, (s, l) => s + l.baseAmount);
 
-    return GestureDetector(
-      onTap: () => _showDetail(context),
-      child: Container(
+    return Dismissible(
+      key: ValueKey(tx.id.value),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        color: Colors.red.shade700,
+        child: const Icon(Icons.delete_outline, color: Colors.white),
+      ),
+      confirmDismiss: (_) async {
+        return await showDialog<bool>(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text('거래 삭제'),
+            content: const Text('이 거래를 삭제할까요?'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('취소')),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('삭제', style: TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+        ) ?? false;
+      },
+      onDismissed: (_) {
+        context.read<JournalBloc>().add(DeleteTransactionEvent(id: tx.id));
+      },
+      child: GestureDetector(
+        onTap: () => _showDetail(context),
+        child: Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       decoration: BoxDecoration(
@@ -308,6 +337,7 @@ class _FlowCard extends StatelessWidget {
         ],
       ),
     ),
+      ),
     );
   }
 
