@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/AppColors.dart';
 import '../../../../shared/widgets/GrowthTree.dart';
@@ -72,11 +73,15 @@ class _TreeHero extends StatelessWidget {
       ),
       child: Row(
         children: [
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.0, end: _growthRatio(netWorth)),
-            duration: const Duration(milliseconds: 1200),
-            curve: Curves.easeInOut,
-            builder: (_, value, __) => GrowthTree(growthRatio: value, size: 80),
+          InkWell(
+            onTap: () => context.go('/report'),
+            borderRadius: BorderRadius.circular(40),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: _growthRatio(netWorth)),
+              duration: const Duration(milliseconds: 1200),
+              curve: Curves.easeInOut,
+              builder: (_, value, __) => GrowthTree(growthRatio: value, size: 80),
+            ),
           ),
           const SizedBox(width: 20),
           Expanded(
@@ -228,26 +233,30 @@ class _LiquidColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.0, end: item.fill),
-          duration: const Duration(milliseconds: 800),
-          curve: Curves.easeOut,
-          builder: (_, value, __) => LiquidGauge(fillRatio: value, size: 58, liquidColor: item.color),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          item.label,
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 10, color: item.color, fontWeight: FontWeight.w700, letterSpacing: 0.03 * 10),
-        ),
-        const SizedBox(height: 3),
-        Text(
-          _fmtCompact(item.value),
-          style: const TextStyle(fontFamily: 'monospace', fontSize: 13, fontWeight: FontWeight.w700),
-        ),
-      ],
+    return InkWell(
+      onTap: () => context.go('/report'),
+      borderRadius: BorderRadius.circular(12),
+      child: Column(
+        children: [
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: item.fill),
+            duration: const Duration(milliseconds: 800),
+            curve: Curves.easeOut,
+            builder: (_, value, __) => LiquidGauge(fillRatio: value, size: 58, liquidColor: item.color),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            item.label,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 10, color: item.color, fontWeight: FontWeight.w700, letterSpacing: 0.03 * 10),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            _fmtCompact(item.value),
+            style: const TextStyle(fontFamily: 'monospace', fontSize: 13, fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
     );
   }
 
