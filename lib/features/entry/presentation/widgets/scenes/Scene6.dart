@@ -21,13 +21,15 @@ class Scene6 extends StatelessWidget {
 
     // 0.22~0.28 release snap
     final snapT = _interval(progress, 0.22, 0.28);
-    final snapScale = snapT < 0.5 ? 1.0 + snapT * 2 * 0.15 : 1.15 - (snapT * 2 - 1) * 0.15;
+    final snapScale = snapT < 0.5
+        ? 1.0 + snapT * 2 * 0.15
+        : 1.15 - (snapT * 2 - 1) * 0.15;
 
-    final crScale = progress < 0.22 ? bowScale : (progress < 0.28 ? snapScale : 1.0);
+    final crScale = progress < 0.22
+        ? bowScale
+        : (progress < 0.28 ? snapScale : 1.0);
 
     // 0.22~0.70 arrow fly
-    const crOffset = Offset(20, 60);
-    const drOffset = Offset(220, 60);
     final arrowT = _interval(progress, 0.22, 0.70);
 
     // 0.70~0.80 impact: DR translateX ±3px 2회 흔들림
@@ -36,47 +38,32 @@ class Scene6 extends StatelessWidget {
         ? (3.0 * (1 - impactT) * ((impactT * 4).floor() % 2 == 0 ? 1 : -1))
         : 0.0;
 
-    // 0.80~1.00 settle
     final enterT = _interval(progress, 0.0, 0.22);
+    final arrowPos = progress >= 0.22
+        ? arch(
+            from: const Offset(crX, rowY),
+            to: const Offset(drX, rowY),
+            t: arrowT,
+            h: 60,
+          )
+        : null;
 
-    return SceneFrame(
-      animArea: Stack(
+    return SizedBox(
+      width: stageW,
+      height: stageH,
+      child: Stack(
         children: [
-          // CR: AssetBow (지갑 — 대변 자산↓)
-          Positioned(
-            left: 0,
-            top: 20,
-            child: Opacity(
-              opacity: enterT.clamp(0.0, 1.0),
-              child: Anchor(emoji: assetBow, label: '보통예금', scale: crScale),
-            ),
-          ),
-          // DR: MetaBank (은행 — 차변 부채↓)
-          Positioned(
-            right: 0,
-            top: 20,
-            child: Opacity(
-              opacity: enterT.clamp(0.0, 1.0),
-              child: Anchor(emoji: metaBank, label: '장기차입금', translateX: shakeX),
-            ),
-          ),
-          // Arrow fly — MetaDollar CR→DR
-          if (progress >= 0.22)
+          Anchor(x: crX, opacity: enterT, scale: crScale, child: const AssetBow()),
+          Anchor(x: drX + shakeX, opacity: enterT, child: const MetaBank()),
+          if (arrowPos != null && arrowT < 1.0)
             FlyingPiece(
-              emoji: metaDollar,
-              progress: arrowT,
-              startOffset: crOffset,
-              endOffset: drOffset,
-              archHeight: -60,
-              visible: arrowT < 1.0,
+              x: arrowPos.dx,
+              y: arrowPos.dy,
+              child: const MetaDollar(size: 34),
             ),
+          SideLabel(x: drX, side: '차변 · 부채↓', label: '장기차입금'),
+          SideLabel(x: crX, side: '대변 · 자산↓', label: '보통예금'),
         ],
-      ),
-      sideLabel: const SideLabel(
-        drTitle: '차변 · 부채↓',
-        drSub: '장기차입금',
-        crTitle: '대변 · 자산↓',
-        crSub: '보통예금',
       ),
     );
   }
