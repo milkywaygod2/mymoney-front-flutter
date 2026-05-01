@@ -6,6 +6,7 @@ import '../../../core/constants/Enums.dart';
 import '../../../core/models/TypedId.dart';
 import 'AccountBloc.dart';
 import 'AccountState.dart';
+import 'widgets/MetaphorIcon.dart';
 import 'widgets/TreeRow.dart';
 
 /// 조회 모드 — 들여쓰기 트리 + 메타포 + 사용량
@@ -108,12 +109,15 @@ class _AccountTree extends StatelessWidget {
       itemCount: roots.length,
       itemBuilder: (context, index) {
         final root = roots[index];
-        return TreeRow(
-          account: root,
-          depth: 0,
-          allAccounts: allAccounts,
-          mapBalances: mapBalances,
-          balance: mapBalances[root.id],
+        return InkWell(
+          onTap: () => _showAccountDetail(context, root),
+          child: TreeRow(
+            account: root,
+            depth: 0,
+            allAccounts: allAccounts,
+            mapBalances: mapBalances,
+            balance: mapBalances[root.id],
+          ),
         );
       },
     );
@@ -153,6 +157,7 @@ class _LocalSearchList extends StatelessWidget {
           trailing: acc.isActive
               ? null
               : const Icon(Icons.block, size: 14, color: Colors.grey),
+          onTap: () => _showAccountDetail(context, acc),
         );
       },
     );
@@ -167,4 +172,57 @@ class _LocalSearchList extends StatelessWidget {
       AccountNature.equity => '🪣',
     };
   }
+}
+
+void _showAccountDetail(BuildContext context, Account account) {
+  final isDebitNormal = account.nature == AccountNature.asset ||
+      account.nature == AccountNature.expense;
+  showModalBottomSheet<void>(
+    context: context,
+    builder: (_) => Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                MetaphorIcon.emojiFor(account.nature),
+                style: const TextStyle(fontSize: 28),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  account.name,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            account.equityTypePath,
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            children: [
+              Chip(label: Text(account.isActive ? '활성' : '비활성')),
+              Chip(label: Text(isDebitNormal ? '차변 계정' : '대변 계정')),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('닫기'),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
