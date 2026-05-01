@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../app/theme/AppColors.dart';
 import '../../../core/constants/Enums.dart';
 import '../../../core/domain/Transaction.dart';
+import '../../../core/models/TypedId.dart';
 import '../../account/presentation/AccountBloc.dart';
 import '../../account/presentation/AccountState.dart';
 import 'JournalBloc.dart';
@@ -337,6 +338,24 @@ class _JournalRow extends StatelessWidget {
                 ],
               ),
             )),
+            if (tx.status == TransactionStatus.draft) ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    context.read<JournalBloc>().add(
+                          PostTransactionEvent(
+                            id: tx.id,
+                            periodId: const PeriodId(0),
+                          ),
+                        );
+                  },
+                  child: const Text('전기 처리'),
+                ),
+              ),
+            ],
           ],
         ),
       ),
