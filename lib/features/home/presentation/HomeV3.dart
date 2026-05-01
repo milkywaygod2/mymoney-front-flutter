@@ -14,6 +14,17 @@ class HomeV3 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (vm.assets == 0 && vm.netWorth == 0) {
+      return const Center(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Icon(Icons.balance, size: 72, color: Colors.grey),
+          SizedBox(height: 16),
+          Text('아직 데이터가 없습니다', style: TextStyle(fontSize: 16, color: Colors.grey)),
+          SizedBox(height: 8),
+          Text('거래를 입력하면 저울이 나타납니다', style: TextStyle(fontSize: 13, color: Colors.grey)),
+        ]),
+      );
+    }
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 100),
       child: Column(
