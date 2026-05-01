@@ -107,9 +107,24 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             }
             if (state.errorMessage != null) {
               return Center(
-                child: Text(
-                  state.errorMessage!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      state.errorMessage!,
+                      style: TextStyle(color: Theme.of(context).colorScheme.error),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        context.read<HomeBloc>().add(const RefreshHome());
+                        context.read<ReportBloc>().add(const LoadDashboard());
+                      },
+                      icon: const Icon(Icons.refresh, size: 16),
+                      label: const Text('다시 시도'),
+                    ),
+                  ],
                 ),
               );
             }
