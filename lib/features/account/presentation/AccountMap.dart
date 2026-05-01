@@ -17,7 +17,32 @@ class AccountMap extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
         if (state.listAll.isEmpty) {
-          return const Center(child: Text('계정과목이 없습니다'));
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.account_tree_outlined,
+                    size: 48,
+                    color: Theme.of(context).colorScheme.outlineVariant),
+                const SizedBox(height: 12),
+                Text(
+                  '계정과목이 없습니다',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '계정과목 탭에서 계정을 추가하세요',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+                ),
+              ],
+            ),
+          );
         }
 
         return Padding(

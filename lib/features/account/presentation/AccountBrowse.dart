@@ -133,9 +133,21 @@ class _LocalSearchList extends StatelessWidget {
   Widget build(BuildContext context) {
     if (results.isEmpty) {
       return Center(
-        child: Text(
-          "'$query' 검색 결과 없음",
-          style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.search_off,
+                size: 40,
+                color: Theme.of(context).colorScheme.outlineVariant),
+            const SizedBox(height: 8),
+            Text(
+              "'$query' 검색 결과 없음",
+              style: TextStyle(
+                fontSize: 13,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
       );
     }
