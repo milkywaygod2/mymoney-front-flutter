@@ -6,7 +6,7 @@ import '../../../../../app/theme/AppColors.dart';
 import '../../../../../shared/widgets/Sparkline.dart';
 
 /// 순자산 카드 (HomeV1용)
-class NetWorthCard extends StatelessWidget {
+class NetWorthCard extends StatefulWidget {
   const NetWorthCard({
     super.key,
     required this.netWorth,
@@ -17,6 +17,44 @@ class NetWorthCard extends StatelessWidget {
   final int netWorth;
   final List<int> spark7d;
   final String periodLabel;
+
+  @override
+  State<NetWorthCard> createState() => _NetWorthCardState();
+}
+
+class _NetWorthCardState extends State<NetWorthCard> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _animation = Tween<double>(begin: 0, end: widget.netWorth.toDouble())
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutQuart));
+    _controller.forward();
+  }
+
+  @override
+  void didUpdateWidget(NetWorthCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.netWorth != widget.netWorth) {
+      _animation = Tween<double>(begin: 0, end: widget.netWorth.toDouble())
+          .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutQuart));
+      _controller
+        ..reset()
+        ..forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,10 +86,10 @@ class NetWorthCard extends StatelessWidget {
                   letterSpacing: 0.06 * 12,
                 ),
               ),
-              if (periodLabel.isNotEmpty) ...[
+              if (widget.periodLabel.isNotEmpty) ...[
                 const SizedBox(width: 6),
                 Text(
-                  periodLabel,
+                  widget.periodLabel,
                   style: TextStyle(
                     fontSize: 10,
                     color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
@@ -61,13 +99,16 @@ class NetWorthCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          Text(
-            '₩ ${_formatAmount(netWorth)}',
-            style: const TextStyle(
-              fontFamily: 'monospace',
-              fontSize: 34,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.02 * 34,
+          AnimatedBuilder(
+            animation: _animation,
+            builder: (_, __) => Text(
+              '₩ ${_formatAmount(_animation.value.round())}',
+              style: const TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 34,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.02 * 34,
+              ),
             ),
           ),
           const SizedBox(height: 10),
@@ -95,7 +136,7 @@ class NetWorthCard extends StatelessWidget {
           }),
           const SizedBox(height: 16),
           Sparkline(
-            values: spark7d.map((v) => v.toDouble()).toList(),
+            values: widget.spark7d.map((v) => v.toDouble()).toList(),
             color: AppColors.natureAsset,
             width: double.infinity,
             height: 44,
@@ -107,9 +148,9 @@ class NetWorthCard extends StatelessWidget {
   }
 
   double? _weeklyChange() {
-    if (spark7d.isEmpty || spark7d.every((v) => v == 0)) return null;
-    final first = spark7d.first;
-    final last = spark7d.last;
+    if (widget.spark7d.isEmpty || widget.spark7d.every((v) => v == 0)) return null;
+    final first = widget.spark7d.first;
+    final last = widget.spark7d.last;
     final base = max(first.abs(), 1);
     return (last - first) / base * 100;
   }
