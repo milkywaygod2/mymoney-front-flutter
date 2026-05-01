@@ -158,10 +158,19 @@ class _RatioSectionWidget extends StatelessWidget {
         // 카드 그리드
         if (listRatios.isEmpty)
           const Padding(
-            padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: Text(
-              '데이터 없음',
-              style: TextStyle(fontSize: 11, color: Colors.grey),
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 12),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.analytics_outlined, size: 40, color: Color(0xFFD1D5DB)),
+                  SizedBox(height: 8),
+                  Text(
+                    '재무비율 데이터 없음',
+                    style: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
+                  ),
+                ],
+              ),
             ),
           )
         else
