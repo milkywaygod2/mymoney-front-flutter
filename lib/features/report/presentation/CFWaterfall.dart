@@ -77,34 +77,64 @@ class _WaterfallBar {
   final _CfCategory? category;
 }
 
-class _WaterfallPainterWidget extends StatelessWidget {
+class _WaterfallPainterWidget extends StatefulWidget {
   const _WaterfallPainterWidget({required this.bars});
   final List<_WaterfallBar> bars;
 
+  @override
+  State<_WaterfallPainterWidget> createState() => _WaterfallPainterWidgetState();
+}
+
+class _WaterfallPainterWidgetState extends State<_WaterfallPainterWidget>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _progress;
+
   // 카테고리별 고정 색상
-  static const _colorOperating  = Color(0xFF10B981); // 영업: 녹
-  static const _colorInvesting  = Color(0xFF3B82F6); // 투자: 파
-  static const _colorFinancing  = Color(0xFFF59E0B); // 재무: 노
-  static const _colorNetChange  = Color(0xFF9CA3AF); // 순증감: 회
-  static const _colorBaseline   = Color(0xFF8B5CF6); // 기초/기말: 보라
+  static const _colorOperating  = Color(0xFF10B981);
+  static const _colorInvesting  = Color(0xFF3B82F6);
+  static const _colorFinancing  = Color(0xFFF59E0B);
+  static const _colorNetChange  = Color(0xFF9CA3AF);
+  static const _colorBaseline   = Color(0xFF8B5CF6);
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _progress = CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _WaterfallPainter(
-        bars: bars,
-        positiveColor: AppColors.natureAsset,
-        negativeColor: AppColors.natureExpense,
-        baselineColor: AppColors.darkFg4,
-        colorOperating: _colorOperating,
-        colorInvesting: _colorInvesting,
-        colorFinancing: _colorFinancing,
-        colorNetChange: _colorNetChange,
-        colorCategoryBaseline: _colorBaseline,
-        labelStyle: Theme.of(context).textTheme.labelSmall ??
-            const TextStyle(fontSize: 10),
+    return AnimatedBuilder(
+      animation: _progress,
+      builder: (_, __) => CustomPaint(
+        painter: _WaterfallPainter(
+          bars: widget.bars,
+          positiveColor: AppColors.natureAsset,
+          negativeColor: AppColors.natureExpense,
+          baselineColor: AppColors.darkFg4,
+          colorOperating: _colorOperating,
+          colorInvesting: _colorInvesting,
+          colorFinancing: _colorFinancing,
+          colorNetChange: _colorNetChange,
+          colorCategoryBaseline: _colorBaseline,
+          labelStyle: Theme.of(context).textTheme.labelSmall ??
+              const TextStyle(fontSize: 10),
+          progress: _progress.value,
+        ),
+        child: const SizedBox.expand(),
       ),
-      child: const SizedBox.expand(),
     );
   }
 }
@@ -121,6 +151,7 @@ class _WaterfallPainter extends CustomPainter {
     this.colorFinancing,
     this.colorNetChange,
     this.colorCategoryBaseline,
+    this.progress = 1.0,
   });
 
   final List<_WaterfallBar> bars;
@@ -133,6 +164,7 @@ class _WaterfallPainter extends CustomPainter {
   final Color? colorFinancing;
   final Color? colorNetChange;
   final Color? colorCategoryBaseline;
+  final double progress;
 
   Color _colorFor(_WaterfallBar bar) {
     if (bar.isBaseline) return colorCategoryBaseline ?? baselineColor;
@@ -186,11 +218,12 @@ class _WaterfallPainter extends CustomPainter {
 
       paintFill.color = _colorFor(bar);
 
+      final animatedBarH = barH * progress;
       final rect = Rect.fromLTWH(
         x,
-        barH >= 0 ? startY - barH : startY,
+        animatedBarH >= 0 ? startY - animatedBarH : startY,
         barW,
-        barH.abs().clamp(2.0, chartH),
+        animatedBarH.abs().clamp(2.0, chartH),
       );
       canvas.drawRRect(
         RRect.fromRectAndRadius(rect, const Radius.circular(3)),
@@ -206,12 +239,12 @@ class _WaterfallPainter extends CustomPainter {
       );
 
       // 금액 텍스트
-      if (bar.value != 0) {
+      if (bar.value != 0 && progress > 0.5) {
         _drawLabel(
           canvas,
           _fmt(bar.value),
           x + barW / 2,
-          barH >= 0 ? startY - barH - 14 : startY - 14,
+          animatedBarH >= 0 ? startY - animatedBarH - 14 : startY - 14,
         );
       }
     }
@@ -246,7 +279,8 @@ class _WaterfallPainter extends CustomPainter {
       oldDelegate.bars != bars ||
       oldDelegate.colorOperating != colorOperating ||
       oldDelegate.colorInvesting != colorInvesting ||
-      oldDelegate.colorFinancing != colorFinancing;
+      oldDelegate.colorFinancing != colorFinancing ||
+      oldDelegate.progress != progress;
 }
 
 /// CFWaterfallFull — GenerateCashFlowStatement 결과 직접 수신 버전
