@@ -137,7 +137,12 @@ class _JournalPageState extends State<JournalPage> with TickerProviderStateMixin
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => EntryPage.show(context),
+        onPressed: () => EntryPage.show(context).then((_) {
+          if (context.mounted) {
+            final perspective = context.read<PerspectiveBloc>().state.effectivePerspective;
+            context.read<JournalBloc>().add(LoadTransactions(perspective: perspective));
+          }
+        }),
         tooltip: '거래 입력',
         child: const Icon(Icons.add),
       ),

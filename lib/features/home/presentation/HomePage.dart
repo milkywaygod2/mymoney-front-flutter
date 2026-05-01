@@ -83,7 +83,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => EntryPage.show(context),
+        onPressed: () => EntryPage.show(context).then((_) {
+          if (context.mounted) {
+            context.read<HomeBloc>().add(const RefreshHome());
+          }
+        }),
         tooltip: '거래 입력',
         child: const Icon(Icons.add),
       ),
