@@ -92,8 +92,8 @@ class _ClusterBubble extends StatelessWidget {
         final y = pos.dy * constraints.maxHeight - size / 2;
 
         return Positioned(
-          left: x.clamp(0.0, constraints.maxWidth - size),
-          top: y.clamp(0.0, constraints.maxHeight - size),
+          left: x.clamp(0.0, (constraints.maxWidth - size).clamp(0.0, double.infinity)),
+          top: y.clamp(0.0, (constraints.maxHeight - size).clamp(0.0, double.infinity)),
           child: GestureDetector(
             onTap: () => _showAccountList(context),
             child: Container(
