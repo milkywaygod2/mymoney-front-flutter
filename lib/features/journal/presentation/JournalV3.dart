@@ -31,6 +31,22 @@ class JournalV3 extends StatefulWidget {
 
 class _JournalV3State extends State<JournalV3> {
   String _query = '';
+  late DateTime _selectedMonth;
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    _selectedMonth = DateTime(now.year, now.month);
+  }
+
+  void _prevMonth() => setState(() {
+        _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month - 1);
+      });
+
+  void _nextMonth() => setState(() {
+        _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1);
+      });
 
   void _showSearchDialog() {
     showDialog<void>(
@@ -73,11 +89,11 @@ class _JournalV3State extends State<JournalV3> {
         final accountMap = _buildAccountMap(accountState);
         return BlocBuilder<JournalBloc, JournalState>(
           builder: (context, state) {
-            final filtered = _query.isEmpty
-                ? state.listTransactions
-                : state.listTransactions
-                    .where((t) => t.description.contains(_query))
-                    .toList();
+            final filtered = state.listTransactions.where((t) {
+              if (t.date.year != _selectedMonth.year || t.date.month != _selectedMonth.month) return false;
+              if (_query.isNotEmpty && !t.description.contains(_query)) return false;
+              return true;
+            }).toList();
 
             final groups = _groupByDate(filtered);
 
@@ -92,7 +108,7 @@ class _JournalV3State extends State<JournalV3> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '${DateTime.now().month}월 ${DateTime.now().day}일',
+                              '${_selectedMonth.year}년 ${_selectedMonth.month}월',
                               style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.1 * 11, color: Theme.of(context).colorScheme.onSurfaceVariant),
                             ),
                             const Text('돈은 어디로 흘렀나', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
@@ -110,6 +126,16 @@ class _JournalV3State extends State<JournalV3> {
                           ),
                         ),
                       IconButton(
+                        icon: const Icon(Icons.chevron_left),
+                        tooltip: '이전 달',
+                        onPressed: _prevMonth,
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.chevron_right),
+                        tooltip: '다음 달',
+                        onPressed: _nextMonth,
+                      ),
+                      IconButton(
                         onPressed: _showSearchDialog,
                         icon: Icon(
                           Icons.search,
@@ -125,7 +151,9 @@ class _JournalV3State extends State<JournalV3> {
                   child: groups.isEmpty
                       ? Center(
                           child: Text(
-                            _query.isEmpty ? '거래 내역이 없습니다' : '"$_query" 검색 결과 없음',
+                            _query.isNotEmpty
+                                ? '"$_query" 검색 결과 없음'
+                                : '${_selectedMonth.year}년 ${_selectedMonth.month}월 거래 없음',
                             style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                           ),
                         )
