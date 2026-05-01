@@ -46,6 +46,26 @@ class _JournalV1State extends State<JournalV1> {
   String _filter = '전체';
   String _searchQuery = '';
   int? _openId;
+  late DateTime _selectedMonth;
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    _selectedMonth = DateTime(now.year, now.month);
+  }
+
+  void _prevMonth() {
+    setState(() {
+      _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month - 1);
+    });
+  }
+
+  void _nextMonth() {
+    setState(() {
+      _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +74,9 @@ class _JournalV1State extends State<JournalV1> {
         final accountMap = _buildAccountMap(accountState);
         return BlocBuilder<JournalBloc, JournalState>(
           builder: (context, state) {
-            final grouped = _groupByDate(state.listTransactions, _filter, _isDoublEntry, accountMap, _searchQuery);
+            final monthTxns = state.listTransactions.where((t) =>
+                t.date.year == _selectedMonth.year && t.date.month == _selectedMonth.month).toList();
+            final grouped = _groupByDate(monthTxns, _filter, _isDoublEntry, accountMap, _searchQuery);
 
         return Column(
           children: [
@@ -68,12 +90,22 @@ class _JournalV1State extends State<JournalV1> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${DateTime.now().month}월',
+                          '${_selectedMonth.year}년 ${_selectedMonth.month}월',
                           style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.1 * 11, color: Theme.of(context).colorScheme.onSurfaceVariant),
                         ),
                         const Text('거래내역', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
                       ],
                     ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left),
+                    tooltip: '이전 달',
+                    onPressed: _prevMonth,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right),
+                    tooltip: '다음 달',
+                    onPressed: _nextMonth,
                   ),
                   if (_searchQuery.isNotEmpty)
                     IconButton(
@@ -104,7 +136,7 @@ class _JournalV1State extends State<JournalV1> {
             ),
             // 단식 모드: 필터 칩
             if (!_isDoublEntry) ...[
-              _MonthSummary(transactions: state.listTransactions),
+              _MonthSummary(transactions: monthTxns),
               const SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.only(left: 16, bottom: 4),
