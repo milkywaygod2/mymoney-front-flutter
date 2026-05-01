@@ -56,42 +56,47 @@ class _FiveAccountBox extends StatelessWidget {
     final liabilityRatio = (bs.totalLiabilities / total).clamp(0.0, 1.0);
     final equityRatio = (bs.totalEquity / total).clamp(0.0, 1.0);
 
-    return SizedBox(
-      height: 160,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // 좌: 자산 기둥
-          Expanded(
-            child: _AccountColumn(
-              label: '자산',
-              amount: bs.totalAssets,
-              color: AppColors.natureAsset,
-              fillRatio: 1.0,
-              segments: const [],
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 160.0),
+      duration: const Duration(milliseconds: 700),
+      curve: Curves.easeOutCubic,
+      builder: (_, h, __) => SizedBox(
+        height: h,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // 좌: 자산 기둥
+            Expanded(
+              child: _AccountColumn(
+                label: '자산',
+                amount: bs.totalAssets,
+                color: AppColors.natureAsset,
+                fillRatio: 1.0,
+                segments: const [],
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          // 우: 부채 + 자본 누적 기둥
-          Expanded(
-            child: _StackedColumn(
-              segments: [
-                _StackedSegment(
-                  label: '부채',
-                  amount: bs.totalLiabilities,
-                  color: AppColors.natureLiability,
-                  ratio: liabilityRatio,
-                ),
-                _StackedSegment(
-                  label: '자본',
-                  amount: bs.totalEquity,
-                  color: AppColors.natureEquity,
-                  ratio: equityRatio,
-                ),
-              ],
+            const SizedBox(width: 8),
+            // 우: 부채 + 자본 누적 기둥
+            Expanded(
+              child: _StackedColumn(
+                segments: [
+                  _StackedSegment(
+                    label: '부채',
+                    amount: bs.totalLiabilities,
+                    color: AppColors.natureLiability,
+                    ratio: liabilityRatio,
+                  ),
+                  _StackedSegment(
+                    label: '자본',
+                    amount: bs.totalEquity,
+                    color: AppColors.natureEquity,
+                    ratio: equityRatio,
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
