@@ -3,8 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/constants/Enums.dart';
 import '../../../core/domain/Transaction.dart';
+import '../../../core/models/TypedId.dart';
 import '../../account/presentation/AccountBloc.dart';
 import '../../account/presentation/AccountState.dart';
+import '../../report/presentation/ReportBloc.dart';
 import 'JournalBloc.dart';
 import 'JournalEvent.dart';
 import 'JournalState.dart';
@@ -188,9 +190,11 @@ class _FlowCard extends StatelessWidget {
   final Map<int, ({String name, String kind})> accountMap;
 
   void _showDetail(BuildContext context) {
+    final journalBloc = context.read<JournalBloc>();
+    final rawPeriodId = context.read<ReportBloc>().state.activePeriodId;
     showModalBottomSheet<void>(
       context: context,
-      builder: (_) => Padding(
+      builder: (ctx) => Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -218,6 +222,24 @@ class _FlowCard extends StatelessWidget {
                 ],
               ),
             )),
+            if (tx.status == TransactionStatus.draft) ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: rawPeriodId == null
+                      ? null
+                      : () {
+                          Navigator.of(ctx).pop();
+                          journalBloc.add(PostTransactionEvent(
+                            id: tx.id,
+                            periodId: PeriodId(rawPeriodId),
+                          ));
+                        },
+                  child: const Text('전기 처리'),
+                ),
+              ),
+            ],
           ],
         ),
       ),
