@@ -124,6 +124,30 @@ class _JournalV1State extends State<JournalV1> {
                 ),
               ),
             // 거래 목록
+            if (grouped.isEmpty)
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.receipt_long_outlined, size: 64, color: Colors.grey.withValues(alpha: 0.5)),
+                      const SizedBox(height: 12),
+                      Text(
+                        _searchQuery.isNotEmpty ? '"$_searchQuery" 검색 결과 없음' : '거래 내역이 없습니다',
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.grey),
+                      ),
+                      if (_searchQuery.isEmpty) ...[
+                        const SizedBox(height: 4),
+                        const Text(
+                          '+ 버튼으로 첫 거래를 입력해보세요',
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              )
+            else
             Expanded(
               child: ListView.builder(
                 itemCount: grouped.length,

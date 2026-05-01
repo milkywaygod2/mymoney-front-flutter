@@ -7,6 +7,7 @@ import '../../../core/domain/Transaction.dart';
 import '../../../core/models/TypedId.dart';
 import '../../account/presentation/AccountBloc.dart';
 import '../../account/presentation/AccountState.dart';
+import '../../report/presentation/ReportBloc.dart';
 import 'JournalBloc.dart';
 import 'JournalEvent.dart';
 import 'JournalState.dart';
@@ -308,6 +309,8 @@ class _JournalRow extends StatelessWidget {
   final Map<int, ({String name, String kind})> accountMap;
 
   void _showDetail(BuildContext context) {
+    final journalBloc = context.read<JournalBloc>();
+    final periodId = context.read<ReportBloc>().state.activePeriodId;
     showModalBottomSheet<void>(
       context: context,
       builder: (_) => Padding(
@@ -343,12 +346,12 @@ class _JournalRow extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: () {
+                  onPressed: periodId == null ? null : () {
                     Navigator.of(context).pop();
-                    context.read<JournalBloc>().add(
+                    journalBloc.add(
                           PostTransactionEvent(
                             id: tx.id,
-                            periodId: const PeriodId(0),
+                            periodId: PeriodId(periodId),
                           ),
                         );
                   },
