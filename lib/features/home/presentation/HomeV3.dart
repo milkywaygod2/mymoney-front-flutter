@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../app/theme/AppColors.dart';
 import 'HomeBloc.dart';
@@ -38,13 +39,17 @@ class HomeV3 extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           // 저울 — 중앙 정렬
-          Center(
-            child: ProportionalScale(
-              revenue: vm.revenue,
-              expense: vm.expense,
-              listPendingExpenses: vm.listPendingExpenses,
-              listPendingAssets: vm.listPendingAssets,
-              listPendingRevenues: vm.listPendingRevenues,
+          InkWell(
+            onTap: () => context.go('/report'),
+            borderRadius: BorderRadius.circular(16),
+            child: Center(
+              child: ProportionalScale(
+                revenue: vm.revenue,
+                expense: vm.expense,
+                listPendingExpenses: vm.listPendingExpenses,
+                listPendingAssets: vm.listPendingAssets,
+                listPendingRevenues: vm.listPendingRevenues,
+              ),
             ),
           ),
           Padding(
@@ -110,12 +115,16 @@ class HomeV3 extends StatelessWidget {
                     ),
                   ),
                 ),
-                FiveAccountBox(
-                  assets: vm.assets,
-                  expense: vm.expense,
-                  liabilities: vm.liabilities,
-                  equity: vm.equity,
-                  revenue: vm.revenue,
+                InkWell(
+                  onTap: () => context.go('/report'),
+                  borderRadius: BorderRadius.circular(16),
+                  child: FiveAccountBox(
+                    assets: vm.assets,
+                    expense: vm.expense,
+                    liabilities: vm.liabilities,
+                    equity: vm.equity,
+                    revenue: vm.revenue,
+                  ),
                 ),
               ],
             ),
