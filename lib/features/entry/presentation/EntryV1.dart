@@ -8,8 +8,23 @@ import 'widgets/AmountHero.dart';
 import 'widgets/FromToFlow.dart';
 
 /// V1 — 자연어 입력 + AI 자동분개 결과
-class EntryV1 extends StatelessWidget {
+class EntryV1 extends StatefulWidget {
   const EntryV1({super.key});
+
+  @override
+  State<EntryV1> createState() => _EntryV1State();
+}
+
+class _EntryV1State extends State<EntryV1> {
+  final _merchantController = TextEditingController();
+  final _memoController = TextEditingController();
+
+  @override
+  void dispose() {
+    _merchantController.dispose();
+    _memoController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -109,6 +124,29 @@ class EntryV1 extends StatelessWidget {
                         label: const Text('자동 분석'),
                       ),
               ),
+              // 비슷한 거래 추천 칩
+              if (state.accountHint != null)
+                _SuggestedChips(
+                  hint: state.accountHint!,
+                  onSelected: (label) {
+                    context.read<EntryBloc>().add(EntryNaturalTextChanged(label));
+                  },
+                ),
+              // 상대처 / 메모 행
+              const SizedBox(height: 8),
+              _EntryInfoRow(
+                icon: Icons.storefront_outlined,
+                label: '상대처',
+                controller: _merchantController,
+                hint: '예) 스타벅스 코엑스',
+              ),
+              const SizedBox(height: 6),
+              _EntryInfoRow(
+                icon: Icons.notes_outlined,
+                label: '메모',
+                controller: _memoController,
+                hint: '선택 사항',
+              ),
               AnimatedOpacity(
                 opacity: state.parsedAmount != null ? 1.0 : 0.0,
                 duration: const Duration(milliseconds: 300),
@@ -166,6 +204,72 @@ class _ParsedResultRow extends StatelessWidget {
           Text(value, style: const TextStyle(fontSize: 13)),
         ],
       ),
+    );
+  }
+}
+
+class _SuggestedChips extends StatelessWidget {
+  const _SuggestedChips({required this.hint, required this.onSelected});
+  final String hint;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 4),
+      child: Wrap(
+        spacing: 6,
+        children: [
+          ActionChip(
+            label: Text(hint, style: const TextStyle(fontSize: 12)),
+            onPressed: () => onSelected(hint),
+            visualDensity: VisualDensity.compact,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EntryInfoRow extends StatelessWidget {
+  const _EntryInfoRow({
+    required this.icon,
+    required this.label,
+    required this.controller,
+    required this.hint,
+  });
+  final IconData icon;
+  final String label;
+  final TextEditingController controller;
+  final String hint;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: Colors.grey),
+        const SizedBox(width: 8),
+        SizedBox(
+          width: 44,
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+        ),
+        Expanded(
+          child: TextField(
+            controller: controller,
+            style: const TextStyle(fontSize: 13),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
+              isDense: true,
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

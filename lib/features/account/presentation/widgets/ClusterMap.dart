@@ -53,7 +53,7 @@ const _kClusterPositions = {
   AccountNature.expense: Offset(0.25, 0.82),  // 좌하단 — 비용
 };
 
-class _ClusterBubble extends StatelessWidget {
+class _ClusterBubble extends StatefulWidget {
   const _ClusterBubble({
     required this.nature,
     required this.accounts,
@@ -61,6 +61,13 @@ class _ClusterBubble extends StatelessWidget {
 
   final AccountNature nature;
   final List<Account> accounts;
+
+  @override
+  State<_ClusterBubble> createState() => _ClusterBubbleState();
+}
+
+class _ClusterBubbleState extends State<_ClusterBubble> {
+  bool _isShowingSheet = false;
 
   static const _kNatureColors = {
     AccountNature.asset: Color(0xFF4CAF50),
@@ -80,9 +87,9 @@ class _ClusterBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pos = _kClusterPositions[nature]!;
-    final color = _kNatureColors[nature]!;
-    final count = accounts.length;
+    final pos = _kClusterPositions[widget.nature]!;
+    final color = _kNatureColors[widget.nature]!;
+    final count = widget.accounts.length;
     // 계정 수에 비례한 버블 크기 (최소 56, 최대 100)
     final size = (56.0 + min(count * 4.0, 44.0)).toDouble();
 
@@ -108,11 +115,11 @@ class _ClusterBubble extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    MetaphorIcon.emojiFor(nature),
+                    MetaphorIcon.emojiFor(widget.nature),
                     style: const TextStyle(fontSize: 22),
                   ),
                   Text(
-                    _kNatureLabels[nature]!,
+                    _kNatureLabels[widget.nature]!,
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
@@ -133,13 +140,17 @@ class _ClusterBubble extends StatelessWidget {
   }
 
   void _showAccountList(BuildContext context) {
+    if (_isShowingSheet) return;
+    setState(() => _isShowingSheet = true);
     showModalBottomSheet<void>(
       context: context,
       builder: (_) => _AccountListSheet(
-        nature: nature,
-        accounts: accounts,
+        nature: widget.nature,
+        accounts: widget.accounts,
       ),
-    );
+    ).whenComplete(() {
+      if (mounted) setState(() => _isShowingSheet = false);
+    });
   }
 }
 
