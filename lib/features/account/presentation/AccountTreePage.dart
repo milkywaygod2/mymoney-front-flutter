@@ -92,7 +92,9 @@ class _AccountTreePageState extends State<AccountTreePage> {
           context.read<AccountBloc>().add(const AccountEvent.loadTree());
         },
         child: BlocBuilder<AccountBloc, AccountState>(
-          buildWhen: (prev, curr) => prev.errorMessage != curr.errorMessage,
+          buildWhen: (prev, curr) =>
+              prev.errorMessage != curr.errorMessage ||
+              prev.isLoading != curr.isLoading,
           builder: (context, state) {
             if (state.errorMessage != null) {
               return Center(
