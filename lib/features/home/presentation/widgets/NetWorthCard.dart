@@ -65,7 +65,7 @@ class _NetWorthCardState extends State<NetWorthCard> with SingleTickerProviderSt
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Theme.of(context).colorScheme.surfaceContainerHigh,
+            Theme.of(context).colorScheme.surfaceContainerHighest,
             Theme.of(context).colorScheme.surface,
           ],
         ),
