@@ -370,7 +370,7 @@ class EntryBloc extends Bloc<EntryEvent, EntryState> {
       );
       emit(state.copyWith(status: EntryStatus.done, savedTransactionDescription: desc.isEmpty ? '거래 입력' : desc));
     } catch (e) {
-      emit(state.copyWith(status: EntryStatus.idle, errorMessage: e.toString()));
+      emit(state.copyWith(status: EntryStatus.error, errorMessage: e.toString()));
     }
   }
 
