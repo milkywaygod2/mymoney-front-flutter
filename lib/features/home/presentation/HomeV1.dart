@@ -15,6 +15,20 @@ class HomeV1 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (vm.netWorth == 0 && vm.spark7d.isEmpty && vm.assets == 0) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.account_balance_wallet_outlined, size: 72, color: Colors.grey.withValues(alpha: 0.5)),
+            const SizedBox(height: 16),
+            const Text('아직 거래 내역이 없습니다', style: TextStyle(fontSize: 16, color: Colors.grey)),
+            const SizedBox(height: 8),
+            const Text('+ 버튼으로 첫 거래를 입력해보세요', style: TextStyle(fontSize: 13, color: Colors.grey)),
+          ],
+        ),
+      );
+    }
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
       child: Column(
