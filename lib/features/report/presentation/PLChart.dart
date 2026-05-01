@@ -46,31 +46,65 @@ class PLChart extends StatelessWidget {
 }
 
 /// 수익/비용 비교 막대 차트
-class _PLBarChart extends StatelessWidget {
+class _PLBarChart extends StatefulWidget {
   const _PLBarChart({required this.pl});
   final IncomeStatement pl;
 
   @override
-  Widget build(BuildContext context) {
-    final maxVal =
-        pl.totalRevenue > pl.totalExpense ? pl.totalRevenue : pl.totalExpense;
+  State<_PLBarChart> createState() => _PLBarChartState();
+}
 
-    return Column(
-      children: [
-        _Bar(
-          label: '수익',
-          value: pl.totalRevenue,
-          maxValue: maxVal,
-          color: AppColors.revenueDeep,
-        ),
-        const SizedBox(height: 6),
-        _Bar(
-          label: '비용',
-          value: pl.totalExpense,
-          maxValue: maxVal,
-          color: AppColors.natureExpense,
-        ),
-      ],
+class _PLBarChartState extends State<_PLBarChart> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+    _anim = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final maxVal = widget.pl.totalRevenue > widget.pl.totalExpense
+        ? widget.pl.totalRevenue
+        : widget.pl.totalExpense;
+
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (context, _) {
+        final progress = _anim.value;
+        return Column(
+          children: [
+            _Bar(
+              label: '수익',
+              value: widget.pl.totalRevenue,
+              maxValue: maxVal,
+              color: AppColors.revenueDeep,
+              animatedRatio: (maxVal > 0 ? widget.pl.totalRevenue / maxVal : 0.0).clamp(0.0, 1.0) * progress,
+            ),
+            const SizedBox(height: 6),
+            _Bar(
+              label: '비용',
+              value: widget.pl.totalExpense,
+              maxValue: maxVal,
+              color: AppColors.natureExpense,
+              animatedRatio: (maxVal > 0 ? widget.pl.totalExpense / maxVal : 0.0).clamp(0.0, 1.0) * progress,
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -81,17 +115,17 @@ class _Bar extends StatelessWidget {
     required this.value,
     required this.maxValue,
     required this.color,
+    required this.animatedRatio,
   });
 
   final String label;
   final int value;
   final int maxValue;
   final Color color;
+  final double animatedRatio;
 
   @override
   Widget build(BuildContext context) {
-    final ratio = maxValue > 0 ? value / maxValue : 0.0;
-
     return Row(
       children: [
         SizedBox(
@@ -105,7 +139,7 @@ class _Bar extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
-              value: ratio.clamp(0.0, 1.0),
+              value: animatedRatio,
               minHeight: 20,
               backgroundColor: color.withValues(alpha: 0.12),
               valueColor: AlwaysStoppedAnimation<Color>(color),
