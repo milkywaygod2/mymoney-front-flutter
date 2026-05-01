@@ -7,6 +7,9 @@ import 'Scene3.dart';
 import 'Scene4.dart';
 import 'Scene5.dart';
 import 'Scene6.dart';
+import 'Scene7.dart';
+import 'Scene8.dart';
+import 'Scene9.dart';
 
 /// 씬 메타데이터
 class SceneMeta {
@@ -45,9 +48,9 @@ const List<SceneMeta> scenes = [
   SceneMeta(title: '대출 받음', sub: '주담대 ₩200,000,000', amount: '+₩200,000,000', build: _buildScene4),
   SceneMeta(title: '월급 입금', sub: '기본급 ₩3,200,000', amount: '+₩3,200,000', build: _buildScene5),
   SceneMeta(title: '대출 상환', sub: '주담대 원리금 ₩1,250,000', amount: '₩1,250,000', build: _buildScene6),
-  SceneMeta(title: '이자 수익', sub: '예금이자 ₩12,400', amount: '+₩12,400', build: _buildScene1),
-  SceneMeta(title: '부동산 매입', sub: '아파트 ₩600,000,000', amount: '₩600,000,000', build: _buildScene1),
-  SceneMeta(title: '출자·증자', sub: '보통주 ₩50,000,000', amount: '+₩50,000,000', build: _buildScene1),
+  SceneMeta(title: '이자 수익', sub: '예금이자 ₩12,400', amount: '+₩12,400', build: _buildScene7),
+  SceneMeta(title: '부동산 매입', sub: '아파트 ₩600,000,000', amount: '₩600,000,000', build: _buildScene8),
+  SceneMeta(title: '출자·증자', sub: '보통주 ₩50,000,000', amount: '+₩50,000,000', build: _buildScene9),
 ];
 
 Widget _buildScene1(AnimationController c) => Scene1(controller: c);
@@ -56,6 +59,9 @@ Widget _buildScene3(AnimationController c) => Scene3(controller: c);
 Widget _buildScene4(AnimationController c) => Scene4(controller: c);
 Widget _buildScene5(AnimationController c) => Scene5(controller: c);
 Widget _buildScene6(AnimationController c) => Scene6(controller: c);
+Widget _buildScene7(AnimationController c) => Scene7(controller: c);
+Widget _buildScene8(AnimationController c) => Scene8(controller: c);
+Widget _buildScene9(AnimationController c) => Scene9(controller: c);
 
 /// wave-6 §6.1 accountHint + parsedAmount 조합으로 씬 자동 선택
 /// AccountId는 int 타입이므로 accountHint 문자열로 kind 추론
