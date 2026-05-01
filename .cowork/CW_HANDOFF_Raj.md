@@ -64,3 +64,29 @@
 - `NatureBadge(AccountNature.asset)` → 계정 분류 표시
 - `MoneyText(amount, size: MoneySize.lg)` → 잔액 표시
 - `DensityScope.of(context)` → 밀도별 레이아웃 분기
+
+---
+
+## QA Step 1 결과 (Iteration 1, 2026-05-01)
+
+### U1 Design System — **PASS** (GAP 0건)
+- AppColors/TextStyles/Spacing/Radius/Shadows/Motion 전수 대조 → 원본 colors_and_type.css 완전 일치
+- AppTheme.dart: fromSeed 폐기 확인, ColorScheme 직접 정의 확인
+
+### U6 Report Dashboard — **GAP 1건 → 수정 완료**
+- ~~GAP: CFWaterfall.dart:50-54 빈 상태 Text 단독~~ → 리드가 직접 수정 (commit 13fb858, agent-automation)
+- BSChart/PLChart/CETable null→CircularProgressIndicator: ACCEPT (로딩 상태, 정합성 문제 아님)
+
+### Step 2 진행 중
+- U1+U6 연결부 검토: MyMoneyApp/AppRouter/DashboardPage/ReportBloc DI 확인 중
+
+---
+
+## v3.0 QA COMPLETE (2026-05-02)
+
+**Iteration 13 / 연속 2회 풀패스 (Iter 12+13) — COMPLETE**
+
+- Step 1~3 전원 PASS, GAP+FIXED 0건
+- U1 Design System: AppColors/TextStyles/Spacing/Radius/Shadows/Motion/AppTheme 전수 대조 이상 없음
+- U6 Report Dashboard: RatioGrid/BSChart/PLChart/CFWaterfall/CETable/DashboardPage 전수 대조 이상 없음
+- KNOWN-GAP 등록 없음 (U1+U6 담당 범위 내)

@@ -1,18 +1,54 @@
 # 태스크 상황판 (CW_STATE_TASK)
 
 [CURRENT_PHASE: 7]
-[CURRENT_WAVE: U1 진행 중 — Design System (Foundation)]
+[CURRENT_WAVE: v3.0 UI QA COMPLETE — Wave U1~U6 완료, QA Loop Iteration 13 / CONSECUTIVE_PASS 2]
+
+---
+
+## QA Step 1 진실의 원본 (Source of Truth)
+
+> CW_HANDOFF 문서는 구현 메모이며, QA 진실의 원본이 아님.
+> **디자인 사이드**와 **개발 사이드** 양쪽을 모두 대조해야 함.
+
+### 디자인 사이드 (UI/픽셀 진실)
+
+| 유형 | 경로 | 용도 |
+|------|------|------|
+| **구현 스펙 (Wave MD)** | `design-handoff-for-dev/wave-0~6.md` | Wave별 Flutter 구현 스펙 — **QA Step 1 1차 원본** |
+| **Flutter 뼈대** | `design-handoff-for-dev/skeletons/wave-*.dart` | 빈 뼈대 + 계정 JSON |
+| **계정 카탈로그** | `design-handoff-for-dev/skeletons/assets/account_catalog.json` | K-IFRS 계정 JSON |
+| **JSX 원본** | `design-reference/screens/*.jsx` | 픽셀 진실 — 스펙 불분명 시 최종 판단 기준 |
+| **인터랙티브 프로토타입** | `design-reference/screens/screens.html` | 모션/인터랙션 직접 확인 |
+| **디자인 토큰 CSS** | `design-reference/colors_and_type.css` | AppColors 변환 원본 |
+
+### 개발 사이드 (아키텍처/계약 진실)
+
+| 유형 | 경로 | 용도 |
+|------|------|------|
+| **아키텍처 문서** | `.cowork/CW_ARCHITECTURE.md` | 전체 아키텍처 — 레이어/모듈/DI/라우팅 설계 원본 |
+| **계약 문서** | `.cowork/CW_CONTRACTS.md` | 도메인 간 인터페이스·이벤트·상태 계약 원본 (**현재 stub — Phase 2A 진입 시 정의 예정**) |
+
+### Wave↔소스 매핑
+
+| Wave | handoff 스펙 | JSX 원본 |
+|------|-------------|---------|
+| U1 Design System | `wave-1-design-system.md` | `colors_and_type.css` · `preview/` |
+| U2 Home | `wave-2-home.md` | `screens/home.jsx` |
+| U3 Journal | `wave-3-journal.md` | `screens/transactions.jsx` |
+| U4 Entry | `wave-4-entry.md` | `screens/entry.jsx` · `entry_autoplay.jsx` |
+| U5 Account Tree | `wave-5-account-tree.md` | `screens/accounts.jsx` · `coa.jsx` · `metaphors.jsx` |
+| U6 Report/Animations | `wave-6-animations.md` | `screens/playground.jsx` · `scenario_assets.jsx` |
 
 ## UI Wave 현황 (Wave U1~U6)
 
 | Wave | 내용 | 담당 | 상태 |
 |------|------|------|------|
 | U1 | Design System (AppColors/TextStyles/Spacing/Radius/Shadows/Motion/AppTheme/공통위젯) | Raj | ✅ 완료 (c237bd3) |
-| U2 | Home (HomePage + HomeV1/V2/V3 + HomeBloc) | Ken | ⏳ U1 대기 |
-| U3 | Journal (JournalPage 재작성 + V1/V2/V3) | Ken | ⏳ U1 대기 |
-| U4 | Entry (EntryPage + V1/V2/V3 + EntryAutoPlay) | Carlos | ⏳ U1 대기 |
-| U5 | AccountTree (재작성 + Browse/Map/Config) | Carlos | ⏳ U1 대기 |
-| U6 | Report Dashboard (재작성 + 차트 6종) | Carlos | ⏳ U1 대기 |
+| U2 | Home (HomePage + HomeV1/V2/V3 + HomeBloc) | Ken | ✅ 완료 (06b43b7) |
+| U3 | Journal (JournalPage 재작성 + V1/V2/V3) | Ken | ✅ 완료 (06b43b7) |
+| U4 | Entry (EntryPage + V1/V2/V3 + EntryAutoPlay) | Carlos | ✅ 완료 (98db0ad) |
+| U5 | AccountTree (재작성 + Browse/Map/Config) | Carlos | ✅ 완료 (b6578a0) |
+| U6 | Report Dashboard (재작성 + 차트 6종) | Carlos | ✅ 완료 (ef15bd7) |
 
 ---
 
@@ -102,7 +138,64 @@ LOOP_STATE: COMPLETE
 ITERATION: 6 / MAX: 100 / CONSECUTIVE_PASS: 2
 
 ### v2.0 QA
-LOOP_STATE: **미실행** — W14 완료 후 QA Loop 실행 권장
+LOOP_STATE: COMPLETE — W14 백엔드 (v1.0 QA와 통합)
+
+### v3.0 UI QA (Wave U1~U6)
+LOOP_STATE: COMPLETE
+ITERATION: 13
+MAX_ITERATION: 100
+CONSECUTIVE_PASS: 2
+
+#### Step 1 판정 기준
+- BSChart/PLChart/CETable null→CircularProgressIndicator: **ACCEPT** (로딩 상태, 정상)
+- EntryAutoPlay overlay 방식 불일치: **ACCEPT** (기능 동등, 설계 단순화)
+- ConfigMode 계정별 개별 메타포: **ACCEPT** (이모지 단순화, 설계 의도)
+
+#### Step 1 원본 소스
+- **U1+U6 (Raj-2)**: `design-handoff-for-dev/wave-1-design-system.md` · `wave-6-animations.md` + JSX: `colors_and_type.css` · `playground.jsx`
+- **U2+U3 (Ken-2)**: `design-handoff-for-dev/wave-2-home.md` · `wave-3-journal.md` + JSX: `home.jsx` · `transactions.jsx`
+- **U4+U5 (Carlos-2)**: `design-handoff-for-dev/wave-4-entry.md` · `wave-5-account-tree.md` + JSX: `entry.jsx` · `accounts.jsx`
+
+#### Agent Results (현재 iteration)
+| Agent | Step 1 | Step 2 | Step 3 |
+|-------|--------|--------|--------|
+| Raj-2 | PASS (GAP 0건, FIXED 0건) | PASS (FIXED 0건, ISSUE 0건) | PASS (FIXED 0건, ISSUE 0건) |
+| Ken-2 | PASS (GAP 0건, FIXED 0건) | PASS (FIXED 0건, ISSUE 0건) | PASS (FIXED 0건, ISSUE 0건) |
+| Carlos-2 | PASS (GAP 0건, FIXED 0건) | PASS (FIXED 0건, ISSUE 0건) | PASS (FIXED 0건, ISSUE 0건) |
+
+#### KNOWN-GAP 등록 (도메인 확장 시 구현)
+| GAP | 위치 | 원인 |
+|-----|------|------|
+| EntryV1 추천 칩 | EntryV1.dart | _SuggestedChips UI stub 추가됨 (e76332c), EntryBloc suggestions 연동 미완 |
+| EntryV1 상대처/메모 row | EntryV1.dart | _EntryInfoRow UI stub 추가됨 (e76332c), EntryBloc merchant/memo 연동 미완 |
+| EntryV1 부기 모드 토글 | EntryV1.dart | 안내 텍스트로 대체 (설계 단순화) |
+| EntryAutoPlay 9씬 미구현 | EntryAutoPlay.dart | wave-6 9씬(현금결제/카드결제/예금이체/대출/월급 등) + FlyingPiece/Anchor/SideLabel 미구현 — 3페이즈(enter/fly/arrive) 단순화로 대체. idle showroom/sceneIndex/bump() 미구현. 설계 단순화 ACCEPT |
+| AccountBrowse showAdvanced | AccountBrowse.dart | Account.priority 필드 미존재 |
+| TreeRow P3/P4 뱃지 | TreeRow.dart | Account.priority 필드 미존재 |
+| ConfigMode 계정별 메타포 | AccountConfig.dart | 이모지 단순화 = 설계 의도 |
+| NumPad 행 순서 (계산기식) | NumPad.dart | 원본 entry.jsx는 전화기식(1~3 상단), 구현은 계산기식(7~9 상단) — 금융 앱 관례상 ACCEPT |
+| EntryPage 닫기 confirm | EntryPage.dart | wave-4 §10 Draft 변경 시 "저장하지 않고 닫을까요?" dialog 미구현 — Navigator.pop() 직접 실행 (UX 완성도 도메인 확장) |
+| _connectBlocStreams StreamSubscription 미저장 | Injection.dart | stream.listen 반환값 미저장 — 앱 singleton으로 실질 누수 없음. 앱 종료 시에만 의미 있어 ACCEPT |
+| amountLg 24px (wave-1 MD 32px) | AppTextStyles.dart:110 | CSS 원본 `.amount-lg { font-size: var(--t-headline-small); }` = 24px — wave-1 MD 오기입. CSS 기준 구현이 정확. ACCEPT |
+| LiquidBar 미구현 | lib/shared/widgets/ | JSX·화면 미사용 프리미티브 — LinearProgressIndicator 대체, 도메인 확장 시 구현 ACCEPT |
+| _NetIncomeChip 디자인 명세 일탈 | HomeV3.dart:175~213 | wave-2 §5 명세: 20px mono nature-asset `+₩XXX만`. 구현: 11px stateSuccess/Error 칩 "흑자/적자" — 금융 UX상 더 명확한 시각 표현. ACCEPT |
+
+#### Loop History
+| Iteration | Step 1 | Step 2 | Step 3 | 결과 |
+|-----------|--------|--------|--------|------|
+| 1 | FIXED 6건 / KNOWN-GAP 7건 | Raj PASS / Ken PASS+FIXED 1건 / Carlos PASS | Raj PASS / Ken PASS / Carlos PASS | FIXED 7건 → Iteration 2 |
+| 2 | FIXED 1건(CFWaterfall const) / KNOWN-GAP 1건 ACCEPT | Raj PASS / Ken PASS / Carlos PASS | Raj PASS / Ken PASS / Carlos FIXED 2건(ClusterMap+EntryV1) | FIXED 3건 → Iteration 3 |
+| 3 | Step1 PASS 전원 / Step2 FIXED 1건(CETable 46580a2) / Step3 Ken·Carlos PASS | - | - | FIXED 1건 → Iteration 4 |
+| 4 | Raj PASS / Ken FIXED 2건 / Carlos PASS | Raj PASS / Ken PASS / Carlos PASS | Raj PASS / Ken PASS / Carlos PASS | FIXED 2건 → Iteration 5 |
+| 5 | Raj PASS / Ken FIXED 1건(HomeV3 Eyelet) / Carlos PASS+GAP 1건 KNOWN-GAP | Raj PASS / Ken PASS / Carlos FIXED 1건(AccountTreePage) | Raj PASS(대행) / Ken PASS / Carlos FIXED 2건(EntryBloc.error+ClusterMap) | FIXED 4건 → Iteration 6 |
+| 6 | FIXED 18건 (surfaceContainerHigh 전수교체) / MINOR 2건 ACCEPT | Raj 리드대행 PASS / Ken PASS / Carlos PASS | Raj 리드대행 PASS / Ken PASS / Carlos PASS | FIXED 18건 → Iteration 7 |
+| 7 | FIXED 1건 (SettingsPage surfaceContainerHigh, commit d2cbb06) | 전원 PASS | 전원 PASS | FIXED 1건 → Iteration 8 |
+| 8 | PASS (GAP 0건, FIXED 0건) | 전원 PASS | 전원 PASS | **풀패스 — CONSECUTIVE_PASS=1** |
+| 9 | Ken-2 FIXED 1건 (FiveAccountBox flow위 수정 12456f6+revert+reapply) | 전원 PASS | 전원 PASS | FIXED 1건 → Iteration 10 (CONSECUTIVE_PASS 리셋) |
+| 10 | 전원 PASS (GAP 0건, FIXED 0건) | 전원 PASS | 전원 PASS | **풀패스 — CONSECUTIVE_PASS=1** |
+| 11 | Carlos-2 FIXED 2건 (TreeRow·ClusterMap AppColors) | 전원 PASS | 전원 PASS | FIXED 2건 → Iteration 12 (CONSECUTIVE_PASS 리셋) |
+| 12 | 전원 PASS (Ken-2 GAP-1 ACCEPT→KNOWN-GAP) | 전원 PASS | 전원 PASS | **풀패스 — CONSECUTIVE_PASS=1** |
+| 13 | 전원 PASS (GAP 0건, FIXED 0건) | 전원 PASS | 전원 PASS | **풀패스 — CONSECUTIVE_PASS=2 → COMPLETE** |
 
 ---
 
