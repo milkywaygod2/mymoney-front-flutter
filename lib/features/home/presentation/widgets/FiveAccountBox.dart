@@ -30,27 +30,27 @@ class FiveAccountBox extends StatelessWidget {
     final flowMax = max(max(revenue, expense), 1);
 
     final leftSegs = [
-      _Seg(kind: 'flow', icon: '🍎', label: '비용', value: expense, gradient: LinearGradient(
-        begin: Alignment.topCenter, end: Alignment.bottomCenter,
-        colors: [AppColors.natureExpense.withValues(alpha: 0.75), AppColors.natureExpense.withValues(alpha: 0.35)],
-      )),
       _Seg(kind: 'stock', icon: '🌳', label: '자산', value: assets, gradient: LinearGradient(
         begin: Alignment.topCenter, end: Alignment.bottomCenter,
         colors: [AppColors.natureAsset.withValues(alpha: 0.75), AppColors.natureAsset.withValues(alpha: 0.35)],
       )),
+      _Seg(kind: 'flow', icon: '🍎', label: '비용', value: expense, gradient: LinearGradient(
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [AppColors.natureExpense.withValues(alpha: 0.75), AppColors.natureExpense.withValues(alpha: 0.35)],
+      )),
     ];
     final rightSegs = [
-      _Seg(kind: 'flow', icon: '💧', label: '수익', value: revenue, gradient: LinearGradient(
+      _Seg(kind: 'stock', icon: '🫙', label: '부채', value: liabilities, gradient: LinearGradient(
         begin: Alignment.topCenter, end: Alignment.bottomCenter,
-        colors: [AppColors.revenueSoft.withValues(alpha: 0.85), AppColors.revenueSoft.withValues(alpha: 0.45)],
+        colors: [AppColors.liabilitySoft.withValues(alpha: 0.75), AppColors.natureLiability.withValues(alpha: 0.35)],
       )),
       _Seg(kind: 'stock', icon: '🪣', label: '자본', value: equity, gradient: LinearGradient(
         begin: Alignment.topCenter, end: Alignment.bottomCenter,
         colors: [AppColors.equityDeep.withValues(alpha: 0.85), AppColors.natureEquity.withValues(alpha: 0.55)],
       )),
-      _Seg(kind: 'stock', icon: '🫙', label: '부채', value: liabilities, gradient: LinearGradient(
+      _Seg(kind: 'flow', icon: '💧', label: '수익', value: revenue, gradient: LinearGradient(
         begin: Alignment.topCenter, end: Alignment.bottomCenter,
-        colors: [AppColors.liabilitySoft.withValues(alpha: 0.75), AppColors.natureLiability.withValues(alpha: 0.35)],
+        colors: [AppColors.revenueSoft.withValues(alpha: 0.85), AppColors.revenueSoft.withValues(alpha: 0.45)],
       )),
     ];
 
