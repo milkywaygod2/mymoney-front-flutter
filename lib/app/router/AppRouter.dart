@@ -12,6 +12,7 @@ import '../../features/home/presentation/HomePage.dart';
 import '../../features/journal/data/TransactionDao.dart';
 import '../../features/journal/presentation/JournalPage.dart';
 import '../../features/report/presentation/DashboardPage.dart';
+import '../../features/entry/presentation/EntryPage.dart';
 import '../../features/report/presentation/ReportBloc.dart';
 import '../../features/report/presentation/SettlementPage.dart';
 import '../../features/settings/presentation/SettingsPage.dart';
@@ -124,6 +125,11 @@ class _ShellScaffold extends StatelessWidget {
         selectedIndex: currentIndex,
         onDestinationSelected: (i) => context.go(_listPaths[i]),
         destinations: _listDestinations,
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => EntryPage.show(context),
+        tooltip: '거래 입력',
+        child: const Icon(Icons.add),
       ),
     );
   }

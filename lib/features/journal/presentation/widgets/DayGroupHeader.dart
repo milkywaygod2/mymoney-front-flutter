@@ -17,7 +17,7 @@ class DayGroupHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final weekdays = ['일', '월', '화', '수', '목', '금', '토'];
     final dayStr = weekday ?? weekdays[date.weekday % 7];
-    final dateStr = '${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}';
+    final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),

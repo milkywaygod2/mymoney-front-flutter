@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -8,8 +10,25 @@ import 'widgets/AmountHero.dart';
 import 'widgets/FromToFlow.dart';
 
 /// V1 — 자연어 입력 + AI 자동분개 결과
-class EntryV1 extends StatelessWidget {
+class EntryV1 extends StatefulWidget {
   const EntryV1({super.key});
+
+  @override
+  State<EntryV1> createState() => _EntryV1State();
+}
+
+class _EntryV1State extends State<EntryV1> {
+  Timer? _debounce;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _dispatchParse(BuildContext context) {
+    context.read<EntryBloc>().add(const EntryParseNaturalText());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,6 +98,11 @@ class EntryV1 extends StatelessWidget {
                 ),
                 onChanged: (text) {
                   context.read<EntryBloc>().add(EntryNaturalTextChanged(text));
+                  _debounce?.cancel();
+                  _debounce = Timer(
+                    const Duration(milliseconds: 400),
+                    () => _dispatchParse(context),
+                  );
                 },
                 onSubmitted: (_) {
                   context.read<EntryBloc>().add(const EntryParseNaturalText());
