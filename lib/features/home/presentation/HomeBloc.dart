@@ -15,6 +15,19 @@ class PendingItem {
   final int amount;
 }
 
+class TodayBranchItem {
+  const TodayBranchItem({
+    required this.name,
+    required this.category,
+    required this.amount,
+    required this.isRevenue,
+  });
+  final String name;
+  final String category;
+  final int amount;
+  final bool isRevenue;
+}
+
 class HomeViewModel {
   const HomeViewModel({
     required this.netWorth,
@@ -28,6 +41,7 @@ class HomeViewModel {
     this.listPendingExpenses = const [],
     this.listPendingAssets = const [],
     this.listPendingRevenues = const [],
+    this.listTodayBranch = const [],
   });
 
   final int netWorth;
@@ -41,6 +55,7 @@ class HomeViewModel {
   final List<PendingItem> listPendingExpenses;
   final List<PendingItem> listPendingAssets;
   final List<PendingItem> listPendingRevenues;
+  final List<TodayBranchItem> listTodayBranch;
 
   static const empty = HomeViewModel(
     netWorth: 0,
@@ -216,6 +231,30 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       }
     }
 
+    // 오늘 거래 최대 3건 (오늘의 가지)
+    final todayStart = DateTime(now.year, now.month, now.day);
+    final todayEnd = DateTime(now.year, now.month, now.day, 23, 59, 59);
+    final todayTxns = allTxns
+        .where((twl) =>
+            !twl.tx.date.isBefore(todayStart) &&
+            !twl.tx.date.isAfter(todayEnd) &&
+            twl.tx.status == 'POSTED')
+        .toList()
+      ..sort((a, b) => b.tx.date.compareTo(a.tx.date));
+
+    final listTodayBranch = todayTxns.take(3).map((twl) {
+      final hasRevenueLine = twl.listLines.any((l) => l.entryType == 'CREDIT');
+      final amt = twl.listLines
+          .where((l) => l.entryType == 'DEBIT')
+          .fold<int>(0, (s, l) => s + l.baseAmount);
+      return TodayBranchItem(
+        name: twl.tx.description,
+        category: hasRevenueLine ? '💧 수익' : '🍎 지출',
+        amount: hasRevenueLine ? amt : -amt,
+        isRevenue: hasRevenueLine,
+      );
+    }).toList();
+
     return HomeViewModel(
       netWorth: dashboard.netAssets,
       spark7d: spark7d,
@@ -228,6 +267,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       listPendingExpenses: listPendingExpenses,
       listPendingAssets: listPendingAssets,
       listPendingRevenues: listPendingRevenues,
+      listTodayBranch: listTodayBranch,
     );
   }
 }

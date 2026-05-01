@@ -46,6 +46,11 @@ class HomeV2 extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 _EquationHint(),
+                if (vm.listTodayBranch.isNotEmpty) ...[
+                  const _SectionLabel(text: '오늘의 가지'),
+                  const SizedBox(height: 10),
+                  _TodaysBranch(items: vm.listTodayBranch),
+                ],
               ],
             ),
           ),
@@ -331,5 +336,83 @@ class _SectionLabel extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _TodaysBranch extends StatelessWidget {
+  const _TodaysBranch({required this.items});
+  final List<TodayBranchItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+      ),
+      clipBehavior: Clip.hardEdge,
+      child: Column(
+        children: List.generate(items.length, (i) {
+          final item = items[i];
+          final isLast = i == items.length - 1;
+          return Container(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            decoration: BoxDecoration(
+              border: isLast
+                  ? null
+                  : Border(
+                      bottom: BorderSide(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                    ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.name,
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        item.category,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  '${item.amount >= 0 ? '+' : ''}₩${_fmt(item.amount.abs())}',
+                  style: TextStyle(
+                    fontFamily: 'monospace',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: item.isRevenue ? AppColors.equitySoft : Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  String _fmt(int v) {
+    final str = v.toString();
+    final buf = StringBuffer();
+    for (var i = 0; i < str.length; i++) {
+      if (i > 0 && (str.length - i) % 3 == 0) buf.write(',');
+      buf.write(str[i]);
+    }
+    return buf.toString();
   }
 }
