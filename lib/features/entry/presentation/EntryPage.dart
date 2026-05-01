@@ -245,7 +245,7 @@ class _SaveButton extends StatelessWidget {
   }
 }
 
-class _AnimationSheet extends StatelessWidget {
+class _AnimationSheet extends StatefulWidget {
   const _AnimationSheet({
     required this.description,
     required this.onFinished,
@@ -255,12 +255,41 @@ class _AnimationSheet extends StatelessWidget {
   final VoidCallback onFinished;
 
   @override
+  State<_AnimationSheet> createState() => _AnimationSheetState();
+}
+
+class _AnimationSheetState extends State<_AnimationSheet> {
+  bool _showAutoPlay = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // §9.5: 저장 버튼 체크 아이콘 220ms 후 AutoPlay 전환
+    Future.delayed(const Duration(milliseconds: 220), () {
+      if (mounted) setState(() => _showAutoPlay = true);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: 300,
-      child: EntryAutoPlay(
-        description: description,
-        onFinished: onFinished,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 150),
+        child: _showAutoPlay
+            ? EntryAutoPlay(
+                key: const ValueKey('autoplay'),
+                description: widget.description,
+                onFinished: widget.onFinished,
+              )
+            : Center(
+                key: const ValueKey('check'),
+                child: Icon(
+                  Icons.check_circle_rounded,
+                  size: 64,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
       ),
     );
   }

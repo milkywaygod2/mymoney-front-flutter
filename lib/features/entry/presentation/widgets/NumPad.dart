@@ -53,7 +53,7 @@ class NumPad extends StatelessWidget {
   }
 }
 
-class _NumPadButton extends StatelessWidget {
+class _NumPadButton extends StatefulWidget {
   const _NumPadButton({
     required this.label,
     required this.onTap,
@@ -67,37 +67,53 @@ class _NumPadButton extends StatelessWidget {
   final bool isWide;
 
   @override
-  Widget build(BuildContext context) {
-    final isDelete = label == '⌫';
-    final isClear = label == 'C';
+  State<_NumPadButton> createState() => _NumPadButtonState();
+}
 
-    return Material(
-      color: isClear
-          ? Theme.of(context).colorScheme.errorContainer
-          : Theme.of(context).colorScheme.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: SizedBox(
-          height: 52,
-          child: Center(
-            child: isDelete
-                ? Icon(
-                    Icons.backspace_outlined,
-                    size: 20,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  )
-                : Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: isClear ? 14 : 20,
-                      fontWeight: FontWeight.w600,
-                      color: isClear
-                          ? Theme.of(context).colorScheme.onErrorContainer
-                          : Theme.of(context).colorScheme.onSurface,
+class _NumPadButtonState extends State<_NumPadButton> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDelete = widget.label == '⌫';
+    final isClear = widget.label == 'C';
+
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) {
+        setState(() => _pressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.94 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeOut,
+        child: Material(
+          color: isClear
+              ? Theme.of(context).colorScheme.errorContainer
+              : Theme.of(context).colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(12),
+          child: SizedBox(
+            height: 52,
+            child: Center(
+              child: isDelete
+                  ? Icon(
+                      Icons.backspace_outlined,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    )
+                  : Text(
+                      widget.label,
+                      style: TextStyle(
+                        fontSize: isClear ? 14 : 20,
+                        fontWeight: FontWeight.w600,
+                        color: isClear
+                            ? Theme.of(context).colorScheme.onErrorContainer
+                            : Theme.of(context).colorScheme.onSurface,
+                      ),
                     ),
-                  ),
+            ),
           ),
         ),
       ),
