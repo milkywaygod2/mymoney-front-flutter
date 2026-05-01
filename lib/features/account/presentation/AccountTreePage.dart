@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/constants/Enums.dart';
 import '../../perspective/presentation/LensSwitcher.dart';
 import '../../perspective/presentation/PerspectiveBloc.dart';
+import '../../perspective/presentation/PerspectiveState.dart';
 import 'AccountBloc.dart';
 import 'AccountEvent.dart';
 import 'AccountBrowse.dart';
@@ -83,13 +84,20 @@ class _AccountTreePageState extends State<AccountTreePage> {
           ),
         ),
       ),
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 200),
-        child: switch (_mode) {
-          AccountViewMode.browse => const AccountBrowse(key: ValueKey('browse')),
-          AccountViewMode.map => const AccountMap(key: ValueKey('map')),
-          AccountViewMode.config => const AccountConfig(key: ValueKey('config')),
+      body: BlocListener<PerspectiveBloc, PerspectiveState>(
+        listenWhen: (prev, curr) =>
+            prev.effectivePerspective?.id != curr.effectivePerspective?.id,
+        listener: (context, state) {
+          context.read<AccountBloc>().add(const AccountEvent.loadTree());
         },
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: switch (_mode) {
+            AccountViewMode.browse => const AccountBrowse(key: ValueKey('browse')),
+            AccountViewMode.map => const AccountMap(key: ValueKey('map')),
+            AccountViewMode.config => const AccountConfig(key: ValueKey('config')),
+          },
+        ),
       ),
     );
   }
