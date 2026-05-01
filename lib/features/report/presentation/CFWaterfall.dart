@@ -35,25 +35,23 @@ class CFWaterfall extends StatelessWidget {
         // 데이터 없음 — 빈 상태
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '현금흐름표',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              const Center(
-                child: Text(
-                  'CF 보고서 데이터가 없습니다',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.waterfall_chart,
+                    size: 36,
+                    color: Theme.of(context).colorScheme.outlineVariant),
+                const SizedBox(height: 8),
+                Text(
+                  '현금흐름표 데이터 없음',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-            ],
+              ],
+            ),
           ),
         );
       },
