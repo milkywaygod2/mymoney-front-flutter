@@ -108,24 +108,33 @@ class _JournalPageState extends State<JournalPage> with TickerProviderStateMixin
           const SizedBox(width: 8),
         ],
       ),
-      body: BlocBuilder<JournalBloc, JournalState>(
-        builder: (context, state) {
-          if (state.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (state.errorMessage != null) {
-            return Center(
-              child: Text(
-                state.errorMessage!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            );
-          }
-          return FadeTransition(
-            opacity: _fadeAnim,
-            child: _buildVariant(),
+      body: BlocListener<PerspectiveBloc, PerspectiveState>(
+        listenWhen: (prev, curr) =>
+            prev.effectivePerspective?.id != curr.effectivePerspective?.id,
+        listener: (context, state) {
+          context.read<JournalBloc>().add(
+            LoadTransactions(perspective: state.effectivePerspective),
           );
         },
+        child: BlocBuilder<JournalBloc, JournalState>(
+          builder: (context, state) {
+            if (state.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (state.errorMessage != null) {
+              return Center(
+                child: Text(
+                  state.errorMessage!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              );
+            }
+            return FadeTransition(
+              opacity: _fadeAnim,
+              child: _buildVariant(),
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => EntryPage.show(context),
