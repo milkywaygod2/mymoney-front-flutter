@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../app/theme/AppColors.dart';
+import '../../../../app/theme/AppMotion.dart';
 import '../../../../core/constants/Enums.dart';
 import '../../../../core/domain/Account.dart';
 import '../../../../core/models/TypedId.dart';
@@ -87,12 +88,10 @@ class _TreeRowState extends State<TreeRow> {
                     SizedBox(
                       width: 20,
                       child: hasChildren
-                          ? Icon(
-                              isExpanded
-                                  ? Icons.expand_more
-                                  : Icons.chevron_right,
-                              size: 18,
-                              color: Colors.grey,
+                          ? AnimatedRotation(
+                              turns: isExpanded ? 0.25 : 0,
+                              duration: AppMotion.fast,
+                              child: const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
                             )
                           : const SizedBox.shrink(),
                     ),
@@ -105,10 +104,12 @@ class _TreeRowState extends State<TreeRow> {
                           Text(
                             widget.account.name,
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: widget.depth == 0 ? 15.0 : 13.5,
                               fontWeight: widget.depth == 0
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
+                                  ? FontWeight.w800
+                                  : widget.depth == 1
+                                      ? FontWeight.w600
+                                      : FontWeight.w500,
                               color: widget.account.isActive
                                   ? null
                                   : Colors.grey,

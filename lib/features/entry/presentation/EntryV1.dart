@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../app/theme/AppColors.dart';
 import '../../account/presentation/AccountBloc.dart';
 import '../../account/presentation/AccountState.dart';
 import 'EntryBloc.dart';
@@ -19,16 +20,21 @@ class EntryV1 extends StatefulWidget {
 
 class _EntryV1State extends State<EntryV1> {
   Timer? _debounce;
+  final _merchantController = TextEditingController();
+  final _memoController = TextEditingController();
 
   @override
   void dispose() {
     _debounce?.cancel();
+    _merchantController.dispose();
+    _memoController.dispose();
     super.dispose();
   }
 
   void _dispatchParse(BuildContext context) {
     context.read<EntryBloc>().add(const EntryParseNaturalText());
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -133,6 +139,29 @@ class _EntryV1State extends State<EntryV1> {
                         label: const Text('자동 분석'),
                       ),
               ),
+              // 비슷한 거래 추천 칩
+              if (state.accountHint != null)
+                _SuggestedChips(
+                  hint: state.accountHint!,
+                  onSelected: (label) {
+                    context.read<EntryBloc>().add(EntryNaturalTextChanged(label));
+                  },
+                ),
+              // 상대처 / 메모 행
+              const SizedBox(height: 8),
+              _EntryInfoRow(
+                icon: Icons.storefront_outlined,
+                label: '상대처',
+                controller: _merchantController,
+                hint: '예) 스타벅스 코엑스',
+              ),
+              const SizedBox(height: 6),
+              _EntryInfoRow(
+                icon: Icons.notes_outlined,
+                label: '메모',
+                controller: _memoController,
+                hint: '선택 사항',
+              ),
               AnimatedOpacity(
                 opacity: state.parsedAmount != null ? 1.0 : 0.0,
                 duration: const Duration(milliseconds: 300),
@@ -140,6 +169,8 @@ class _EntryV1State extends State<EntryV1> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Divider(),
+                    if (state.confidence != null)
+                      _ConfidenceBanner(confidence: state.confidence!),
                     _ParsedResultRow(label: '인식 금액', value: '₩${state.amountDisplay}'),
                     if (state.parsedDescription != null)
                       _ParsedResultRow(
@@ -190,6 +221,107 @@ class _ParsedResultRow extends StatelessWidget {
           Text(value, style: const TextStyle(fontSize: 13)),
         ],
       ),
+    );
+  }
+}
+
+class _SuggestedChips extends StatelessWidget {
+  const _SuggestedChips({required this.hint, required this.onSelected});
+  final String hint;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 4),
+      child: Wrap(
+        spacing: 6,
+        children: [
+          ActionChip(
+            label: Text(hint, style: const TextStyle(fontSize: 12)),
+            onPressed: () => onSelected(hint),
+            visualDensity: VisualDensity.compact,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ConfidenceBanner extends StatelessWidget {
+  const _ConfidenceBanner({required this.confidence});
+  final double confidence;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color bg;
+    final String label;
+    if (confidence >= 0.9) {
+      bg = AppColors.stateSuccess;
+      label = '✓ 자동 확정';
+    } else if (confidence >= 0.7) {
+      bg = AppColors.stateWarning;
+      label = '⚠ 확인 필요';
+    } else {
+      bg = AppColors.stateError;
+      label = '✗ 직접 수정';
+    }
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: bg.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: bg.withValues(alpha: 0.4)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: bg),
+      ),
+    );
+  }
+}
+
+class _EntryInfoRow extends StatelessWidget {
+  const _EntryInfoRow({
+    required this.icon,
+    required this.label,
+    required this.controller,
+    required this.hint,
+  });
+  final IconData icon;
+  final String label;
+  final TextEditingController controller;
+  final String hint;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: Colors.grey),
+        const SizedBox(width: 8),
+        SizedBox(
+          width: 44,
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+        ),
+        Expanded(
+          child: TextField(
+            controller: controller,
+            style: const TextStyle(fontSize: 13),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
+              isDense: true,
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

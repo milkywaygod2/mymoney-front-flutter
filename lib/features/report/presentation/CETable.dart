@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../app/theme/AppColors.dart';
 import '../../../core/constants/Enums.dart';
 import '../../../core/models/EquityChangeItem.dart';
 import 'ReportBloc.dart';
@@ -120,7 +121,7 @@ class _CETableContent extends StatelessWidget {
 
     return TableRow(
       decoration: isTotal
-          ? const BoxDecoration(color: Color(0xFFF5F5F5))
+          ? const BoxDecoration(color: AppColors.lightSurface1)
           : null,
       children: [
         _Cell(text: _rowLabel(item), isBold: isTotal),
