@@ -192,13 +192,27 @@ class _JournalV2State extends State<JournalV2> {
             if (grouped.isEmpty)
               Expanded(
                 child: Center(
-                  child: Text(
-                    _searchQuery.isNotEmpty
-                        ? '"$_searchQuery" 검색 결과 없음'
-                        : _filter != '전체'
-                            ? '${_selectedMonth.year}년 ${_selectedMonth.month}월 $_filter 거래 없음'
-                            : '${_selectedMonth.year}년 ${_selectedMonth.month}월 거래 없음',
-                    style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _searchQuery.isNotEmpty ? Icons.search_off : Icons.receipt_long_outlined,
+                        size: 48,
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        _searchQuery.isNotEmpty
+                            ? '"$_searchQuery" 검색 결과 없음'
+                            : _filter != '전체'
+                                ? '${_selectedMonth.year}년 ${_selectedMonth.month}월 $_filter 거래 없음'
+                                : '${_selectedMonth.year}년 ${_selectedMonth.month}월 거래 없음',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               )
