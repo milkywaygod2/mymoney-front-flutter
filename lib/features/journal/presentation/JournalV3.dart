@@ -150,11 +150,24 @@ class _JournalV3State extends State<JournalV3> {
                 Expanded(
                   child: groups.isEmpty
                       ? Center(
-                          child: Text(
-                            _query.isNotEmpty
-                                ? '"$_query" 검색 결과 없음'
-                                : '${_selectedMonth.year}년 ${_selectedMonth.month}월 거래 없음',
-                            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _query.isNotEmpty ? Icons.search_off : Icons.swap_horiz_outlined,
+                                size: 48,
+                                color: Theme.of(context).colorScheme.outlineVariant,
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                _query.isNotEmpty
+                                    ? '"$_query" 검색 결과 없음'
+                                    : '${_selectedMonth.year}년 ${_selectedMonth.month}월 거래 없음',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
                           ),
                         )
                       : ListView.builder(
